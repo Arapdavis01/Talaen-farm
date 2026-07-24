@@ -56,64 +56,81 @@
             <!-- Login Card -->
             <div class="relative bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl overflow-hidden border border-white/20 animate-fadeIn">
                 
-                <!-- Diagonal Split Header with Both Images -->
-                <div class="relative h-56 overflow-hidden">
-                    <!-- Tea Farm Image (Left side) -->
-                    <div class="absolute inset-0 w-full h-full" style="clip-path: polygon(0 0, 55% 0, 0 100%);">
-                        <img src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" 
+                <!-- Equal Diagonal Split Header with Both Images -->
+                <div class="relative h-64 overflow-hidden">
+                    
+                    <!-- Tea Farm Image (Top-Left triangle) -->
+                    <div class="absolute inset-0" style="clip-path: polygon(0 0, 100% 0, 0 100%);">
+                        <img src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
                              alt="Tea Farm" 
                              class="w-full h-full object-cover">
-                        <div class="absolute inset-0 bg-gradient-to-br from-green-800/60 to-green-900/40"></div>
+                        <div class="absolute inset-0 bg-gradient-to-br from-green-800/50 to-green-900/30"></div>
+                        
                         <!-- Tea Label -->
-                        <div class="absolute top-4 left-4">
-                            <div class="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-xl px-3 py-1.5">
-                                <i class="fas fa-leaf text-green-200 text-sm"></i>
-                                <span class="text-white text-xs font-semibold tracking-wider uppercase">Tea Farm</span>
+                        <div class="absolute top-6 left-6">
+                            <div class="flex items-center gap-2.5 bg-white/25 backdrop-blur-md rounded-2xl px-4 py-2.5 shadow-lg border border-white/20">
+                                <div class="w-8 h-8 bg-green-500 rounded-xl flex items-center justify-center">
+                                    <i class="fas fa-leaf text-white text-sm"></i>
+                                </div>
+                                <div>
+                                    <p class="text-white text-sm font-bold leading-tight">Tea Farm</p>
+                                    <p class="text-green-100 text-[10px] leading-tight">Plucking & Sales</p>
+                                </div>
                             </div>
                         </div>
                     </div>
                     
-                    <!-- Dairy Farm Image (Right side) -->
-                    <div class="absolute inset-0 w-full h-full" style="clip-path: polygon(55% 0, 100% 0, 100% 100%, 0 100%);">
-                        <img src="https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" 
+                    <!-- Dairy Farm Image (Bottom-Right triangle) -->
+                    <div class="absolute inset-0" style="clip-path: polygon(100% 0, 100% 100%, 0 100%);">
+                        <img src="https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
                              alt="Dairy Farm" 
                              class="w-full h-full object-cover">
-                        <div class="absolute inset-0 bg-gradient-to-bl from-blue-800/60 to-blue-900/40"></div>
+                        <div class="absolute inset-0 bg-gradient-to-tl from-blue-800/50 to-blue-900/30"></div>
+                        
                         <!-- Dairy Label -->
-                        <div class="absolute top-4 right-4">
-                            <div class="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-xl px-3 py-1.5">
-                                <i class="fas fa-cow text-blue-200 text-sm"></i>
-                                <span class="text-white text-xs font-semibold tracking-wider uppercase">Dairy Farm</span>
+                        <div class="absolute bottom-6 right-6">
+                            <div class="flex items-center gap-2.5 bg-white/25 backdrop-blur-md rounded-2xl px-4 py-2.5 shadow-lg border border-white/20">
+                                <div class="w-8 h-8 bg-blue-500 rounded-xl flex items-center justify-center">
+                                    <i class="fas fa-cow text-white text-sm"></i>
+                                </div>
+                                <div>
+                                    <p class="text-white text-sm font-bold leading-tight">Dairy Farm</p>
+                                    <p class="text-blue-100 text-[10px] leading-tight">Milk & Cattle</p>
+                                </div>
                             </div>
                         </div>
                     </div>
                     
-                    <!-- Diagonal Divider Line -->
-                    <div class="absolute inset-0 pointer-events-none" style="background: linear-gradient(145deg, transparent 54.5%, rgba(255,255,255,0.4) 54.5%, rgba(255,255,255,0.4) 55.5%, transparent 55.5%);"></div>
+                    <!-- Diagonal Divider Glow Line -->
+                    <div class="absolute inset-0 pointer-events-none" style="background: linear-gradient(135deg, transparent calc(50% - 1.5px), rgba(255,255,255,0.5) 50%, transparent calc(50% + 1.5px));"></div>
                     
-                    <!-- Center Logo Overlay -->
-                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-                        <div class="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-2xl border-4 border-white/50 rotate-3 transform hover:rotate-0 transition-transform duration-500">
-                            <i class="fas fa-tractor text-white text-xl"></i>
+                    <!-- Center Logo Badge -->
+                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
+                        <div class="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-2xl border-[3px] border-white/60 transform hover:scale-110 transition-transform duration-500">
+                            <i class="fas fa-tractor text-white text-2xl"></i>
                         </div>
                     </div>
                     
-                    <!-- Gradient Overlay at bottom for text readability -->
-                    <div class="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-black/60 to-transparent"></div>
+                    <!-- Subtle gradient overlay for bottom text -->
+                    <div class="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/70 to-transparent pointer-events-none"></div>
                     
-                    <!-- Title Overlay -->
-                    <div class="absolute bottom-4 left-0 right-0 text-center z-10">
-                        <h1 class="text-2xl font-bold text-white drop-shadow-lg">🌿 Talaen Farm</h1>
-                        <p class="text-white/80 text-xs tracking-wider uppercase">Management System</p>
+                    <!-- Farm Name at Bottom -->
+                    <div class="absolute bottom-5 left-0 right-0 text-center z-10">
+                        <h1 class="text-2xl font-extrabold text-white drop-shadow-2xl tracking-tight">🌿 Talaen Farm</h1>
+                        <p class="text-white/70 text-[11px] tracking-[0.2em] uppercase font-medium">Management System</p>
                     </div>
                 </div>
                 
                 <!-- Login Form Section -->
                 <div class="p-8 pt-6">
-                    <!-- Small indicator text -->
-                    <p class="text-center text-gray-400 text-xs mb-5 uppercase tracking-wider font-medium">
-                        <i class="fas fa-lock mr-1 text-green-500"></i> Secure Login
-                    </p>
+                    <!-- Secure login indicator -->
+                    <div class="flex items-center justify-center gap-2 mb-5">
+                        <div class="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+                        <span class="text-gray-400 text-xs uppercase tracking-wider font-semibold flex items-center gap-1.5">
+                            <i class="fas fa-shield-halved text-green-500 text-xs"></i> Secure Login
+                        </span>
+                        <div class="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+                    </div>
                     
                     <form id="loginForm" class="space-y-5">
                         <div>
@@ -123,7 +140,7 @@
                                     <i class="fas fa-user"></i>
                                 </span>
                                 <input type="text" id="username" required 
-                                    class="w-full pl-11 pr-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all font-medium"
+                                    class="w-full pl-11 pr-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all font-medium text-gray-800 placeholder-gray-400"
                                     placeholder="Enter your username">
                             </div>
                         </div>
@@ -135,7 +152,7 @@
                                     <i class="fas fa-lock"></i>
                                 </span>
                                 <input type="password" id="password" required 
-                                    class="w-full pl-11 pr-12 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all font-medium"
+                                    class="w-full pl-11 pr-12 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all font-medium text-gray-800 placeholder-gray-400"
                                     placeholder="Enter your password">
                                 <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 transition-colors">
                                     <i class="fas fa-eye"></i>
@@ -155,7 +172,7 @@
                     </div>
                     
                     <!-- Footer -->
-                    <p class="text-center text-gray-400 text-xs mt-5">
+                    <p class="text-center text-gray-400 text-xs mt-6">
                         &copy; 2024 Talaen Farm. All rights reserved.
                     </p>
                 </div>
