@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌿 Talaen Farm Management System</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Google Fonts - Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'farm-green': {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="font-inter bg-gray-50">
+    
+    <!-- Login Modal -->
+    <div id="loginModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden transform transition-all">
+            <!-- Login Header with Farm Image -->
+            <div class="relative h-48 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1000&q=80');">
+                <div class="absolute inset-0 bg-gradient-to-b from-green-900/60 to-green-800/80"></div>
+                <div class="absolute bottom-0 left-0 right-0 p-6 text-white">
+                    <h1 class="text-3xl font-bold mb-1">🌿 Talaen Farm</h1>
+                    <p class="text-green-100 text-sm">Management System</p>
+                </div>
+            </div>
+            
+            <!-- Login Form -->
+            <div class="p-6">
+                <form id="loginForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                                <i class="fas fa-user"></i>
+                            </span>
+                            <input type="text" id="username" required 
+                                class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all"
+                                placeholder="Enter your username">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                                <i class="fas fa-lock"></i>
+                            </span>
+                            <input type="password" id="password" required 
+                                class="w-full pl-10 pr-12 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all"
+                                placeholder="Enter your password">
+                            <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" 
+                        class="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-2.5 rounded-lg font-medium hover:from-green-700 hover:to-green-800 transition-all transform hover:scale-[1.02] active:scale-[0.98]">
+                        <i class="fas fa-sign-in-alt mr-2"></i>Login
+                    </button>
+                </form>
+                <div id="loginError" class="mt-3 text-red-500 text-sm text-center hidden"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App Container (Hidden until login) -->
+    <div id="appContainer" class="hidden min-h-screen flex">
+        
+        <!-- Sidebar -->
+        <div id="sidebar" class="hidden lg:flex flex-col w-64 bg-gradient-to-b from-green-800 to-green-900 text-white fixed h-full z-30">
+            <div class="p-5 border-b border-green-700">
+                <h2 class="text-xl font-bold">🌿 Talaen Farm</h2>
+                <p id="sidebarRole" class="text-green-200 text-xs mt-1"></p>
+            </div>
+            <nav id="sidebarNav" class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+                <!-- Dynamic sidebar items -->
+            </nav>
+            <div class="p-4 border-t border-green-700">
+                <button id="logoutBtn" class="w-full bg-red-500/20 hover:bg-red-500/30 text-red-200 py-2 rounded-lg transition-colors text-sm">
+                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                </button>
+            </div>
+        </div>
+        
+        <!-- Mobile Sidebar Overlay -->
+        <div id="sidebarOverlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden"></div>
+        
+        <!-- Main Content -->
+        <div class="flex-1 lg:ml-64">
+            <!-- Mobile Navbar -->
+            <div id="mobileNavbar" class="lg:hidden bg-white shadow-sm p-4 flex items-center justify-between sticky top-0 z-10">
+                <button id="hamburgerBtn" class="text-gray-600 hover:text-gray-800">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+                <h2 class="font-bold text-green-800">🌿 Talaen Farm</h2>
+                <div class="w-8"></div>
+            </div>
+            
+            <!-- Page Content -->
+            <main id="mainContent" class="p-4 md:p-6 lg:p-8">
+                <!-- Dynamic content loaded here -->
+            </main>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+    <!-- Generic Modal Container -->
+    <div id="modalContainer" class="hidden fixed inset-0 z-40 flex items-center justify-center bg-black bg-opacity-50">
+        <div id="modalContent" class="bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+            <!-- Dynamic modal content -->
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/components/toast.js"></script>
+    <script src="js/components/modal.js"></script>
+    <script src="js/components/sidebar.js"></script>
+    <script src="js/components/navbar.js"></script>
+    <script src="js/modules/moduleSelector.js"></script>
+    <script src="js/modules/tea/teaDashboard.js"></script>
+    <script src="js/modules/tea/workers.js"></script>
+    <script src="js/modules/tea/companies.js"></script>
+    <script src="js/modules/tea/blocks.js"></script>
+    <script src="js/modules/tea/wageRate.js"></script>
+    <script src="js/modules/tea/pluckingSelf.js"></script>
+    <script src="js/modules/tea/pluckingVerified.js"></script>
+    <script src="js/modules/tea/comparison.js"></script>
+    <script src="js/modules/tea/debts.js"></script>
+    <script src="js/modules/tea/payWorker.js"></script>
+    <script src="js/modules/tea/payStore.js"></script>
+    <script src="js/modules/tea/reports.js"></script>
+    <script src="js/modules/dairy/dairyDashboard.js"></script>
+    <script src="js/modules/dairy/cows.js"></script>
+    <script src="js/modules/dairy/dairyWorkers.js"></script>
+    <script src="js/modules/dairy/buyers.js"></script>
+    <script src="js/modules/dairy/milkProduction.js"></script>
+    <script src="js/modules/dairy/milkDisposal.js"></script>
+    <script src="js/modules/dairy/feed.js"></script>
+    <script src="js/modules/dairy/payDairyWorker.js"></script>
+    <script src="js/modules/dairy/deliveries.js"></script>
+    <script src="js/modules/dairy/buyerPayments.js"></script>
+    <script src="js/modules/dairy/dairyReports.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
