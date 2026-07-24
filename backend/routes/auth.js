@@ -9,6 +9,56 @@ const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET;
 
 // ============================================
+// TEMPORARY - Create First Admin Account
+// DELETE THIS ROUTE AFTER USE
+// ============================================
+router.get('/setup-admin', async (req, res) => {
+    try {
+        const salt = await bcrypt.genSalt(10);
+        const hash = await bcrypt.hash('admin123', salt);
+        
+        const { data, error } = await supabase
+            .from('users')
+            .insert({
+                username: 'admin',
+                password_hash: hash,
+                role: 'farm_owner',
+                full_name: 'Farm Owner',
+                phone: '0700000000'
+            })
+            .select()
+            .single();
+            
+        if (error) {
+            return res.status(400).json({ 
+                success: false, 
+                message: error.message 
+            });
+        }
+        
+        res.json({ 
+            success: true, 
+            message: 'Admin account created successfully',
+            credentials: { 
+                username: 'admin', 
+                password: 'admin123' 
+            },
+            user: {
+                id: data.id,
+                username: data.username,
+                role: data.role,
+                full_name: data.full_name
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            message: error.message 
+        });
+    }
+});
+
+// ============================================
 // POST /api/auth/login
 // ============================================
 router.post('/login', async (req, res) => {
