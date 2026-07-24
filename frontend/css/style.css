@@ -1,37 +1,193 @@
 /* ============================================
-   TALAEN FARM - Custom Styles
+   TALAEN FARM - Complete Styling
    ============================================ */
 
-/* Smooth scrolling */
+/* Import Inter font weights */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+/* Base Styles */
 html {
     scroll-behavior: smooth;
 }
 
-/* Custom scrollbar */
+body {
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInLeft {
+    from { opacity: 0; transform: translateX(-30px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInRight {
+    from { opacity: 0; transform: translateX(30px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes modalSlideIn {
+    from { opacity: 0; transform: translateY(-30px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes modalSlideOut {
+    from { opacity: 1; transform: translateY(0) scale(1); }
+    to { opacity: 0; transform: translateY(-20px) scale(0.95); }
+}
+
+@keyframes toastSlideIn {
+    from { opacity: 0; transform: translateX(120%); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes toastSlideOut {
+    from { opacity: 1; transform: translateX(0); }
+    to { opacity: 0; transform: translateX(120%); }
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+@keyframes pulseBtn {
+    0% { transform: scale(1); }
+    50% { transform: scale(0.96); }
+    100% { transform: scale(1); }
+}
+
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+@keyframes bounceIn {
+    0% { transform: scale(0.3); opacity: 0; }
+    50% { transform: scale(1.05); }
+    70% { transform: scale(0.9); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-fadeIn {
+    animation: fadeIn 0.5s ease-out;
+}
+
+.animate-fadeInUp {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.animate-fadeInDown {
+    animation: fadeInDown 0.4s ease-out;
+}
+
+.animate-slideInLeft {
+    animation: slideInLeft 0.5s ease-out;
+}
+
+.animate-slideInRight {
+    animation: slideInRight 0.5s ease-out;
+}
+
+.animate-bounceIn {
+    animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* ============================================
+   CUSTOM SCROLLBAR
+   ============================================ */
 ::-webkit-scrollbar {
-    width: 6px;
+    width: 8px;
+    height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-    background: #f1f1f1;
+    background: #f1f5f9;
+    border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 3px;
+    background: linear-gradient(180deg, #16a34a, #15803d);
+    border-radius: 10px;
+    border: 2px solid #f1f5f9;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #555;
+    background: linear-gradient(180deg, #15803d, #166534);
 }
 
-/* Sidebar transitions */
+/* Sidebar scrollbar */
+#sidebarNav::-webkit-scrollbar {
+    width: 4px;
+}
+
+#sidebarNav::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+#sidebarNav::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    border: none;
+}
+
+#sidebarNav::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.35);
+}
+
+/* Modal scrollbar */
+#modalContent::-webkit-scrollbar {
+    width: 6px;
+}
+
+#modalContent::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#modalContent::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 10px;
+}
+
+/* ============================================
+   LOGIN PAGE / BACKGROUND
+   ============================================ */
+#appBackground {
+    transition: opacity 0.5s ease;
+}
+
+#loginModal .bg-white\/95 {
+    animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* ============================================
+   SIDEBAR
+   ============================================ */
 #sidebar {
-    transition: transform 0.3s ease-in-out;
-}
-
-#sidebar.sidebar-open {
-    transform: translateX(0);
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 4px 0 30px rgba(0, 0, 0, 0.2);
 }
 
 @media (max-width: 1023px) {
@@ -44,17 +200,175 @@ html {
     }
 }
 
-/* Card hover effects */
+/* Active sidebar link */
+.sidebar-link-active {
+    background: rgba(255, 255, 255, 0.12) !important;
+    border-left: 3px solid #4ade80 !important;
+    font-weight: 600;
+    box-shadow: inset 0 0 30px rgba(74, 222, 128, 0.08);
+}
+
+#sidebarNav a {
+    transition: all 0.25s ease;
+    border-left: 3px solid transparent;
+}
+
+#sidebarNav a:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-left: 3px solid rgba(255, 255, 255, 0.3);
+    padding-left: 1.25rem;
+}
+
+/* Sidebar overlay */
+#sidebarOverlay {
+    transition: opacity 0.3s ease;
+}
+
+/* ============================================
+   CARD STYLES
+   ============================================ */
 .hover-card {
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .hover-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    transform: translateY(-3px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
 }
 
-/* Table responsive */
+/* Dashboard stat cards */
+.stat-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: default;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+.stat-card:hover .stat-icon {
+    transform: scale(1.1);
+}
+
+.stat-icon {
+    transition: transform 0.3s ease;
+}
+
+/* ============================================
+   MODULE SELECTOR CARDS
+   ============================================ */
+.module-card {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    overflow: hidden;
+    position: relative;
+}
+
+.module-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2);
+}
+
+.module-card:hover .module-card-overlay {
+    background: rgba(0, 0, 0, 0.45);
+}
+
+.module-card:active {
+    transform: translateY(-4px);
+}
+
+.module-card-image {
+    transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.module-card:hover .module-card-image {
+    transform: scale(1.12);
+}
+
+.module-card-overlay {
+    transition: background 0.4s ease;
+}
+
+/* ============================================
+   MODAL STYLES
+   ============================================ */
+#modalContent {
+    animation: modalSlideIn 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#modalContent.modal-closing {
+    animation: modalSlideOut 0.25s ease-in forwards;
+}
+
+#modalContent .sticky {
+    border-radius: 1rem 1rem 0 0;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+/* Modal backdrop */
+#modalContainer {
+    transition: opacity 0.3s ease;
+}
+
+/* Modal form elements */
+#modalContent input:focus,
+#modalContent select:focus,
+#modalContent textarea:focus {
+    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1);
+    border-color: #22c55e;
+    outline: none;
+}
+
+#modalContent input:hover,
+#modalContent select:hover,
+#modalContent textarea:hover {
+    border-color: #a3a3a3;
+}
+
+/* ============================================
+   TABLE STYLES
+   ============================================ */
+.responsive-table {
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+}
+
+.responsive-table thead th {
+    background: #f8fafc;
+    font-weight: 600;
+    color: #64748b;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 1rem 1.5rem;
+    white-space: nowrap;
+}
+
+.responsive-table tbody tr {
+    transition: all 0.2s ease;
+}
+
+.responsive-table tbody tr:hover {
+    background: #f0fdf4;
+    transform: scale(1.001);
+    box-shadow: 0 2px 10px rgba(34, 197, 94, 0.08);
+}
+
+.responsive-table tbody td {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 0.9rem;
+}
+
+.responsive-table tfoot td {
+    padding: 1rem 1.5rem;
+    font-weight: 700;
+}
+
+/* Mobile responsive table */
 @media (max-width: 768px) {
     .responsive-table thead {
         display: none;
@@ -63,9 +377,17 @@ html {
     .responsive-table tbody tr {
         display: block;
         margin-bottom: 1rem;
-        border: 1px solid #e5e7eb;
-        border-radius: 0.5rem;
-        padding: 1rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 1rem;
+        padding: 1.25rem;
+        background: white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+    
+    .responsive-table tbody tr:hover {
+        border-color: #22c55e;
+        box-shadow: 0 4px 20px rgba(34, 197, 94, 0.12);
+        transform: none;
         background: white;
     }
     
@@ -73,139 +395,400 @@ html {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 0.5rem 0;
+        padding: 0.75rem 0;
         border-bottom: 1px solid #f3f4f6;
     }
     
     .responsive-table tbody td:last-child {
         border-bottom: none;
+        padding-bottom: 0;
+    }
+    
+    .responsive-table tbody td:first-child {
+        padding-top: 0;
     }
     
     .responsive-table tbody td::before {
         content: attr(data-label);
-        font-weight: 600;
+        font-weight: 700;
         color: #374151;
         margin-right: 1rem;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        flex-shrink: 0;
     }
 }
 
-/* Modal animation */
-@keyframes modalSlideIn {
-    from {
-        opacity: 0;
-        transform: translateY(-20px) scale(0.95);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
-
-#modalContent {
-    animation: modalSlideIn 0.3s ease-out;
-}
-
-/* Toast animation */
-@keyframes toastSlideIn {
-    from {
-        opacity: 0;
-        transform: translateX(100%);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
+/* ============================================
+   TOAST NOTIFICATIONS
+   ============================================ */
 .toast-item {
-    animation: toastSlideIn 0.3s ease-out;
+    animation: toastSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
-/* Loading spinner */
-.spinner {
-    border: 3px solid #f3f4f6;
-    border-top: 3px solid #16a34a;
-    border-radius: 50%;
-    width: 24px;
-    height: 24px;
-    animation: spin 0.8s linear infinite;
+.toast-item.removing {
+    animation: toastSlideOut 0.35s ease-in forwards;
 }
 
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-/* Module selector cards */
-.module-card {
-    transition: all 0.3s ease;
+/* ============================================
+   BUTTON STYLES
+   ============================================ */
+button {
+    transition: all 0.2s ease;
     cursor: pointer;
 }
 
-.module-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+button:active {
+    transform: scale(0.97);
 }
 
-.module-card:active {
-    transform: translateY(-2px);
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
 }
 
-/* Active sidebar link */
-.sidebar-link-active {
-    background: rgba(255, 255, 255, 0.15);
-    border-left: 3px solid #4ade80;
-}
-
-/* Dashboard stat cards */
-.stat-card {
-    transition: all 0.3s ease;
-}
-
-.stat-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-}
-
-/* Form input focus */
-input:focus, select:focus, textarea:focus {
-    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
-}
-
-/* Button pulse effect */
 .btn-pulse:active {
-    animation: pulse 0.3s ease-out;
+    animation: pulseBtn 0.3s ease-out;
 }
 
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(0.95); }
-    100% { transform: scale(1); }
+.btn-primary {
+    background: linear-gradient(135deg, #16a34a, #15803d);
+    color: white;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(22, 163, 74, 0.3);
 }
 
-/* Badge styles */
+.btn-primary:hover {
+    background: linear-gradient(135deg, #15803d, #166534);
+    box-shadow: 0 6px 25px rgba(22, 163, 74, 0.4);
+    transform: translateY(-1px);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+}
+
+.btn-danger:hover {
+    box-shadow: 0 6px 25px rgba(239, 68, 68, 0.4);
+}
+
+/* ============================================
+   FORM STYLES
+   ============================================ */
+input, select, textarea {
+    transition: all 0.2s ease;
+}
+
+input:focus, select:focus, textarea:focus {
+    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1);
+    outline: none;
+}
+
+input:hover, select:hover, textarea:hover {
+    border-color: #a3a3a3;
+}
+
+/* Form validation styles */
+input.error, select.error, textarea.error {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+}
+
+input.success, select.success, textarea.success {
+    border-color: #22c55e;
+    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1);
+}
+
+/* ============================================
+   BADGE STYLES
+   ============================================ */
 .badge {
     display: inline-flex;
     align-items: center;
-    padding: 0.25rem 0.75rem;
+    gap: 0.25rem;
+    padding: 0.3rem 0.75rem;
     border-radius: 9999px;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 600;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+    text-transform: uppercase;
 }
 
-/* Responsive padding */
+/* ============================================
+   LOADING SPINNER
+   ============================================ */
+.spinner {
+    border: 3px solid #e5e7eb;
+    border-top: 3px solid #16a34a;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    animation: spin 0.7s linear infinite;
+}
+
+.spinner-sm {
+    width: 18px;
+    height: 18px;
+    border-width: 2px;
+}
+
+.spinner-lg {
+    width: 44px;
+    height: 44px;
+    border-width: 4px;
+}
+
+.spinner-white {
+    border-color: rgba(255, 255, 255, 0.2);
+    border-top-color: white;
+}
+
+/* ============================================
+   SHIMMER LOADING SKELETON
+   ============================================ */
+.shimmer {
+    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 8px;
+}
+
+.shimmer-text {
+    height: 14px;
+    margin-bottom: 8px;
+}
+
+.shimmer-title {
+    height: 20px;
+    width: 60%;
+    margin-bottom: 12px;
+}
+
+.shimmer-card {
+    height: 100px;
+    border-radius: 12px;
+}
+
+/* ============================================
+   EMPTY STATE
+   ============================================ */
+.empty-state {
+    text-align: center;
+    padding: 3rem 1.5rem;
+}
+
+.empty-state i {
+    font-size: 4rem;
+    color: #d1d5db;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.empty-state p {
+    color: #9ca3af;
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+/* ============================================
+   GLASS MORPHISM EFFECT
+   ============================================ */
+.glass {
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.glass-dark {
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+
+/* ============================================
+   TOOLTIP
+   ============================================ */
+[data-tooltip] {
+    position: relative;
+}
+
+[data-tooltip]:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0.5rem 0.85rem;
+    background: #1f2937;
+    color: white;
+    border-radius: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    white-space: nowrap;
+    z-index: 100;
+    pointer-events: none;
+    animation: fadeIn 0.2s ease-out;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* ============================================
+   RESPONSIVE STYLES
+   ============================================ */
+@media (max-width: 1024px) {
+    .lg\:ml-72 {
+        margin-left: 0 !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .grid-cols-1.md\:grid-cols-2 {
+        grid-template-columns: repeat(1, 1fr);
+    }
+    
+    .grid-cols-1.md\:grid-cols-3 {
+        grid-template-columns: repeat(1, 1fr);
+    }
+    
+    .grid-cols-1.md\:grid-cols-4 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
 @media (max-width: 640px) {
     #mainContent {
         padding: 1rem;
     }
+    
+    h1 {
+        font-size: 1.4rem !important;
+    }
+    
+    h2 {
+        font-size: 1.2rem !important;
+    }
+    
+    .stat-card {
+        padding: 1rem !important;
+    }
+    
+    .stat-card .text-2xl {
+        font-size: 1.3rem !important;
+    }
 }
 
-/* Print styles */
+/* ============================================
+   PRINT STYLES
+   ============================================ */
 @media print {
-    #sidebar, #mobileNavbar, #toastContainer {
+    #sidebar, 
+    #sidebarOverlay,
+    #mobileNavbar, 
+    #toastContainer, 
+    #modalContainer,
+    #appBackground {
         display: none !important;
+    }
+    
+    #appContainer {
+        display: block !important;
     }
     
     #mainContent {
         margin-left: 0 !important;
+        padding: 0 !important;
+    }
+    
+    .stat-card {
+        break-inside: avoid;
+        box-shadow: none !important;
+        border: 1px solid #ddd !important;
+        page-break-inside: avoid;
+    }
+    
+    .responsive-table tbody tr {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+    
+    button {
+        display: none !important;
+    }
+    
+    body {
+        font-size: 12px;
+        color: #000;
+        background: #fff;
     }
 }
+
+/* ============================================
+   DARK MODE SUPPORT (Future)
+   ============================================ */
+@media (prefers-color-scheme: dark) {
+    /* Uncomment for future dark mode support */
+    /*
+    body.dark-mode {
+        background: #0f172a;
+        color: #e2e8f0;
+    }
+    */
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+.truncate-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.truncate-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.no-select {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.transition-fast {
+    transition: all 0.15s ease;
+}
+
+.transition-smooth {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================
+   Z-INDEX LAYERS
+   ============================================ */
+.z-sidebar { z-index: 30; }
+.z-sidebar-overlay { z-index: 20; }
+.z-navbar { z-index: 10; }
+.z-modal { z-index: 40; }
+.z-toast { z-index: 50; }
+.z-login { z-index: 50; }
