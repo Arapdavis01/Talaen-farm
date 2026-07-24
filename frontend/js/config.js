@@ -3,8 +3,8 @@
 // ============================================
 
 const CONFIG = {
-    // API Base URL - Change this to your deployed backend URL
-    API_URL: 'http://localhost:3000/api',
+    // API Base URL - Live backend on Render
+    API_URL: 'https://talaen-farm-api.onrender.com/api',
     
     // App Settings
     APP_NAME: 'Talaen Farm',
