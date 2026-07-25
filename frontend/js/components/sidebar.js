@@ -52,6 +52,7 @@ class Sidebar {
     }
 
     groupItemsBySection(items, module) {
+        const systemItems = ['User Management'];
         const managementItems = ['Dashboard', 'Workers', 'Dairy Workers', 'Companies', 'Milk Buyers', 'Blocks', 'Cows'];
         const settingsItems = ['Wage Rate'];
         const operationsItems = ['Self Plucking', 'Verified Plucking', 'Milk Production', 'Feed Records', 'Milk Disposal'];
@@ -59,6 +60,7 @@ class Sidebar {
         const reportItems = ['Reports'];
 
         const sections = {
+            system: [],
             management: [],
             operations: [],
             financial: [],
@@ -66,7 +68,8 @@ class Sidebar {
         };
 
         items.forEach(item => {
-            if (managementItems.includes(item.label)) sections.management.push(item);
+            if (systemItems.includes(item.label)) sections.system.push(item);
+            else if (managementItems.includes(item.label)) sections.management.push(item);
             else if (operationsItems.includes(item.label)) sections.operations.push(item);
             else if (financialItems.includes(item.label)) sections.financial.push(item);
             else if (reportItems.includes(item.label)) sections.reports.push(item);
@@ -83,6 +86,7 @@ class Sidebar {
 
     buildSidebarHTML(sections, module) {
         const sectionIcons = {
+            system: 'fa-shield-halved',
             management: 'fa-cog',
             operations: 'fa-tasks',
             financial: 'fa-calculator',
@@ -90,6 +94,7 @@ class Sidebar {
         };
 
         const sectionTitles = {
+            system: 'System',
             management: 'Management',
             operations: 'Operations',
             financial: 'Financial',
@@ -153,6 +158,14 @@ class Sidebar {
 
         const items = [];
 
+        // System section - User Management for admins
+        if (isAdmin) {
+            items.push(
+                { route: 'user-management', icon: 'fa-users-gear', label: 'User Management' }
+            );
+        }
+
+        // Management section
         if (isAdmin) {
             items.push(
                 { route: 'tea-dashboard', icon: 'fa-th-large', label: 'Dashboard' },
@@ -163,18 +176,24 @@ class Sidebar {
             );
         }
 
+        // Operations section
         items.push(
             { route: 'tea-plucking-self', icon: 'fa-leaf', label: 'Self Plucking' }
         );
 
         if (isAdmin) {
             items.push(
-                { route: 'tea-plucking-verified', icon: 'fa-check-double', label: 'Verified Plucking' },
+                { route: 'tea-plucking-verified', icon: 'fa-check-double', label: 'Verified Plucking' }
+            );
+        }
+
+        // Financial section
+        if (isAdmin) {
+            items.push(
                 { route: 'tea-comparison', icon: 'fa-balance-scale', label: 'Comparison' },
                 { route: 'tea-debts', icon: 'fa-credit-card', label: 'Store Debts' },
                 { route: 'tea-pay-worker', icon: 'fa-hand-holding-usd', label: 'Pay Worker' },
-                { route: 'tea-pay-store', icon: 'fa-store-alt', label: 'Pay Store' },
-                { route: 'tea-reports', icon: 'fa-file-invoice-dollar', label: 'Reports' }
+                { route: 'tea-pay-store', icon: 'fa-store-alt', label: 'Pay Store' }
             );
         }
 
@@ -190,6 +209,13 @@ class Sidebar {
             );
         }
 
+        // Reports section
+        if (isAdmin) {
+            items.push(
+                { route: 'tea-reports', icon: 'fa-file-invoice-dollar', label: 'Reports' }
+            );
+        }
+
         return items;
     }
 
@@ -201,6 +227,14 @@ class Sidebar {
 
         const items = [];
 
+        // System section - User Management for admins
+        if (isAdmin) {
+            items.push(
+                { route: 'user-management', icon: 'fa-users-gear', label: 'User Management' }
+            );
+        }
+
+        // Management section
         if (isAdmin) {
             items.push(
                 { route: 'dairy-dashboard', icon: 'fa-th-large', label: 'Dashboard' },
@@ -210,6 +244,7 @@ class Sidebar {
             );
         }
 
+        // Operations section
         if (isAdmin || isDairyWorker) {
             items.push(
                 { route: 'dairy-production', icon: 'fa-flask', label: 'Milk Production' },
@@ -219,11 +254,16 @@ class Sidebar {
 
         if (isAdmin) {
             items.push(
-                { route: 'dairy-disposal', icon: 'fa-truck', label: 'Milk Disposal' },
+                { route: 'dairy-disposal', icon: 'fa-truck', label: 'Milk Disposal' }
+            );
+        }
+
+        // Financial section
+        if (isAdmin) {
+            items.push(
                 { route: 'dairy-pay-worker', icon: 'fa-hand-holding-usd', label: 'Pay Worker' },
                 { route: 'dairy-deliveries', icon: 'fa-shipping-fast', label: 'Deliveries' },
-                { route: 'dairy-buyer-payments', icon: 'fa-receipt', label: 'Buyer Payments' },
-                { route: 'dairy-reports', icon: 'fa-file-invoice-dollar', label: 'Reports' }
+                { route: 'dairy-buyer-payments', icon: 'fa-receipt', label: 'Buyer Payments' }
             );
         }
 
@@ -231,6 +271,13 @@ class Sidebar {
             items.push(
                 { route: 'dairy-deliveries', icon: 'fa-shipping-fast', label: 'My Deliveries' },
                 { route: 'dairy-buyer-payments', icon: 'fa-receipt', label: 'Payments' }
+            );
+        }
+
+        // Reports section
+        if (isAdmin) {
+            items.push(
+                { route: 'dairy-reports', icon: 'fa-file-invoice-dollar', label: 'Reports' }
             );
         }
 
