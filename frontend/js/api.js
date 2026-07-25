@@ -139,6 +139,10 @@ class ApiService {
         return this.get('/tea/companies');
     }
 
+    async getCompanyStats(companyId) {
+        return this.get(`/tea/companies/${companyId}/stats`);
+    }
+
     async createCompany(companyData) {
         return this.post('/tea/companies', companyData);
     }
@@ -161,8 +165,16 @@ class ApiService {
         return this.get('/tea/wage-rate');
     }
 
+    async getWageRateHistory() {
+        return this.get('/tea/wage-rate/history');
+    }
+
     async setWageRate(wageData) {
         return this.post('/tea/wage-rate', wageData);
+    }
+
+    async getWageRateImpact(proposedRate) {
+        return this.get(`/tea/wage-rate/impact?proposed_rate=${proposedRate}`);
     }
 
     // Plucking Self
