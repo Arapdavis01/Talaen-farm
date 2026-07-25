@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🌿 Talaen Farm Management System</title>
+    <title>Talaen Farm Management System</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -25,17 +25,22 @@
                         'inter': ['Inter', 'sans-serif'],
                     },
                     colors: {
-                        'farm-green': {
+                        'brand': {
                             50: '#f0fdf4',
                             100: '#dcfce7',
                             200: '#bbf7d0',
                             300: '#86efac',
                             400: '#4ade80',
                             500: '#22c55e',
-                            600: '#16a34a',
-                            700: '#15803d',
-                            800: '#166534',
-                            900: '#14532d',
+                            600: '#059669',
+                            700: '#047857',
+                            800: '#065f46',
+                            900: '#064e3b',
+                        },
+                        'slate': {
+                            750: '#1e293b',
+                            850: '#1a1a2e',
+                            950: '#0f0f23',
                         }
                     }
                 }
@@ -43,18 +48,18 @@
         }
     </script>
 </head>
-<body class="font-inter bg-gray-50">
+<body class="font-inter bg-stone-50">
     
     <!-- Full Screen Background -->
-    <div id="appBackground" class="fixed inset-0 z-0 bg-cover bg-center bg-no-repeat" style="background-image: url('https://images.unsplash.com/photo-1499529112087-3cb3b73cec95?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');">
-        <div class="absolute inset-0 bg-gradient-to-br from-green-900/75 via-green-800/65 to-emerald-900/75"></div>
+    <div id="appBackground" class="fixed inset-0 z-0 bg-cover bg-center bg-no-repeat transition-all duration-700" style="background-image: url('https://images.unsplash.com/photo-1499529112087-3cb3b73cec95?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');">
+        <div class="absolute inset-0 bg-gradient-to-br from-slate-900/80 via-slate-800/70 to-slate-900/80"></div>
     </div>
     
     <!-- Login Modal -->
     <div id="loginModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="relative w-full max-w-lg">
             <!-- Login Card -->
-            <div class="relative bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl overflow-hidden border border-white/20 animate-fadeIn">
+            <div class="relative bg-white/98 backdrop-blur-sm rounded-3xl shadow-2xl overflow-hidden border border-white/30 animate-fadeIn">
                 
                 <!-- Equal Diagonal Split Header with Both Images -->
                 <div class="relative h-64 overflow-hidden">
@@ -64,17 +69,17 @@
                         <img src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
                              alt="Tea Farm" 
                              class="w-full h-full object-cover">
-                        <div class="absolute inset-0 bg-gradient-to-br from-green-800/50 to-green-900/30"></div>
+                        <div class="absolute inset-0 bg-gradient-to-br from-emerald-800/50 to-emerald-900/30"></div>
                         
                         <!-- Tea Label -->
                         <div class="absolute top-6 left-6">
-                            <div class="flex items-center gap-2.5 bg-white/25 backdrop-blur-md rounded-2xl px-4 py-2.5 shadow-lg border border-white/20">
-                                <div class="w-8 h-8 bg-green-500 rounded-xl flex items-center justify-center">
+                            <div class="flex items-center gap-2.5 bg-white/20 backdrop-blur-md rounded-2xl px-4 py-2.5 shadow-lg border border-white/20">
+                                <div class="w-8 h-8 bg-emerald-500 rounded-xl flex items-center justify-center">
                                     <i class="fas fa-leaf text-white text-sm"></i>
                                 </div>
                                 <div>
                                     <p class="text-white text-sm font-bold leading-tight">Tea Farm</p>
-                                    <p class="text-green-100 text-[10px] leading-tight">Plucking & Sales</p>
+                                    <p class="text-emerald-100 text-[10px] leading-tight">Plucking & Sales</p>
                                 </div>
                             </div>
                         </div>
@@ -85,17 +90,17 @@
                         <img src="https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
                              alt="Dairy Farm" 
                              class="w-full h-full object-cover">
-                        <div class="absolute inset-0 bg-gradient-to-tl from-blue-800/50 to-blue-900/30"></div>
+                        <div class="absolute inset-0 bg-gradient-to-tl from-sky-800/50 to-sky-900/30"></div>
                         
                         <!-- Dairy Label -->
                         <div class="absolute bottom-6 right-6">
-                            <div class="flex items-center gap-2.5 bg-white/25 backdrop-blur-md rounded-2xl px-4 py-2.5 shadow-lg border border-white/20">
-                                <div class="w-8 h-8 bg-blue-500 rounded-xl flex items-center justify-center">
+                            <div class="flex items-center gap-2.5 bg-white/20 backdrop-blur-md rounded-2xl px-4 py-2.5 shadow-lg border border-white/20">
+                                <div class="w-8 h-8 bg-sky-500 rounded-xl flex items-center justify-center">
                                     <i class="fas fa-cow text-white text-sm"></i>
                                 </div>
                                 <div>
                                     <p class="text-white text-sm font-bold leading-tight">Dairy Farm</p>
-                                    <p class="text-blue-100 text-[10px] leading-tight">Milk & Cattle</p>
+                                    <p class="text-sky-100 text-[10px] leading-tight">Milk & Cattle</p>
                                 </div>
                             </div>
                         </div>
@@ -106,8 +111,8 @@
                     
                     <!-- Center Logo Badge -->
                     <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
-                        <div class="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-2xl border-[3px] border-white/60 transform hover:scale-110 transition-transform duration-500">
-                            <i class="fas fa-tractor text-white text-2xl"></i>
+                        <div class="w-20 h-20 bg-gradient-to-br from-slate-700 to-slate-800 rounded-2xl flex items-center justify-center shadow-2xl border-[3px] border-white/60 transform hover:scale-110 transition-transform duration-500 overflow-hidden">
+                            <img src="assets/images/logo.png" alt="Logo" class="w-12 h-12 object-contain" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-tractor text-white text-2xl\'></i>'">
                         </div>
                     </div>
                     
@@ -116,7 +121,7 @@
                     
                     <!-- Farm Name at Bottom -->
                     <div class="absolute bottom-5 left-0 right-0 text-center z-10">
-                        <h1 class="text-2xl font-extrabold text-white drop-shadow-2xl tracking-tight">🌿 Talaen Farm</h1>
+                        <h1 class="text-2xl font-extrabold text-white drop-shadow-2xl tracking-tight">Talaen Farm</h1>
                         <p class="text-white/70 text-[11px] tracking-[0.2em] uppercase font-medium">Management System</p>
                     </div>
                 </div>
@@ -125,43 +130,43 @@
                 <div class="p-8 pt-6">
                     <!-- Secure login indicator -->
                     <div class="flex items-center justify-center gap-2 mb-5">
-                        <div class="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
-                        <span class="text-gray-400 text-xs uppercase tracking-wider font-semibold flex items-center gap-1.5">
-                            <i class="fas fa-shield-halved text-green-500 text-xs"></i> Secure Login
+                        <div class="h-px flex-1 bg-gradient-to-r from-transparent via-stone-300 to-transparent"></div>
+                        <span class="text-stone-400 text-xs uppercase tracking-wider font-semibold flex items-center gap-1.5">
+                            <i class="fas fa-shield-halved text-emerald-600 text-xs"></i> Secure Login
                         </span>
-                        <div class="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+                        <div class="h-px flex-1 bg-gradient-to-r from-transparent via-stone-300 to-transparent"></div>
                     </div>
                     
                     <form id="loginForm" class="space-y-5">
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Username</label>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Username</label>
                             <div class="relative group">
-                                <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 group-focus-within:text-green-500 transition-colors">
+                                <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-stone-400 group-focus-within:text-emerald-600 transition-colors">
                                     <i class="fas fa-user"></i>
                                 </span>
                                 <input type="text" id="username" required 
-                                    class="w-full pl-11 pr-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all font-medium text-gray-800 placeholder-gray-400"
+                                    class="w-full pl-11 pr-4 py-3 bg-stone-50 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all font-medium text-slate-800 placeholder-stone-400"
                                     placeholder="Enter your username">
                             </div>
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Password</label>
                             <div class="relative group">
-                                <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 group-focus-within:text-green-500 transition-colors">
+                                <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-stone-400 group-focus-within:text-emerald-600 transition-colors">
                                     <i class="fas fa-lock"></i>
                                 </span>
                                 <input type="password" id="password" required 
-                                    class="w-full pl-11 pr-12 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all font-medium text-gray-800 placeholder-gray-400"
+                                    class="w-full pl-11 pr-12 py-3 bg-stone-50 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all font-medium text-slate-800 placeholder-stone-400"
                                     placeholder="Enter your password">
-                                <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 transition-colors">
+                                <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 pr-4 flex items-center text-stone-400 hover:text-stone-600 transition-colors">
                                     <i class="fas fa-eye"></i>
                                 </button>
                             </div>
                         </div>
                         
                         <button type="submit" 
-                            class="w-full bg-gradient-to-r from-green-600 via-emerald-600 to-green-700 text-white py-3.5 rounded-xl font-semibold hover:from-green-700 hover:via-emerald-700 hover:to-green-800 transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-green-600/25 flex items-center justify-center gap-2">
+                            class="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 text-white py-3.5 rounded-xl font-semibold hover:from-emerald-700 hover:to-emerald-800 transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2">
                             <i class="fas fa-sign-in-alt"></i> Sign In
                         </button>
                     </form>
@@ -172,7 +177,7 @@
                     </div>
                     
                     <!-- Footer -->
-                    <p class="text-center text-gray-400 text-xs mt-6">
+                    <p class="text-center text-stone-400 text-xs mt-6">
                         &copy; 2024 Talaen Farm. All rights reserved.
                     </p>
                 </div>
@@ -183,40 +188,44 @@
     <!-- Main App Container (Hidden until login) -->
     <div id="appContainer" class="hidden relative z-10 min-h-screen flex">
         
-        <!-- Sidebar -->
-        <div id="sidebar" class="hidden lg:flex flex-col w-72 bg-gradient-to-b from-green-900 via-green-800 to-emerald-900 text-white fixed h-full z-30 shadow-2xl">
-            <div class="p-6 border-b border-white/10">
+        <!-- Sidebar - Professional Dark -->
+        <div id="sidebar" class="hidden lg:flex flex-col w-72 bg-slate-850 text-slate-200 fixed h-full z-30 shadow-2xl border-r border-slate-700/50">
+            <div class="p-6 border-b border-slate-700/50">
                 <div class="flex items-center gap-3 mb-1">
-                    <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                        <i class="fas fa-leaf text-white"></i>
+                    <div class="w-11 h-11 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl flex items-center justify-center overflow-hidden shadow-lg shadow-emerald-900/30">
+                        <img src="assets/images/logo.png" alt="Logo" class="w-7 h-7 object-contain" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-leaf text-white text-lg\'></i>'">
                     </div>
-                    <h2 class="text-xl font-bold">Talaen Farm</h2>
+                    <div>
+                        <h2 class="text-lg font-bold text-white tracking-tight">Talaen Farm</h2>
+                        <p id="sidebarRole" class="text-slate-400 text-[11px] leading-tight"></p>
+                    </div>
                 </div>
-                <p id="sidebarRole" class="text-green-300 text-xs mt-2 ml-13"></p>
             </div>
-            <nav id="sidebarNav" class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+            <nav id="sidebarNav" class="flex-1 overflow-y-auto py-4 px-3 space-y-0.5">
                 <!-- Dynamic sidebar items -->
             </nav>
-            <div class="p-4 border-t border-white/10">
-                <button id="logoutBtn" class="w-full bg-red-500/20 hover:bg-red-500/30 text-red-200 py-3 rounded-xl transition-all text-sm font-medium flex items-center justify-center gap-2">
+            <div class="p-4 border-t border-slate-700/50">
+                <button id="logoutBtn" class="w-full bg-red-500/10 hover:bg-red-500/20 text-red-300 py-3 rounded-xl transition-all text-sm font-medium flex items-center justify-center gap-2 border border-red-500/20 hover:border-red-500/30">
                     <i class="fas fa-sign-out-alt"></i>Logout
                 </button>
             </div>
         </div>
         
         <!-- Mobile Sidebar Overlay -->
-        <div id="sidebarOverlay" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-20 lg:hidden"></div>
+        <div id="sidebarOverlay" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-20 lg:hidden"></div>
         
         <!-- Main Content -->
         <div class="flex-1 lg:ml-72">
             <!-- Mobile Navbar -->
-            <div id="mobileNavbar" class="lg:hidden bg-white/95 backdrop-blur-sm shadow-lg p-4 flex items-center justify-between sticky top-0 z-10">
-                <button id="hamburgerBtn" class="text-gray-600 hover:text-green-700 transition-colors w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gray-100">
+            <div id="mobileNavbar" class="lg:hidden bg-white/95 backdrop-blur-md shadow-sm p-4 flex items-center justify-between sticky top-0 z-10 border-b border-stone-200">
+                <button id="hamburgerBtn" class="text-slate-600 hover:text-emerald-700 transition-colors w-10 h-10 flex items-center justify-center rounded-xl hover:bg-stone-100">
                     <i class="fas fa-bars text-xl"></i>
                 </button>
-                <div class="flex items-center gap-2">
-                    <i class="fas fa-leaf text-green-700"></i>
-                    <h2 class="font-bold text-green-800">Talaen Farm</h2>
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-lg flex items-center justify-center overflow-hidden">
+                        <img src="assets/images/logo.png" alt="Logo" class="w-5 h-5 object-contain" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-leaf text-white text-sm\'></i>'">
+                    </div>
+                    <h2 class="font-bold text-slate-800">Talaen Farm</h2>
                 </div>
                 <div class="w-10"></div>
             </div>
@@ -233,7 +242,7 @@
 
     <!-- Generic Modal Container -->
     <div id="modalContainer" class="hidden fixed inset-0 z-40 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-        <div id="modalContent" class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto border border-gray-100">
+        <div id="modalContent" class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto border border-stone-200">
             <!-- Dynamic modal content -->
         </div>
     </div>
@@ -243,6 +252,7 @@
     <script src="js/api.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/router.js"></script>
+    <script src="js/background.js"></script>
     <script src="js/components/toast.js"></script>
     <script src="js/components/modal.js"></script>
     <script src="js/components/sidebar.js"></script>
