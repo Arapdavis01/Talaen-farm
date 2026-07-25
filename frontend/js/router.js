@@ -24,7 +24,13 @@ class Router {
             this.updateActiveSidebarLink(path);
         } else {
             console.error(`Route not found: ${path}`);
-            this.navigate('dashboard');
+            // Fallback to dashboard of current module
+            const module = this.getModule();
+            if (module === 'tea') {
+                this.navigate('tea-dashboard');
+            } else if (module === 'dairy') {
+                this.navigate('dairy-dashboard');
+            }
         }
     }
 
@@ -55,6 +61,12 @@ class Router {
     // Build routes for a module
     buildModuleRoutes(module) {
         this.setModule(module);
+        
+        // Clear existing routes
+        this.routes = {};
+        
+        // Register shared routes (available in both modules)
+        this.register('user-management', () => UserManagement.show());
         
         if (module === 'tea') {
             this.register('tea-dashboard', () => TeaDashboard.show());
@@ -88,6 +100,7 @@ class Router {
     goToModuleSelector() {
         const availableModules = JSON.parse(localStorage.getItem('available_modules') || '[]');
         this.setModule(null);
+        this.routes = {};
         ModuleSelector.show(availableModules);
     }
 }
