@@ -859,7 +859,65 @@ router.post('/plucking/verified', authorizeRoles('farm_owner', 'supervisor'), as
 
         if (error) throw error;
 
-        res.status(201).json({ success: true, plucking });
+        // ============================================
+        // AUTO-APPROVAL LOGIC
+        // ============================================
+        
+        // Check for matching self-reported data
+        const { data: selfData } = await supabase
+            .from('plucking_self')
+            .select('weight_kg, recorded_by')
+            .eq('worker_id', worker_id)
+            .eq('plucking_date', plucking_date)
+            .maybeSingle();
+
+        let approvalStatus = 'pending';
+        let approvedKg = null;
+        let isApproved = false;
+
+        // Scenario A: Admin recorded on behalf of worker (no self-record or self-recorded by worker)
+        // → Auto-approved as trusted figure
+        if (!selfData) {
+            approvalStatus = 'approved';
+            approvedKg = weight_kg;
+            isApproved = true;
+        } else if (selfData) {
+            // Scenario B: Figures match → Auto-approved
+            if (parseFloat(selfData.weight_kg) === parseFloat(weight_kg)) {
+                approvalStatus = 'approved';
+                approvedKg = weight_kg;
+                isApproved = true;
+            } 
+            // Scenario C: Figures don't match → Disputed, needs comparison
+            else {
+                approvalStatus = 'disputed';
+            }
+        }
+
+        // Update the record with approval status
+        const { data: updatedPlucking, error: updateError } = await supabase
+            .from('plucking_verified')
+            .update({ 
+                approval_status: approvalStatus, 
+                approved_kg: approvedKg, 
+                is_approved: isApproved 
+            })
+            .eq('id', plucking.id)
+            .select('*, tea_workers(full_name), companies(name), blocks(name), users!recorded_by(username, role)')
+            .single();
+
+        if (updateError) throw updateError;
+
+        res.status(201).json({ 
+            success: true, 
+            plucking: updatedPlucking,
+            approval: {
+                status: approvalStatus,
+                is_approved: isApproved,
+                approved_kg: approvedKg,
+                message: isApproved ? 'Auto-approved ✅' : 'Disputed ⚠️ - Comparison needed'
+            }
+        });
     } catch (error) {
         console.error('Record verified plucking error:', error);
         res.status(500).json({ success: false, message: 'Error recording verified plucking.' });
@@ -924,6 +982,37 @@ router.put('/plucking/verified/:id', authorizeRoles('farm_owner', 'supervisor'),
     }
 });
 
+// PUT /api/tea/plucking/verified/:id/approve - Resolve dispute
+router.put('/plucking/verified/:id/approve', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { approved_kg } = req.body;
+
+        if (!approved_kg || approved_kg <= 0) {
+            return res.status(400).json({ success: false, message: 'Valid approved kg is required.' });
+        }
+
+        const { data: record, error } = await supabase
+            .from('plucking_verified')
+            .update({ 
+                approved_kg: approved_kg, 
+                is_approved: true, 
+                approval_status: 'resolved' 
+            })
+            .eq('id', id)
+            .select('*, tea_workers(full_name), companies(name), blocks(name), users!recorded_by(username, role)')
+            .single();
+
+        if (error) throw error;
+        if (!record) return res.status(404).json({ success: false, message: 'Record not found.' });
+
+        res.json({ success: true, record, message: 'Dispute resolved and record approved.' });
+    } catch (error) {
+        console.error('Approve plucking error:', error);
+        res.status(500).json({ success: false, message: 'Error approving record.' });
+    }
+});
+
 // DELETE /api/tea/plucking/verified/:id
 router.delete('/plucking/verified/:id', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
     try {
@@ -977,8 +1066,26 @@ router.get('/plucking/verified/check/:workerId', authorizeRoles('farm_owner', 's
         res.status(500).json({ success: false, message: 'Error checking verification.' });
     }
 });
+
+// GET /api/tea/plucking/disputed - Get all disputed records for comparison
+router.get('/plucking/disputed', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
+    try {
+        const { data: records, error } = await supabase
+            .from('plucking_verified')
+            .select('*, tea_workers(full_name), companies(name), blocks(name), users!recorded_by(username, role)')
+            .eq('approval_status', 'disputed')
+            .order('plucking_date', { ascending: false });
+
+        if (error) throw error;
+
+        res.json({ success: true, records });
+    } catch (error) {
+        console.error('Fetch disputed records error:', error);
+        res.status(500).json({ success: false, message: 'Error fetching disputed records.' });
+    }
+});
 // ============================================
-// COMPARISON PANEL
+// COMPARISON PANEL (Enhanced with Approval)
 // GET /api/tea/comparison/:worker_id?date=YYYY-MM-DD
 // ============================================
 router.get('/comparison/:worker_id', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
@@ -993,8 +1100,9 @@ router.get('/comparison/:worker_id', authorizeRoles('farm_owner', 'supervisor'),
 
         let verifiedQuery = supabase
             .from('plucking_verified')
-            .select('*, companies(name), blocks(name)')
-            .eq('worker_id', worker_id);
+            .select('*, companies(name), blocks(name), users!recorded_by(username, role)')
+            .eq('worker_id', worker_id)
+            .eq('approval_status', 'disputed'); // Only show disputed records
 
         if (date) {
             selfQuery = selfQuery.eq('plucking_date', date);
@@ -1015,6 +1123,8 @@ router.get('/comparison/:worker_id', authorizeRoles('farm_owner', 'supervisor'),
         res.json({
             success: true,
             comparison: {
+                worker_id: worker_id,
+                date: date || 'all dates',
                 self_reported: {
                     records: selfResult.data,
                     total_kg: selfTotal
@@ -1023,7 +1133,11 @@ router.get('/comparison/:worker_id', authorizeRoles('farm_owner', 'supervisor'),
                     records: verifiedResult.data,
                     total_kg: verifiedTotal
                 },
-                discrepancy: verifiedTotal - selfTotal
+                discrepancy: verifiedTotal - selfTotal,
+                status: verifiedResult.data.length > 0 ? 'disputed' : 'no_disputes',
+                message: verifiedResult.data.length > 0 
+                    ? `${verifiedResult.data.length} disputed record(s) need review` 
+                    : 'No disputes found for this worker'
             }
         });
     } catch (error) {
@@ -1032,6 +1146,85 @@ router.get('/comparison/:worker_id', authorizeRoles('farm_owner', 'supervisor'),
     }
 });
 
+// GET /api/tea/comparison/disputes - All disputed records across all workers
+router.get('/comparison/disputes', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
+    try {
+        // Get all disputed verified records
+        const { data: disputedRecords, error } = await supabase
+            .from('plucking_verified')
+            .select('*, tea_workers(full_name), companies(name), blocks(name), users!recorded_by(username, role)')
+            .eq('approval_status', 'disputed')
+            .order('plucking_date', { ascending: false });
+
+        if (error) throw error;
+
+        // For each disputed record, get the self-reported data
+        const disputesWithSelfData = await Promise.all(disputedRecords.map(async (record) => {
+            const { data: selfData } = await supabase
+                .from('plucking_self')
+                .select('*, companies(name), blocks(name)')
+                .eq('worker_id', record.worker_id)
+                .eq('plucking_date', record.plucking_date)
+                .maybeSingle();
+
+            return {
+                verified: record,
+                self_reported: selfData || null,
+                discrepancy: selfData ? parseFloat(record.weight_kg) - parseFloat(selfData.weight_kg) : null
+            };
+        }));
+
+        res.json({
+            success: true,
+            disputes: disputesWithSelfData,
+            total_disputes: disputesWithSelfData.length,
+            message: disputesWithSelfData.length > 0 
+                ? `${disputesWithSelfData.length} dispute(s) need resolution` 
+                : 'All records are approved!'
+        });
+    } catch (error) {
+        console.error('Fetch disputes error:', error);
+        res.status(500).json({ success: false, message: 'Error fetching disputes.' });
+    }
+});
+
+// PUT /api/tea/comparison/resolve/:id - Resolve a dispute with final approved kg
+router.put('/comparison/resolve/:id', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { approved_kg, resolution_notes } = req.body;
+
+        if (!approved_kg || approved_kg <= 0) {
+            return res.status(400).json({ success: false, message: 'Valid approved kg is required.' });
+        }
+
+        const { data: record, error } = await supabase
+            .from('plucking_verified')
+            .update({ 
+                approved_kg: approved_kg, 
+                is_approved: true, 
+                approval_status: 'resolved',
+                notes: resolution_notes 
+                    ? `${record.notes || ''}\n[Resolution: ${resolution_notes}]` 
+                    : record.notes
+            })
+            .eq('id', id)
+            .select('*, tea_workers(full_name), companies(name), blocks(name), users!recorded_by(username, role)')
+            .single();
+
+        if (error) throw error;
+        if (!record) return res.status(404).json({ success: false, message: 'Record not found.' });
+
+        res.json({ 
+            success: true, 
+            record, 
+            message: `Dispute resolved. Approved: ${approved_kg} kg. Ready for payment.` 
+        });
+    } catch (error) {
+        console.error('Resolve dispute error:', error);
+        res.status(500).json({ success: false, message: 'Error resolving dispute.' });
+    }
+});
 // ============================================
 // DEBTS
 // ============================================
@@ -1182,17 +1375,45 @@ router.post('/pay-worker', authorizeRoles('farm_owner', 'supervisor'), async (re
             return res.status(400).json({ success: false, message: 'No active wage rate set.' });
         }
 
-        // Get unsettled verified plucking
-        const { data: unsettledPlucking } = await supabase
+        // Get approved AND unsettled verified plucking (only approved records)
+        const { data: approvedPlucking } = await supabase
             .from('plucking_verified')
             .select('*')
             .eq('worker_id', worker_id)
-            .eq('is_settled', false);
+            .eq('is_settled', false)
+            .eq('is_approved', true);
 
-        const totalKg = unsettledPlucking.reduce((sum, p) => sum + parseFloat(p.weight_kg), 0);
+        if (!approvedPlucking || approvedPlucking.length === 0) {
+            // Check if there are disputed records
+            const { data: disputedRecords } = await supabase
+                .from('plucking_verified')
+                .select('id')
+                .eq('worker_id', worker_id)
+                .eq('is_settled', false)
+                .eq('approval_status', 'disputed');
+
+            if (disputedRecords && disputedRecords.length > 0) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: `Cannot process payment. ${disputedRecords.length} disputed record(s) need resolution first. Go to Comparison to resolve.`,
+                    disputed_count: disputedRecords.length
+                });
+            }
+
+            return res.status(400).json({ 
+                success: false, 
+                message: 'No approved plucking records ready for payment.' 
+            });
+        }
+
+        // Calculate total kg using approved_kg (or weight_kg if approved_kg is null)
+        const totalKg = approvedPlucking.reduce((sum, p) => {
+            const kg = p.approved_kg || p.weight_kg;
+            return sum + parseFloat(kg);
+        }, 0);
 
         if (totalKg === 0) {
-            return res.status(400).json({ success: false, message: 'No unsettled plucking records.' });
+            return res.status(400).json({ success: false, message: 'No approved kg to process.' });
         }
 
         // Calculate gross pay
@@ -1228,14 +1449,15 @@ router.post('/pay-worker', authorizeRoles('farm_owner', 'supervisor'), async (re
 
         if (error) throw error;
 
-        // Mark plucking as settled
+        // Mark only approved plucking as settled
         await supabase
             .from('plucking_verified')
             .update({ is_settled: true, settlement_id: settlement.id })
             .eq('worker_id', worker_id)
-            .eq('is_settled', false);
+            .eq('is_settled', false)
+            .eq('is_approved', true);
 
-        // Mark debts as settled up to the net pay amount
+        // Mark debts as settled if net pay > 0
         if (netPay > 0) {
             await supabase
                 .from('debts')
@@ -1260,6 +1482,9 @@ router.post('/pay-worker', authorizeRoles('farm_owner', 'supervisor'), async (re
             .update({ total_debt: remainingDebt, updated_at: new Date() })
             .eq('id', worker_id);
 
+        // Count records settled
+        const recordsSettled = approvedPlucking.length;
+
         res.json({
             success: true,
             settlement: {
@@ -1267,8 +1492,9 @@ router.post('/pay-worker', authorizeRoles('farm_owner', 'supervisor'), async (re
                 total_debt: totalDebt,
                 net_pay: netPay > 0 ? netPay : 0,
                 kg_settled: totalKg,
+                records_settled: recordsSettled,
                 message: netPay > 0 
-                    ? `Worker paid KES ${netPay.toFixed(2)}` 
+                    ? `Worker paid KES ${netPay.toFixed(2)} for ${totalKg.toFixed(2)} kg (${recordsSettled} records)` 
                     : 'Gross pay fully offset by debts. No cash payment.'
             }
         });
