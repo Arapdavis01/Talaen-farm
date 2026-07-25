@@ -10,6 +10,7 @@ class Sidebar {
         this.isOpen = false;
         this.currentModule = null;
         this.activeRoute = null;
+        this.disputeCount = 0;
     }
 
     build(module) {
@@ -48,6 +49,34 @@ class Sidebar {
         const dashboardLink = this.nav.querySelector(`[data-route="${dashboardRoute}"]`);
         if (dashboardLink) {
             this.setActiveItem(dashboardLink);
+        }
+
+        // Load dispute count for badge
+        this.loadDisputeCount();
+    }
+
+    async loadDisputeCount() {
+        if (this.currentModule !== 'tea') return;
+        try {
+            const response = await api.getDisputedRecords();
+            if (response.success) {
+                this.disputeCount = response.total_disputes || 0;
+                this.updateDisputeBadge();
+            }
+        } catch (e) {
+            // Silently fail - badge is optional
+        }
+    }
+
+    updateDisputeBadge() {
+        const badge = this.nav.querySelector('#comparisonBadge');
+        if (badge) {
+            if (this.disputeCount > 0) {
+                badge.textContent = this.disputeCount > 99 ? '99+' : this.disputeCount;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
         }
     }
 
@@ -190,7 +219,7 @@ class Sidebar {
         // Financial section
         if (isAdmin) {
             items.push(
-                { route: 'tea-comparison', icon: 'fa-scale-balanced', label: 'Comparison' },
+                { route: 'tea-comparison', icon: 'fa-scale-balanced', label: 'Comparison', badge: true },
                 { route: 'tea-debts', icon: 'fa-credit-card', label: 'Store Debts' },
                 { route: 'tea-pay-worker', icon: 'fa-hand-holding-dollar', label: 'Pay Worker' },
                 { route: 'tea-pay-store', icon: 'fa-shop', label: 'Pay Store' }
@@ -287,11 +316,12 @@ class Sidebar {
     createNavItem(item, moduleAccent = 'emerald') {
         return `
             <a href="#" data-route="${item.route}" 
-                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:bg-white/5 transition-all cursor-pointer font-medium text-[13px] group mb-0.5">
+                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:bg-white/5 transition-all cursor-pointer font-medium text-[13px] group mb-0.5 relative">
                 <span class="w-8 h-8 bg-white/5 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-${moduleAccent}-500/15 transition-all">
                     <i class="fas ${item.icon} text-xs group-hover:text-${moduleAccent}-400 transition-colors"></i>
                 </span>
                 <span class="flex-1 group-hover:text-slate-200 transition-colors">${item.label}</span>
+                ${item.badge ? `<span id="comparisonBadge" class="hidden absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 bg-amber-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">0</span>` : ''}
                 <span class="opacity-0 group-hover:opacity-100 transition-opacity">
                     <i class="fas fa-chevron-right text-[9px] text-slate-600"></i>
                 </span>
@@ -320,39 +350,27 @@ class Sidebar {
     }
 
     toggle() {
-        if (this.isOpen) {
-            this.close();
-        } else {
-            this.open();
-        }
+        if (this.isOpen) { this.close(); } else { this.open(); }
     }
 
     open() {
         this.sidebar.classList.add('sidebar-open');
         this.overlay.classList.remove('hidden');
         this.isOpen = true;
-        
-        if (typeof navbar !== 'undefined' && navbar.updateHamburgerIcon) {
-            navbar.updateHamburgerIcon(true);
-        }
+        if (typeof navbar !== 'undefined' && navbar.updateHamburgerIcon) { navbar.updateHamburgerIcon(true); }
     }
 
     close() {
         this.sidebar.classList.remove('sidebar-open');
         this.overlay.classList.add('hidden');
         this.isOpen = false;
-        
-        if (typeof navbar !== 'undefined' && navbar.updateHamburgerIcon) {
-            navbar.updateHamburgerIcon(false);
-        }
+        if (typeof navbar !== 'undefined' && navbar.updateHamburgerIcon) { navbar.updateHamburgerIcon(false); }
     }
 
     refresh() {
         if (this.currentModule) {
             this.build(this.currentModule);
-            if (this.activeRoute) {
-                this.setActiveRoute(this.activeRoute);
-            }
+            if (this.activeRoute) { this.setActiveRoute(this.activeRoute); }
         }
     }
 }
