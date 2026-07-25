@@ -24,7 +24,7 @@ class TeaPluckingSelf {
                     ${!isWorker ? `
                         <button onclick="TeaPluckingSelf.exportCSV()" 
                             class="bg-white border border-stone-200 text-slate-600 px-4 py-2.5 rounded-xl hover:bg-stone-50 transition-all flex items-center gap-2 text-sm font-medium shadow-sm">
-                            <i class="fas fa-download"></i> Export
+                            <i class="fas fa-download"></i> Export All
                         </button>
                     ` : ''}
                     <button onclick="TeaPluckingSelf.showAddForm()" 
@@ -108,8 +108,8 @@ class TeaPluckingSelf {
                 const today = new Date().toISOString().split('T')[0];
                 const todayRecords = records.filter(r => r.plucking_date === today);
                 const todayKg = todayRecords.reduce((sum, r) => sum + parseFloat(r.weight_kg), 0);
+                const totalKg = records.reduce((sum, r) => sum + parseFloat(r.weight_kg), 0);
 
-                // Get all workers and count those who recorded today
                 let recordedCount = 0;
                 let notRecordedCount = 0;
                 
@@ -127,8 +127,8 @@ class TeaPluckingSelf {
                         <p class="text-2xl font-bold text-slate-800">${records.length}</p>
                     </div>
                     <div class="stat-card bg-white rounded-2xl border border-stone-200 p-4 shadow-sm">
-                        <p class="text-xs font-medium text-stone-500 uppercase tracking-wider mb-2">Today's Kg</p>
-                        <p class="text-2xl font-bold text-emerald-700">${todayKg.toFixed(2)}</p>
+                        <p class="text-xs font-medium text-stone-500 uppercase tracking-wider mb-2">Total Kg</p>
+                        <p class="text-2xl font-bold text-emerald-700">${totalKg.toFixed(2)}</p>
                     </div>
                     ${!isWorker ? `
                         <div class="stat-card bg-white rounded-2xl border border-emerald-200 p-4 shadow-sm bg-emerald-50/30">
@@ -145,8 +145,8 @@ class TeaPluckingSelf {
                             <p class="text-2xl font-bold text-sky-700">${todayRecords.length}</p>
                         </div>
                         <div class="stat-card bg-white rounded-2xl border border-stone-200 p-4 shadow-sm">
-                            <p class="text-xs font-medium text-stone-500 uppercase tracking-wider mb-2">This Month</p>
-                            <p class="text-2xl font-bold text-purple-700">${records.length}</p>
+                            <p class="text-xs font-medium text-stone-500 uppercase tracking-wider mb-2">Today's Kg</p>
+                            <p class="text-2xl font-bold text-emerald-700">${todayKg.toFixed(2)}</p>
                         </div>
                     `}
                 `;
@@ -188,6 +188,24 @@ class TeaPluckingSelf {
         }
     }
 
+    static getRecordedByBadge(record) {
+        if (!record.users) return '<span class="text-stone-400 text-xs">—</span>';
+        
+        const username = record.users.username || 'Unknown';
+        const role = record.users.role;
+        
+        if (role === 'farm_owner' || role === 'supervisor') {
+            return `<span class="badge bg-indigo-50 text-indigo-700 border border-indigo-200" title="Recorded by admin">
+                <i class="fas fa-user-shield text-[9px] mr-1"></i>${username}
+            </span>`;
+        } else if (role === 'tea_worker') {
+            return `<span class="badge bg-emerald-50 text-emerald-700 border border-emerald-200" title="Self-recorded">
+                <i class="fas fa-user text-[9px] mr-1"></i>${username} (Self)
+            </span>`;
+        }
+        return `<span class="badge bg-stone-50 text-stone-600 border border-stone-200">${username}</span>`;
+    }
+
     static renderRecords(records) {
         if (records.length === 0) {
             document.getElementById('pluckingRecords').innerHTML = `
@@ -225,9 +243,12 @@ class TeaPluckingSelf {
                     <span class="font-semibold text-emerald-700">${parseFloat(record.weight_kg).toFixed(2)} <span class="text-xs font-normal text-stone-400">kg</span></span>
                 </td>
                 <td class="px-4 py-3" data-label="Grade">
-                    ${record.field_grade ? `<span class="badge bg-purple-50 text-purple-700 border border-purple-200">${record.field_grade}</span>` : '<span class="text-stone-400">—</span>'}
+                    ${record.field_grade ? `<span class="badge bg-purple-50 text-purple-700 border border-purple-200">${record.field_grade}</span>` : '<span class="text-stone-400 text-xs">—</span>'}
                 </td>
                 ${isAdmin ? `
+                    <td class="px-4 py-3" data-label="Recorded By">
+                        ${TeaPluckingSelf.getRecordedByBadge(record)}
+                    </td>
                     <td class="px-4 py-3" data-label="Actions" onclick="event.stopPropagation()">
                         <div class="flex gap-1">
                             <button onclick="TeaPluckingSelf.showEditForm('${record.id}')" class="w-7 h-7 flex items-center justify-center rounded-lg text-stone-400 hover:text-emerald-600 hover:bg-emerald-50" title="Edit">
@@ -255,6 +276,7 @@ class TeaPluckingSelf {
                                 <th class="px-4 py-3">Block</th>
                                 <th class="px-4 py-3">Weight</th>
                                 <th class="px-4 py-3">Grade</th>
+                                ${isAdmin ? '<th class="px-4 py-3">Recorded By</th>' : ''}
                                 ${isAdmin ? '<th class="px-4 py-3">Actions</th>' : ''}
                             </tr>
                         </thead>
@@ -315,14 +337,16 @@ class TeaPluckingSelf {
     }
 
     static exportCSV() {
-        const headers = ['Date', 'Worker', 'Company', 'Block', 'Weight (kg)', 'Grade'];
+        const headers = ['Date', 'Worker', 'Company', 'Block', 'Weight (kg)', 'Grade', 'Recorded By', 'Recorded By Role'];
         const rows = TeaPluckingSelf.allRecords.map(r => [
             r.plucking_date,
             r.tea_workers?.full_name || '',
             r.companies?.name || '',
             r.blocks?.name || '',
             r.weight_kg,
-            r.field_grade || ''
+            r.field_grade || '',
+            r.users?.username || 'Unknown',
+            r.users?.role || 'Unknown'
         ]);
         let csv = headers.join(',') + '\n';
         rows.forEach(row => { csv += row.map(v => `"${v}"`).join(',') + '\n'; });
@@ -331,10 +355,10 @@ class TeaPluckingSelf {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'self_plucking.csv';
+        a.download = `self_plucking_${new Date().toISOString().split('T')[0]}.csv`;
         a.click();
         URL.revokeObjectURL(url);
-        showToast('Records exported!', 'success');
+        showToast(`${TeaPluckingSelf.allRecords.length} records exported!`, 'success');
     }
 
     static async showAddForm() {
@@ -400,7 +424,7 @@ class TeaPluckingSelf {
                         placeholder="Enter weight in kg">
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-1.5">Field/Grade</label>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1.5">Field/Grade <span class="text-stone-400 font-normal">(optional)</span></label>
                     <input type="text" id="pluckingGrade" 
                         class="w-full px-3.5 py-2.5 border-2 border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
                         placeholder="e.g., Grade A">
@@ -419,7 +443,6 @@ class TeaPluckingSelf {
                     return;
                 }
 
-                // Check for duplicate
                 const existing = TeaPluckingSelf.allRecords.find(r => 
                     r.worker_id === workerId && r.plucking_date === pluckingDate
                 );
@@ -434,15 +457,19 @@ class TeaPluckingSelf {
                     company_id: document.getElementById('pluckingCompany').value,
                     block_id: document.getElementById('pluckingBlock').value,
                     weight_kg: parseFloat(document.getElementById('pluckingWeight').value),
-                    field_grade: document.getElementById('pluckingGrade').value,
-                    notes: document.getElementById('pluckingNotes').value
+                    field_grade: document.getElementById('pluckingGrade').value || null,
+                    notes: document.getElementById('pluckingNotes').value || null
                 };
 
                 try {
                     const response = await api.recordSelfPlucking(pluckingData);
                     if (response.success) {
                         modal.close();
-                        showToast('Plucking recorded successfully!', 'success');
+                        if (response.duplicate_warning) {
+                            showToast(response.duplicate_warning, 'warning');
+                        } else {
+                            showToast('Plucking recorded successfully!', 'success');
+                        }
                         await TeaPluckingSelf.loadRecords();
                         await TeaPluckingSelf.loadStats();
                     }
@@ -590,12 +617,12 @@ class TeaPluckingSelf {
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-1.5">Weight (kg)</label>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1.5">Weight (kg) *</label>
                     <input type="number" id="editPluckingWeight" value="${record.weight_kg}" step="0.01" required 
                         class="w-full px-3.5 py-2.5 border-2 border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none">
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-1.5">Grade</label>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1.5">Grade <span class="text-stone-400 font-normal">(optional)</span></label>
                     <input type="text" id="editPluckingGrade" value="${record.field_grade || ''}" 
                         class="w-full px-3.5 py-2.5 border-2 border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none">
                 </div>
@@ -605,21 +632,41 @@ class TeaPluckingSelf {
                         class="w-full px-3.5 py-2.5 border-2 border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none">${record.notes || ''}</textarea>
                 </div>
             `, async () => {
-                // For now, we'll use the same endpoint by recording new and noting the edit
-                // In production, you'd want a PUT endpoint for self plucking
-                showToast('Edit functionality requires backend update. Record a new entry instead.', 'warning');
-                modal.close();
-            }, { submitText: 'Update', icon: 'fa-edit', size: 'max-w-xl' });
+                const updateData = {
+                    plucking_date: document.getElementById('editPluckingDate').value,
+                    company_id: document.getElementById('editPluckingCompany').value,
+                    block_id: document.getElementById('editPluckingBlock').value,
+                    weight_kg: parseFloat(document.getElementById('editPluckingWeight').value),
+                    field_grade: document.getElementById('editPluckingGrade').value || null,
+                    notes: document.getElementById('editPluckingNotes').value || null
+                };
+
+                try {
+                    const response = await api.updateSelfPlucking(recordId, updateData);
+                    if (response.success) {
+                        modal.close();
+                        showToast('Record updated successfully!', 'success');
+                        await TeaPluckingSelf.loadRecords();
+                        await TeaPluckingSelf.loadStats();
+                    }
+                } catch (error) {
+                    showToast(error.message, 'error');
+                }
+            }, { submitText: 'Update Record', submitIcon: 'fa-save', icon: 'fa-edit', size: 'max-w-xl' });
         } catch (error) {
             showToast('Error loading form.', 'error');
         }
     }
 
     static async deleteRecord(recordId) {
-        modal.openConfirm('Delete Record', 'Are you sure you want to delete this plucking record?', async () => {
+        modal.openConfirm('Delete Record', 'Are you sure you want to delete this plucking record? This action cannot be undone.', async () => {
             try {
-                // Note: Backend needs a DELETE endpoint for self plucking
-                showToast('Delete functionality requires backend update.', 'warning');
+                const response = await api.deleteSelfPlucking(recordId);
+                if (response.success) {
+                    showToast('Record deleted successfully!', 'success');
+                    await TeaPluckingSelf.loadRecords();
+                    await TeaPluckingSelf.loadStats();
+                }
             } catch (error) {
                 showToast(error.message, 'error');
             }
