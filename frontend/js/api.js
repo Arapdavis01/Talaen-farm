@@ -61,55 +61,44 @@ class ApiService {
     async put(endpoint, body) { return this.request(endpoint, 'PUT', body); }
     async delete(endpoint) { return this.request(endpoint, 'DELETE'); }
 
-    // ============================================
-    // AUTH ENDPOINTS
-    // ============================================
+    // ============ AUTH ============
     async login(username, password) { return this.post('/auth/login', { username, password }); }
     async register(userData) { return this.post('/auth/register', userData); }
     async getProfile() { return this.get('/auth/me'); }
     async changePassword(cp, np) { return this.post('/auth/change-password', { current_password: cp, new_password: np }); }
     async getUsers() { return this.get('/auth/users'); }
 
-    // ============================================
-    // USER MANAGEMENT ENDPOINTS
-    // ============================================
+    // ============ USER MANAGEMENT ============
     async updateUser(userId, userData) { return this.put(`/auth/users/${userId}`, userData); }
     async resetUserPassword(userId, newPassword) { return this.post(`/auth/reset-password/${userId}`, { password: newPassword }); }
 
-    // ============================================
-    // TEA MODULE ENDPOINTS
-    // ============================================
-    
-    // Workers
+    // ============ TEA MODULE ============
     async getTeaWorkers(params = {}) { const q = new URLSearchParams(params).toString(); return this.get(`/tea/workers${q ? '?' + q : ''}`); }
     async getTeaWorkerStats(workerId) { return this.get(`/tea/workers/${workerId}/stats`); }
     async createTeaWorker(workerData) { return this.post('/tea/workers', workerData); }
     async updateTeaWorker(id, workerData) { return this.put(`/tea/workers/${id}`, workerData); }
 
-    // Companies
     async getCompanies() { return this.get('/tea/companies'); }
     async getCompanyStats(companyId) { return this.get(`/tea/companies/${companyId}/stats`); }
     async createCompany(companyData) { return this.post('/tea/companies', companyData); }
     async updateCompany(id, companyData) { return this.put(`/tea/companies/${id}`, companyData); }
 
-    // Blocks
     async getBlocks() { return this.get('/tea/blocks'); }
     async createBlock(blockData) { return this.post('/tea/blocks', blockData); }
 
-    // Wage Rate
     async getWageRate() { return this.get('/tea/wage-rate'); }
     async getWageRateHistory() { return this.get('/tea/wage-rate/history'); }
     async setWageRate(wageData) { return this.post('/tea/wage-rate', wageData); }
     async getWageRateImpact(proposedRate) { return this.get(`/tea/wage-rate/impact?proposed_rate=${proposedRate}`); }
 
-    // Plucking Self
+    // Self Plucking
     async recordSelfPlucking(pluckingData) { return this.post('/tea/plucking/self', pluckingData); }
     async getSelfPlucking(workerId = null) { const ep = workerId ? `/tea/plucking/self/${workerId}` : '/tea/plucking/self'; return this.get(ep); }
     async updateSelfPlucking(id, pluckingData) { return this.put(`/tea/plucking/self/${id}`, pluckingData); }
     async deleteSelfPlucking(id) { return this.delete(`/tea/plucking/self/${id}`); }
     async checkWorkerPlucking(workerId, date = null) { const ep = `/tea/plucking/check/${workerId}${date ? '?date=' + date : ''}`; return this.get(ep); }
 
-    // Plucking Verified
+    // Verified Plucking
     async recordVerifiedPlucking(pluckingData) { return this.post('/tea/plucking/verified', pluckingData); }
     async getVerifiedPlucking(workerId = null) { const ep = workerId ? `/tea/plucking/verified/${workerId}` : '/tea/plucking/verified'; return this.get(ep); }
     async updateVerifiedPlucking(id, pluckingData) { return this.put(`/tea/plucking/verified/${id}`, pluckingData); }
@@ -119,6 +108,7 @@ class ApiService {
     // Approval & Disputes
     async approveVerifiedPlucking(id, approvedKg) { return this.put(`/tea/plucking/verified/${id}/approve`, { approved_kg: approvedKg }); }
     async getDisputedRecords() { return this.get('/tea/comparison/disputes'); }
+    async getResolvedDisputes() { return this.get('/tea/comparison/resolved'); }
     async resolveDispute(id, approvedKg, notes) { return this.put(`/tea/comparison/resolve/${id}`, { approved_kg: approvedKg, resolution_notes: notes }); }
 
     // Comparison
@@ -137,52 +127,30 @@ class ApiService {
     async getTeaDashboard() { return this.get('/tea/dashboard'); }
     async getProfitReport() { return this.get('/tea/reports/profit'); }
 
-    // ============================================
-    // DAIRY MODULE ENDPOINTS (As-Is, No Changes)
-    // ============================================
-
-    // Cows
+    // ============ DAIRY MODULE ============
     async getCows() { return this.get('/dairy/cows'); }
     async createCow(cowData) { return this.post('/dairy/cows', cowData); }
     async updateCow(id, cowData) { return this.put(`/dairy/cows/${id}`, cowData); }
     async deleteCow(id) { return this.delete(`/dairy/cows/${id}`); }
-
-    // Dairy Workers
     async getDairyWorkers() { return this.get('/dairy/workers'); }
     async createDairyWorker(workerData) { return this.post('/dairy/workers', workerData); }
     async updateDairyWorker(id, workerData) { return this.put(`/dairy/workers/${id}`, workerData); }
-
-    // Milk Buyers
     async getMilkBuyers() { return this.get('/dairy/buyers'); }
     async createMilkBuyer(buyerData) { return this.post('/dairy/buyers', buyerData); }
     async updateMilkBuyer(id, buyerData) { return this.put(`/dairy/buyers/${id}`, buyerData); }
-
-    // Milk Production
     async recordMilkProduction(productionData) { return this.post('/dairy/production', productionData); }
     async getMilkProduction(params = {}) { const q = new URLSearchParams(params).toString(); return this.get(`/dairy/production?${q}`); }
-
-    // Milk Disposal
     async recordMilkDisposal(disposalData) { return this.post('/dairy/disposal', disposalData); }
     async getMilkDisposal(params = {}) { const q = new URLSearchParams(params).toString(); return this.get(`/dairy/disposal?${q}`); }
-
-    // Feed
     async recordFeed(feedData) { return this.post('/dairy/feed', feedData); }
     async getFeed(params = {}) { const q = new URLSearchParams(params).toString(); return this.get(`/dairy/feed?${q}`); }
-
-    // Dairy Payments
     async payDairyWorker(paymentData) { return this.post('/dairy/pay-worker', paymentData); }
     async getDairyPayments(workerId = null) { const ep = workerId ? `/dairy/payments/${workerId}` : '/dairy/payments'; return this.get(ep); }
-
-    // Buyer Deliveries
     async createDelivery(deliveryData) { return this.post('/dairy/deliveries', deliveryData); }
     async getDeliveries() { return this.get('/dairy/deliveries'); }
     async confirmDelivery(id, litresConfirmed) { return this.put(`/dairy/deliveries/${id}/confirm`, { litres_confirmed: litresConfirmed }); }
-
-    // Buyer Payments
     async recordBuyerPayment(paymentData) { return this.post('/dairy/buyer-payments', paymentData); }
     async getBuyerPayments() { return this.get('/dairy/buyer-payments'); }
-
-    // Dairy Dashboard & Reports
     async getDairyDashboard() { return this.get('/dairy/dashboard'); }
     async getDairyReport(params = {}) { const q = new URLSearchParams(params).toString(); return this.get(`/dairy/reports/summary?${q}`); }
 }
