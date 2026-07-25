@@ -8,11 +8,158 @@ const router = express.Router();
 router.use(authenticateToken);
 
 // ============================================
-// TEA WORKERS CRUD
+// TEA WORKERS CRUD (Enhanced)
 // ============================================
 
 // GET /api/tea/workers
+// Query params: search, status, type, sort
 router.get('/workers', authorizeRoles('farm_owner', 'supervisor', 'store_manager'), async (req, res) => {
+    try {
+        const { search, status, type, sort } = req.query;
+
+        let query = supabase
+            .from('tea_workers')
+            .select('*, users(username)')
+            .order('full_name');
+
+        // Search by name, phone, or id_number
+        if (search) {
+            query = query.or(`full_name.ilike.%${search}%,phone.ilike.%${search}%,id_number.ilike.%${search}%`);
+        }
+
+        // Filter by active status
+        if (status === 'active') {
+            query = query.eq('is_active', true);
+        } else if (status === 'inactive') {
+            query = query.eq('is_active', false);
+        }
+
+        // Filter by worker type
+        if (type && ['permanent', 'casual', 'seasonal'].includes(type)) {
+            query = query.eq('worker_type', type);
+        }
+
+        // Sort options
+        if (sort === 'name') {
+            query = supabase.from('tea_workers').select('*, users(username)').order('full_name');
+        } else if (sort === 'date_joined') {
+            query = supabase.from('tea_workers').select('*, users(username)').order('date_joined', { ascending: false });
+        } else if (sort === 'newest') {
+            query = supabase.from('tea_workers').select('*, users(username)').order('created_at', { ascending: false });
+        }
+
+        const { data: workers, error } = await query;
+
+        if (error) throw error;
+
+        // Get stats for each worker
+        const workersWithStats = await Promise.all(workers.map(async (worker) => {
+            // Total kg plucked (verified)
+            const { data: plucking } = await supabase
+                .from('plucking_verified')
+                .select('weight_kg')
+                .eq('worker_id', worker.id);
+            const totalKg = plucking.reduce((sum, p) => sum + parseFloat(p.weight_kg), 0);
+
+            // Current debt
+            const { data: debts } = await supabase
+                .from('debts')
+                .select('amount')
+                .eq('worker_id', worker.id)
+                .eq('is_settled', false)
+                .eq('is_reversed', false);
+            const currentDebt = debts.reduce((sum, d) => sum + parseFloat(d.amount), 0);
+
+            return {
+                ...worker,
+                total_kg: totalKg,
+                current_debt: currentDebt
+            };
+        }));
+
+        res.json({ success: true, workers: workersWithStats });
+    } catch (error) {
+        console.error('Fetch workers error:', error);
+        res.status(500).json({ success: false, message: 'Error fetching workers.' });
+    }
+});
+
+// GET /api/tea/workers/:id/stats
+// Worker summary stats
+router.get('/workers/:id/stats', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Total kg plucked (verified)
+        const { data: plucking } = await supabase
+            .from('plucking_verified')
+            .select('weight_kg')
+            .eq('worker_id', id);
+        const totalKg = plucking.reduce((sum, p) => sum + parseFloat(p.weight_kg), 0);
+
+        // Total kg this month
+        const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+        const { data: monthPlucking } = await supabase
+            .from('plucking_verified')
+            .select('weight_kg')
+            .eq('worker_id', id)
+            .gte('plucking_date', monthStart);
+        const monthlyKg = monthPlucking.reduce((sum, p) => sum + parseFloat(p.weight_kg), 0);
+
+        // Current debt
+        const { data: debts } = await supabase
+            .from('debts')
+            .select('amount')
+            .eq('worker_id', id)
+            .eq('is_settled', false)
+            .eq('is_reversed', false);
+        const currentDebt = debts.reduce((sum, d) => sum + parseFloat(d.amount), 0);
+
+        // Last payment
+        const { data: lastPayment } = await supabase
+            .from('settlements')
+            .select('*')
+            .eq('worker_id', id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+
+        // Recent plucking (last 10)
+        const { data: recentPlucking } = await supabase
+            .from('plucking_verified')
+            .select('*, companies(name), blocks(name)')
+            .eq('worker_id', id)
+            .order('plucking_date', { ascending: false })
+            .limit(10);
+
+        // Recent debts (last 10)
+        const { data: recentDebts } = await supabase
+            .from('debts')
+            .select('*')
+            .eq('worker_id', id)
+            .order('debt_date', { ascending: false })
+            .limit(10);
+
+        res.json({
+            success: true,
+            stats: {
+                total_kg: totalKg,
+                monthly_kg: monthlyKg,
+                current_debt: currentDebt,
+                last_payment: lastPayment || null,
+                recent_plucking: recentPlucking || [],
+                recent_debts: recentDebts || []
+            }
+        });
+    } catch (error) {
+        console.error('Worker stats error:', error);
+        res.status(500).json({ success: false, message: 'Error fetching worker stats.' });
+    }
+});
+
+// GET /api/tea/workers/export/csv
+// Export workers as CSV
+router.get('/workers/export/csv', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
     try {
         const { data: workers, error } = await supabase
             .from('tea_workers')
@@ -21,17 +168,47 @@ router.get('/workers', authorizeRoles('farm_owner', 'supervisor', 'store_manager
 
         if (error) throw error;
 
-        res.json({ success: true, workers });
+        // Build CSV
+        const headers = ['Name', 'Phone', 'ID Number', 'Gender', 'Date of Birth', 'Worker Type', 'Date Joined', 'Status', 'Has Login', 'Total Debt'];
+        const rows = workers.map(w => [
+            w.full_name,
+            w.phone || '',
+            w.id_number || '',
+            w.gender || '',
+            w.date_of_birth || '',
+            w.worker_type || '',
+            w.date_joined || '',
+            w.is_active ? 'Active' : 'Inactive',
+            w.users ? 'Yes' : 'No',
+            w.total_debt || 0
+        ]);
+
+        let csv = headers.join(',') + '\n';
+        rows.forEach(row => {
+            csv += row.map(val => `"${val}"`).join(',') + '\n';
+        });
+
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', 'attachment; filename=tea_workers.csv');
+        res.send(csv);
     } catch (error) {
-        console.error('Fetch workers error:', error);
-        res.status(500).json({ success: false, message: 'Error fetching workers.' });
+        console.error('Export workers error:', error);
+        res.status(500).json({ success: false, message: 'Error exporting workers.' });
     }
 });
 
 // POST /api/tea/workers
 router.post('/workers', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
     try {
-        const { full_name, phone, username, password } = req.body;
+        const { 
+            full_name, phone, id_number, gender, date_of_birth, 
+            worker_type, date_joined, username, password 
+        } = req.body;
+
+        // Validate required
+        if (!full_name) {
+            return res.status(400).json({ success: false, message: 'Full name is required.' });
+        }
 
         // Create user account first if credentials provided
         let user_id = null;
@@ -52,17 +229,24 @@ router.post('/workers', authorizeRoles('farm_owner', 'supervisor'), async (req, 
                 .select()
                 .single();
 
-            if (userError) throw userError;
+            if (userError) {
+                return res.status(400).json({ success: false, message: 'Username already exists.' });
+            }
             user_id = newUser.id;
         }
 
-        // Create tea worker
+        // Create tea worker with all fields
         const { data: worker, error } = await supabase
             .from('tea_workers')
             .insert({
                 user_id,
                 full_name,
-                phone
+                phone,
+                id_number,
+                gender,
+                date_of_birth,
+                worker_type: worker_type || 'permanent',
+                date_joined: date_joined || new Date().toISOString().split('T')[0]
             })
             .select()
             .single();
@@ -80,16 +264,34 @@ router.post('/workers', authorizeRoles('farm_owner', 'supervisor'), async (req, 
 router.put('/workers/:id', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
     try {
         const { id } = req.params;
-        const { full_name, phone, is_active } = req.body;
+        const { 
+            full_name, phone, id_number, gender, date_of_birth, 
+            worker_type, date_joined, is_active 
+        } = req.body;
+
+        // Build update object with only provided fields
+        const updateData = { updated_at: new Date() };
+        if (full_name !== undefined) updateData.full_name = full_name;
+        if (phone !== undefined) updateData.phone = phone;
+        if (id_number !== undefined) updateData.id_number = id_number;
+        if (gender !== undefined) updateData.gender = gender;
+        if (date_of_birth !== undefined) updateData.date_of_birth = date_of_birth;
+        if (worker_type !== undefined) updateData.worker_type = worker_type;
+        if (date_joined !== undefined) updateData.date_joined = date_joined;
+        if (is_active !== undefined) updateData.is_active = is_active;
 
         const { data: worker, error } = await supabase
             .from('tea_workers')
-            .update({ full_name, phone, is_active, updated_at: new Date() })
+            .update(updateData)
             .eq('id', id)
             .select()
             .single();
 
         if (error) throw error;
+
+        if (!worker) {
+            return res.status(404).json({ success: false, message: 'Worker not found.' });
+        }
 
         res.json({ success: true, worker });
     } catch (error) {
@@ -97,7 +299,6 @@ router.put('/workers/:id', authorizeRoles('farm_owner', 'supervisor'), async (re
         res.status(500).json({ success: false, message: 'Error updating worker.' });
     }
 });
-
 // ============================================
 // COMPANIES CRUD
 // ============================================
