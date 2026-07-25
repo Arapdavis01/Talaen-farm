@@ -622,7 +622,7 @@ router.get('/wage-rate/impact', authorizeRoles('farm_owner', 'supervisor'), asyn
     }
 });
 // ============================================
-// PLUCKING - SELF (Worker Records)
+// PLUCKING - SELF (Worker Records) Enhanced
 // ============================================
 
 // POST /api/tea/plucking/self
@@ -635,6 +635,28 @@ router.post('/plucking/self', authorizeRoles('farm_owner', 'supervisor', 'tea_wo
             worker_id = req.user.linked_worker_id;
         }
 
+        // Validate required fields
+        if (!worker_id || !company_id || !block_id || !plucking_date || weight_kg === undefined) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'All required fields must be provided: worker, company, block, date, weight.' 
+            });
+        }
+
+        if (weight_kg <= 0) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Weight must be greater than 0.' 
+            });
+        }
+
+        // Check if worker already has a record for this date (warning, not blocking)
+        const { data: existingRecords } = await supabase
+            .from('plucking_self')
+            .select('id, weight_kg, companies(name), blocks(name)')
+            .eq('worker_id', worker_id)
+            .eq('plucking_date', plucking_date);
+
         const { data: plucking, error } = await supabase
             .from('plucking_self')
             .insert({
@@ -646,12 +668,17 @@ router.post('/plucking/self', authorizeRoles('farm_owner', 'supervisor', 'tea_wo
                 field_grade,
                 notes
             })
-            .select()
+            .select('*, tea_workers(full_name), companies(name), blocks(name)')
             .single();
 
         if (error) throw error;
 
-        res.status(201).json({ success: true, plucking });
+        res.status(201).json({ 
+            success: true, 
+            plucking,
+            duplicate_warning: existingRecords.length > 0 ? 
+                `Worker already has ${existingRecords.length} record(s) for this date.` : null
+        });
     } catch (error) {
         console.error('Record self plucking error:', error);
         res.status(500).json({ success: false, message: 'Error recording plucking.' });
@@ -671,7 +698,8 @@ router.get('/plucking/self/:worker_id?', authorizeRoles('farm_owner', 'superviso
         let query = supabase
             .from('plucking_self')
             .select('*, tea_workers(full_name), companies(name), blocks(name)')
-            .order('plucking_date', { ascending: false });
+            .order('plucking_date', { ascending: false })
+            .order('created_at', { ascending: false });
 
         if (worker_id) {
             query = query.eq('worker_id', worker_id);
@@ -685,6 +713,94 @@ router.get('/plucking/self/:worker_id?', authorizeRoles('farm_owner', 'superviso
     } catch (error) {
         console.error('Fetch self plucking error:', error);
         res.status(500).json({ success: false, message: 'Error fetching plucking records.' });
+    }
+});
+
+// PUT /api/tea/plucking/self/:id
+router.put('/plucking/self/:id', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { plucking_date, company_id, block_id, weight_kg, field_grade, notes } = req.body;
+
+        const updateData = {};
+        if (plucking_date) updateData.plucking_date = plucking_date;
+        if (company_id) updateData.company_id = company_id;
+        if (block_id) updateData.block_id = block_id;
+        if (weight_kg !== undefined) updateData.weight_kg = weight_kg;
+        if (field_grade !== undefined) updateData.field_grade = field_grade;
+        if (notes !== undefined) updateData.notes = notes;
+
+        const { data: record, error } = await supabase
+            .from('plucking_self')
+            .update(updateData)
+            .eq('id', id)
+            .select('*, tea_workers(full_name), companies(name), blocks(name)')
+            .single();
+
+        if (error) throw error;
+        if (!record) {
+            return res.status(404).json({ success: false, message: 'Record not found.' });
+        }
+
+        res.json({ success: true, record, message: 'Record updated successfully.' });
+    } catch (error) {
+        console.error('Update self plucking error:', error);
+        res.status(500).json({ success: false, message: 'Error updating record.' });
+    }
+});
+
+// DELETE /api/tea/plucking/self/:id
+router.delete('/plucking/self/:id', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Check record exists
+        const { data: existing } = await supabase
+            .from('plucking_self')
+            .select('id')
+            .eq('id', id)
+            .single();
+
+        if (!existing) {
+            return res.status(404).json({ success: false, message: 'Record not found.' });
+        }
+
+        const { error } = await supabase
+            .from('plucking_self')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+
+        res.json({ success: true, message: 'Record deleted successfully.' });
+    } catch (error) {
+        console.error('Delete self plucking error:', error);
+        res.status(500).json({ success: false, message: 'Error deleting record.' });
+    }
+});
+
+// GET /api/tea/plucking/check/:workerId?date=YYYY-MM-DD
+router.get('/plucking/check/:workerId', authorizeRoles('farm_owner', 'supervisor', 'tea_worker'), async (req, res) => {
+    try {
+        const { workerId } = req.params;
+        const { date } = req.query;
+        const checkDate = date || new Date().toISOString().split('T')[0];
+
+        const { data: existing } = await supabase
+            .from('plucking_self')
+            .select('*, companies(name), blocks(name)')
+            .eq('worker_id', workerId)
+            .eq('plucking_date', checkDate);
+
+        res.json({ 
+            success: true, 
+            has_recorded: existing.length > 0, 
+            record_count: existing.length,
+            records: existing 
+        });
+    } catch (error) {
+        console.error('Check plucking error:', error);
+        res.status(500).json({ success: false, message: 'Error checking records.' });
     }
 });
 
