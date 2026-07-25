@@ -117,8 +117,13 @@ class ApiService {
     // ============================================
     
     // Workers
-    async getTeaWorkers() {
-        return this.get('/tea/workers');
+    async getTeaWorkers(params = {}) {
+        const query = new URLSearchParams(params).toString();
+        return this.get(`/tea/workers${query ? '?' + query : ''}`);
+    }
+
+    async getTeaWorkerStats(workerId) {
+        return this.get(`/tea/workers/${workerId}/stats`);
     }
 
     async createTeaWorker(workerData) {
