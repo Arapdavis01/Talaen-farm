@@ -665,10 +665,11 @@ router.post('/plucking/self', authorizeRoles('farm_owner', 'supervisor', 'tea_wo
                 block_id,
                 plucking_date,
                 weight_kg,
-                field_grade,
-                notes
+                field_grade: field_grade || null,
+                notes: notes || null,
+                recorded_by: req.user.id  // Auto-track who recorded
             })
-            .select('*, tea_workers(full_name), companies(name), blocks(name)')
+            .select('*, tea_workers(full_name), companies(name), blocks(name), users!recorded_by(username, role)')
             .single();
 
         if (error) throw error;
@@ -697,7 +698,7 @@ router.get('/plucking/self/:worker_id?', authorizeRoles('farm_owner', 'superviso
 
         let query = supabase
             .from('plucking_self')
-            .select('*, tea_workers(full_name), companies(name), blocks(name)')
+            .select('*, tea_workers(full_name), companies(name), blocks(name), users!recorded_by(username, role)')
             .order('plucking_date', { ascending: false })
             .order('created_at', { ascending: false });
 
@@ -727,14 +728,14 @@ router.put('/plucking/self/:id', authorizeRoles('farm_owner', 'supervisor'), asy
         if (company_id) updateData.company_id = company_id;
         if (block_id) updateData.block_id = block_id;
         if (weight_kg !== undefined) updateData.weight_kg = weight_kg;
-        if (field_grade !== undefined) updateData.field_grade = field_grade;
-        if (notes !== undefined) updateData.notes = notes;
+        if (field_grade !== undefined) updateData.field_grade = field_grade || null;
+        if (notes !== undefined) updateData.notes = notes || null;
 
         const { data: record, error } = await supabase
             .from('plucking_self')
             .update(updateData)
             .eq('id', id)
-            .select('*, tea_workers(full_name), companies(name), blocks(name)')
+            .select('*, tea_workers(full_name), companies(name), blocks(name), users!recorded_by(username, role)')
             .single();
 
         if (error) throw error;
@@ -788,7 +789,7 @@ router.get('/plucking/check/:workerId', authorizeRoles('farm_owner', 'supervisor
 
         const { data: existing } = await supabase
             .from('plucking_self')
-            .select('*, companies(name), blocks(name)')
+            .select('*, companies(name), blocks(name), users!recorded_by(username, role)')
             .eq('worker_id', workerId)
             .eq('plucking_date', checkDate);
 
@@ -803,7 +804,6 @@ router.get('/plucking/check/:workerId', authorizeRoles('farm_owner', 'supervisor
         res.status(500).json({ success: false, message: 'Error checking records.' });
     }
 });
-
 // ============================================
 // PLUCKING - VERIFIED (Owner Records)
 // ============================================
