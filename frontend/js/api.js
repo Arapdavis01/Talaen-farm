@@ -187,6 +187,19 @@ class ApiService {
         return this.get(endpoint);
     }
 
+    async updateSelfPlucking(id, pluckingData) {
+        return this.put(`/tea/plucking/self/${id}`, pluckingData);
+    }
+
+    async deleteSelfPlucking(id) {
+        return this.delete(`/tea/plucking/self/${id}`);
+    }
+
+    async checkWorkerPlucking(workerId, date = null) {
+        const endpoint = `/tea/plucking/check/${workerId}${date ? '?date=' + date : ''}`;
+        return this.get(endpoint);
+    }
+
     // Plucking Verified
     async recordVerifiedPlucking(pluckingData) {
         return this.post('/tea/plucking/verified', pluckingData);
