@@ -29,6 +29,40 @@ class ApiService {
         return headers;
     }
 
+    // Handle session expiry - clear everything and redirect to login
+    handleSessionExpired() {
+        // Clear all stored session data
+        localStorage.removeItem(CONFIG.TOKEN_KEY);
+        localStorage.removeItem(CONFIG.USER_KEY);
+        localStorage.removeItem('available_modules');
+        localStorage.removeItem('current_module');
+        
+        // Reset token
+        this.token = null;
+        
+        // Show toast if function exists
+        if (typeof showToast === 'function') {
+            showToast('Session expired. Please login again.', 'warning', 5000);
+        }
+        
+        // Redirect to login after short delay
+        setTimeout(() => {
+            // Hide app, show login
+            const appContainer = document.getElementById('appContainer');
+            const loginModal = document.getElementById('loginModal');
+            
+            if (appContainer) appContainer.classList.add('hidden');
+            if (loginModal) {
+                loginModal.classList.remove('hidden');
+                // Clear login form
+                const loginForm = document.getElementById('loginForm');
+                const loginError = document.getElementById('loginError');
+                if (loginForm) loginForm.reset();
+                if (loginError) loginError.classList.add('hidden');
+            }
+        }, 1000);
+    }
+
     // Generic request method
     async request(endpoint, method = 'GET', body = null) {
         try {
@@ -42,6 +76,21 @@ class ApiService {
             }
 
             const response = await fetch(`${this.baseUrl}${endpoint}`, options);
+            
+            // Handle expired/invalid token (401 Unauthorized or 403 Forbidden)
+            if (response.status === 401 || response.status === 403) {
+                const data = await response.json().catch(() => ({}));
+                
+                // Check if it's a token-related error
+                if (data.message === 'Invalid or expired token.' || 
+                    data.message === 'Access denied. No token provided.' ||
+                    data.message === 'Authentication required.') {
+                    
+                    this.handleSessionExpired();
+                    throw new Error('Session expired. Redirecting to login...');
+                }
+            }
+            
             const data = await response.json();
 
             if (!response.ok) {
@@ -50,7 +99,10 @@ class ApiService {
 
             return data;
         } catch (error) {
-            console.error(`API Error [${method} ${endpoint}]:`, error);
+            // Don't log the session expiry redirect as an error in console
+            if (error.message !== 'Session expired. Redirecting to login...') {
+                console.error(`API Error [${method} ${endpoint}]:`, error);
+            }
             throw error;
         }
     }
