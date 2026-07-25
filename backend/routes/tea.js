@@ -1101,7 +1101,7 @@ router.get('/comparison/:worker_id', authorizeRoles('farm_owner', 'supervisor'),
 
         let verifiedQuery = supabase
             .from('plucking_verified')
-            .select('*, companies(name), blocks(name), users!recorded_by(username, role)')
+            .select('*, companies(name), blocks(name)')
             .eq('worker_id', worker_id)
             .eq('approval_status', 'disputed');
 
@@ -1141,7 +1141,6 @@ router.get('/comparison/:worker_id', authorizeRoles('farm_owner', 'supervisor'),
 // GET /api/tea/comparison/disputes - All disputed records
 router.get('/comparison/disputes', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
     try {
-        // Get all verified records, filter disputed in JS (safer if column doesn't exist)
         const { data: allRecords, error } = await supabase
             .from('plucking_verified')
             .select('*, tea_workers(full_name), companies(name), blocks(name)')
@@ -1149,10 +1148,9 @@ router.get('/comparison/disputes', authorizeRoles('farm_owner', 'supervisor'), a
 
         if (error) throw error;
 
-        // Filter for disputed records
+        // Filter disputed in JS (safer)
         const disputedRecords = (allRecords || []).filter(r => r.approval_status === 'disputed');
 
-        // For each disputed record, get the self-reported data
         const disputesWithSelfData = [];
         for (const record of disputedRecords) {
             const { data: selfData } = await supabase
@@ -1183,6 +1181,25 @@ router.get('/comparison/disputes', authorizeRoles('farm_owner', 'supervisor'), a
     }
 });
 
+// GET /api/tea/comparison/resolved - Recently resolved disputes
+router.get('/comparison/resolved', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
+    try {
+        const { data: records, error } = await supabase
+            .from('plucking_verified')
+            .select('*, tea_workers(full_name), companies(name), blocks(name)')
+            .eq('approval_status', 'resolved')
+            .order('plucking_date', { ascending: false })
+            .limit(50);
+
+        if (error) throw error;
+
+        res.json({ success: true, records: records || [] });
+    } catch (error) {
+        console.error('Fetch resolved error:', error);
+        res.status(500).json({ success: false, message: 'Error fetching resolved records.' });
+    }
+});
+
 // PUT /api/tea/comparison/resolve/:id - Resolve a dispute
 router.put('/comparison/resolve/:id', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
     try {
@@ -1193,7 +1210,7 @@ router.put('/comparison/resolve/:id', authorizeRoles('farm_owner', 'supervisor')
             return res.status(400).json({ success: false, message: 'Valid approved kg is required.' });
         }
 
-        // Get current notes first
+        // Get current record first
         const { data: current } = await supabase
             .from('plucking_verified')
             .select('notes')
@@ -1202,7 +1219,7 @@ router.put('/comparison/resolve/:id', authorizeRoles('farm_owner', 'supervisor')
 
         const updatedNotes = resolution_notes 
             ? `${current?.notes || ''}\n[Resolution: ${resolution_notes}]` 
-            : current?.notes;
+            : current?.notes || null;
 
         const { data: record, error } = await supabase
             .from('plucking_verified')
