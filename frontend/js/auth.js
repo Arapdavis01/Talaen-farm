@@ -6,6 +6,7 @@ class AuthManager {
     constructor() {
         this.currentUser = null;
         this.token = null;
+        this.tokenCheckInterval = null;
         this.init();
     }
 
@@ -15,12 +16,111 @@ class AuthManager {
         const savedUser = localStorage.getItem(CONFIG.USER_KEY);
 
         if (savedToken && savedUser) {
-            this.token = savedToken;
-            this.currentUser = JSON.parse(savedUser);
-            api.setToken(savedToken);
+            // Check if token is expired before using it
+            if (this.isTokenExpired(savedToken)) {
+                console.log('Saved token is expired, clearing session');
+                this.clearSession(true); // silent clear, no toast
+            } else {
+                this.token = savedToken;
+                this.currentUser = JSON.parse(savedUser);
+                api.setToken(savedToken);
+                
+                // Start periodic token check
+                this.startTokenCheck();
+            }
         }
 
         this.setupEventListeners();
+    }
+
+    // Check if JWT token is expired
+    isTokenExpired(token) {
+        if (!token) return true;
+        
+        try {
+            const parts = token.split('.');
+            if (parts.length !== 3) return true;
+            
+            const payload = JSON.parse(atob(parts[1]));
+            const expiry = payload.exp * 1000; // Convert to milliseconds
+            const now = Date.now();
+            
+            // Consider token expired 60 seconds before actual expiry
+            return now >= (expiry - 60000);
+        } catch (e) {
+            console.error('Token parse error:', e);
+            return true;
+        }
+    }
+
+    // Get remaining token time in minutes
+    getTokenRemainingMinutes() {
+        if (!this.token) return 0;
+        try {
+            const payload = JSON.parse(atob(this.token.split('.')[1]));
+            const expiry = payload.exp * 1000;
+            const remaining = Math.max(0, expiry - Date.now());
+            return Math.floor(remaining / 60000);
+        } catch (e) {
+            return 0;
+        }
+    }
+
+    // Start periodic token check
+    startTokenCheck() {
+        // Clear existing interval if any
+        if (this.tokenCheckInterval) {
+            clearInterval(this.tokenCheckInterval);
+        }
+        
+        // Check token every 2 minutes
+        this.tokenCheckInterval = setInterval(() => {
+            if (this.token && this.isTokenExpired(this.token)) {
+                console.log('Token expired during session');
+                showToast('Session expired. Please login again.', 'warning', 4000);
+                setTimeout(() => this.clearSession(false), 1500);
+            }
+        }, 120000); // 2 minutes
+    }
+
+    // Stop periodic token check
+    stopTokenCheck() {
+        if (this.tokenCheckInterval) {
+            clearInterval(this.tokenCheckInterval);
+            this.tokenCheckInterval = null;
+        }
+    }
+
+    // Clear session and show login
+    clearSession(silent = false) {
+        // Stop token checking
+        this.stopTokenCheck();
+        
+        // Clear localStorage
+        localStorage.removeItem(CONFIG.TOKEN_KEY);
+        localStorage.removeItem(CONFIG.USER_KEY);
+        localStorage.removeItem('available_modules');
+        localStorage.removeItem('current_module');
+        
+        // Reset state
+        this.token = null;
+        this.currentUser = null;
+        api.setToken(null);
+        
+        // Update UI
+        const loginModal = document.getElementById('loginModal');
+        const appContainer = document.getElementById('appContainer');
+        const loginForm = document.getElementById('loginForm');
+        const loginError = document.getElementById('loginError');
+        
+        if (appContainer) appContainer.classList.add('hidden');
+        if (loginModal) loginModal.classList.remove('hidden');
+        if (loginForm) loginForm.reset();
+        if (loginError) loginError.classList.add('hidden');
+        
+        if (!silent) {
+            showToast('Logged out successfully.', 'info');
+        }
     }
 
     setupEventListeners() {
@@ -65,7 +165,7 @@ class AuthManager {
 
         // Show loading state
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Logging in...';
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Signing in...';
         errorDiv.classList.add('hidden');
 
         try {
@@ -83,6 +183,9 @@ class AuthManager {
                 // Store available modules
                 localStorage.setItem('available_modules', JSON.stringify(response.available_modules));
 
+                // Start periodic token check
+                this.startTokenCheck();
+
                 // Hide login, show app
                 document.getElementById('loginModal').classList.add('hidden');
                 document.getElementById('appContainer').classList.remove('hidden');
@@ -98,13 +201,19 @@ class AuthManager {
             this.showError(error.message || 'Network error. Please try again.');
         } finally {
             submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>Login';
+            submitBtn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>Sign In';
         }
     }
 
     showError(message) {
         const errorDiv = document.getElementById('loginError');
-        errorDiv.textContent = message;
+        const errorText = document.getElementById('loginErrorText');
+        
+        if (errorText) {
+            errorText.textContent = message;
+        } else {
+            errorDiv.textContent = message;
+        }
         errorDiv.classList.remove('hidden');
     }
 
@@ -112,7 +221,7 @@ class AuthManager {
         // Update sidebar role
         document.getElementById('sidebarRole').textContent = this.getRoleDisplay(user.role);
 
-        // Build sidebar based on role and current module
+        // Reset module
         this.currentModule = null;
         
         // Show module selector first
@@ -132,29 +241,12 @@ class AuthManager {
     }
 
     handleLogout() {
-        // Clear storage
-        localStorage.removeItem(CONFIG.TOKEN_KEY);
-        localStorage.removeItem(CONFIG.USER_KEY);
-        localStorage.removeItem('available_modules');
-        localStorage.removeItem('current_module');
-        
-        this.token = null;
-        this.currentUser = null;
-        api.setToken(null);
-
-        // Show login, hide app
-        document.getElementById('loginModal').classList.remove('hidden');
-        document.getElementById('appContainer').classList.add('hidden');
-        
-        // Clear form
-        document.getElementById('loginForm').reset();
-        document.getElementById('loginError').classList.add('hidden');
-
-        showToast('Logged out successfully.', 'info');
+        this.clearSession(false);
     }
 
     isAuthenticated() {
-        return this.token !== null && this.currentUser !== null;
+        if (!this.token || !this.currentUser) return false;
+        return !this.isTokenExpired(this.token);
     }
 
     getCurrentUser() {
