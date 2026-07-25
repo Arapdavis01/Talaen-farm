@@ -457,15 +457,15 @@ router.post('/blocks', authorizeRoles('farm_owner', 'supervisor'), async (req, r
 });
 
 // ============================================
-// WAGE RATE
+// WAGE RATE (Enhanced)
 // ============================================
 
-// GET /api/tea/wage-rate
+// GET /api/tea/wage-rate - Current active rate
 router.get('/wage-rate', authorizeRoles('farm_owner', 'supervisor', 'tea_worker'), async (req, res) => {
     try {
         const { data: wageRate, error } = await supabase
             .from('wage_rate')
-            .select('*')
+            .select('*, users!created_by(full_name)')
             .eq('is_active', true)
             .order('effective_from', { ascending: false })
             .limit(1)
@@ -473,10 +473,48 @@ router.get('/wage-rate', authorizeRoles('farm_owner', 'supervisor', 'tea_worker'
 
         if (error && error.code !== 'PGRST116') throw error;
 
-        res.json({ success: true, wage_rate: wageRate || null });
+        // Calculate days active
+        let daysActive = 0;
+        if (wageRate) {
+            const effectiveDate = new Date(wageRate.effective_from);
+            const today = new Date();
+            daysActive = Math.floor((today - effectiveDate) / (1000 * 60 * 60 * 24));
+        }
+
+        res.json({ 
+            success: true, 
+            wage_rate: wageRate ? { ...wageRate, days_active: daysActive } : null 
+        });
     } catch (error) {
         console.error('Fetch wage rate error:', error);
         res.status(500).json({ success: false, message: 'Error fetching wage rate.' });
+    }
+});
+
+// GET /api/tea/wage-rate/history - All historical rates
+router.get('/wage-rate/history', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
+    try {
+        const { data: history, error } = await supabase
+            .from('wage_rate')
+            .select('*, users!created_by(full_name)')
+            .order('effective_from', { ascending: false });
+
+        if (error) throw error;
+
+        // Calculate changes between consecutive rates
+        const historyWithChanges = history.map((rate, index) => {
+            const previousRate = history[index + 1];
+            let change = null;
+            if (previousRate) {
+                change = parseFloat(rate.rate_per_kg) - parseFloat(previousRate.rate_per_kg);
+            }
+            return { ...rate, change };
+        });
+
+        res.json({ success: true, history: historyWithChanges });
+    } catch (error) {
+        console.error('Fetch wage rate history error:', error);
+        res.status(500).json({ success: false, message: 'Error fetching wage rate history.' });
     }
 });
 
@@ -485,28 +523,104 @@ router.post('/wage-rate', authorizeRoles('farm_owner', 'supervisor'), async (req
     try {
         const { rate_per_kg, effective_from } = req.body;
 
-        // Deactivate old rates
+        if (!rate_per_kg || rate_per_kg <= 0) {
+            return res.status(400).json({ success: false, message: 'Valid rate per kg is required.' });
+        }
+
+        if (!effective_from) {
+            return res.status(400).json({ success: false, message: 'Effective date is required.' });
+        }
+
+        // Deactivate all currently active rates
         await supabase
             .from('wage_rate')
             .update({ is_active: false })
             .eq('is_active', true);
 
-        // Create new rate
+        // Create new rate with created_by
         const { data: wageRate, error } = await supabase
             .from('wage_rate')
-            .insert({ rate_per_kg, effective_from })
+            .insert({ 
+                rate_per_kg, 
+                effective_from,
+                created_by: req.user.id
+            })
             .select()
             .single();
 
         if (error) throw error;
 
-        res.status(201).json({ success: true, wage_rate: wageRate });
+        res.status(201).json({ success: true, wage_rate: wageRate, message: 'Wage rate set successfully.' });
     } catch (error) {
         console.error('Set wage rate error:', error);
         res.status(500).json({ success: false, message: 'Error setting wage rate.' });
     }
 });
 
+// GET /api/tea/wage-rate/impact - Calculate impact of a proposed rate
+router.get('/wage-rate/impact', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
+    try {
+        const { proposed_rate } = req.query;
+
+        if (!proposed_rate || proposed_rate <= 0) {
+            return res.status(400).json({ success: false, message: 'Valid proposed rate is required.' });
+        }
+
+        // Get current active rate
+        const { data: currentRate } = await supabase
+            .from('wage_rate')
+            .select('rate_per_kg')
+            .eq('is_active', true)
+            .single();
+
+        const currentRatePerKg = currentRate ? parseFloat(currentRate.rate_per_kg) : 0;
+        const proposedRatePerKg = parseFloat(proposed_rate);
+
+        // Get yesterday's plucking
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+        const { data: yesterdayPlucking } = await supabase
+            .from('plucking_verified')
+            .select('weight_kg')
+            .eq('plucking_date', yesterdayStr);
+
+        const yesterdayKg = yesterdayPlucking.reduce((sum, p) => sum + parseFloat(p.weight_kg), 0);
+
+        // Get this month's plucking
+        const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+        const { data: monthPlucking } = await supabase
+            .from('plucking_verified')
+            .select('weight_kg')
+            .gte('plucking_date', monthStart);
+
+        const monthlyKg = monthPlucking.reduce((sum, p) => sum + parseFloat(p.weight_kg), 0);
+
+        const currentCost = yesterdayKg * currentRatePerKg;
+        const proposedCost = yesterdayKg * proposedRatePerKg;
+        const difference = proposedCost - currentCost;
+        const percentChange = currentRatePerKg > 0 ? ((proposedRatePerKg - currentRatePerKg) / currentRatePerKg) * 100 : 100;
+
+        res.json({
+            success: true,
+            impact: {
+                current_rate: currentRatePerKg,
+                proposed_rate: proposedRatePerKg,
+                yesterday_kg: yesterdayKg,
+                monthly_kg: monthlyKg,
+                yesterday_current_cost: currentCost,
+                yesterday_proposed_cost: proposedCost,
+                difference,
+                percent_change: percentChange,
+                monthly_impact: monthlyKg * (proposedRatePerKg - currentRatePerKg)
+            }
+        });
+    } catch (error) {
+        console.error('Wage rate impact error:', error);
+        res.status(500).json({ success: false, message: 'Error calculating impact.' });
+    }
+});
 // ============================================
 // PLUCKING - SELF (Worker Records)
 // ============================================
