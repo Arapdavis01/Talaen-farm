@@ -370,4 +370,123 @@ router.get('/users', authenticateToken, authorizeRoles('farm_owner', 'supervisor
     }
 });
 
+// ============================================
+// PUT /api/auth/users/:id
+// Update user (Owner/Supervisor only)
+// ============================================
+router.put('/users/:id', authenticateToken, authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { is_active, full_name, phone, role } = req.body;
+
+        // Build update object with only provided fields
+        const updateData = { updated_at: new Date() };
+        if (is_active !== undefined) updateData.is_active = is_active;
+        if (full_name) updateData.full_name = full_name;
+        if (phone !== undefined) updateData.phone = phone;
+        if (role) updateData.role = role;
+
+        // Prevent deactivating yourself
+        if (id === req.user.id && is_active === false) {
+            return res.status(400).json({
+                success: false,
+                message: 'You cannot deactivate your own account.'
+            });
+        }
+
+        const { data: user, error } = await supabase
+            .from('users')
+            .update(updateData)
+            .eq('id', id)
+            .select('id, username, role, full_name, phone, is_active, created_at')
+            .single();
+
+        if (error) {
+            throw error;
+        }
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found.'
+            });
+        }
+
+        res.json({
+            success: true,
+            message: 'User updated successfully.',
+            user
+        });
+
+    } catch (error) {
+        console.error('Update user error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error updating user.'
+        });
+    }
+});
+
+// ============================================
+// POST /api/auth/reset-password/:id
+// Reset user password (Owner/Supervisor only)
+// ============================================
+router.post('/reset-password/:id', authenticateToken, authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { password } = req.body;
+
+        // Validate password
+        if (!password || password.length < 6) {
+            return res.status(400).json({
+                success: false,
+                message: 'Password must be at least 6 characters long.'
+            });
+        }
+
+        // Check if user exists
+        const { data: existingUser, error: checkError } = await supabase
+            .from('users')
+            .select('id, full_name')
+            .eq('id', id)
+            .single();
+
+        if (checkError || !existingUser) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found.'
+            });
+        }
+
+        // Hash new password
+        const salt = await bcrypt.genSalt(10);
+        const password_hash = await bcrypt.hash(password, salt);
+
+        // Update password
+        const { error } = await supabase
+            .from('users')
+            .update({ 
+                password_hash, 
+                updated_at: new Date() 
+            })
+            .eq('id', id);
+
+        if (error) {
+            throw error;
+        }
+
+        res.json({
+            success: true,
+            message: `Password reset successfully for ${existingUser.full_name}.`
+        });
+
+    } catch (error) {
+        console.error('Reset password error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error resetting password.'
+        });
+    }
+});
+
 module.exports = router;
