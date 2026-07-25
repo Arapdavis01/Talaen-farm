@@ -102,6 +102,17 @@ class ApiService {
     }
 
     // ============================================
+    // USER MANAGEMENT ENDPOINTS
+    // ============================================
+    async updateUser(userId, userData) {
+        return this.put(`/auth/users/${userId}`, userData);
+    }
+
+    async resetUserPassword(userId, newPassword) {
+        return this.post(`/auth/reset-password/${userId}`, { password: newPassword });
+    }
+
+    // ============================================
     // TEA MODULE ENDPOINTS
     // ============================================
     
