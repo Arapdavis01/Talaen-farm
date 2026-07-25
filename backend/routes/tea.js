@@ -805,13 +805,40 @@ router.get('/plucking/check/:workerId', authorizeRoles('farm_owner', 'supervisor
     }
 });
 // ============================================
-// PLUCKING - VERIFIED (Owner Records)
+// PLUCKING - VERIFIED (Owner Records) Enhanced
 // ============================================
 
 // POST /api/tea/plucking/verified
 router.post('/plucking/verified', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
     try {
         const { worker_id, company_id, block_id, plucking_date, weight_kg, field_grade, notes } = req.body;
+
+        // Validate required fields
+        if (!worker_id || !company_id || !block_id || !plucking_date || weight_kg === undefined) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'All required fields must be provided: worker, company, block, date, weight.' 
+            });
+        }
+
+        if (weight_kg <= 0) {
+            return res.status(400).json({ success: false, message: 'Weight must be greater than 0.' });
+        }
+
+        // Check if worker already verified for this date
+        const { data: existingVerified } = await supabase
+            .from('plucking_verified')
+            .select('id, weight_kg, companies(name), blocks(name)')
+            .eq('worker_id', worker_id)
+            .eq('plucking_date', plucking_date);
+
+        if (existingVerified.length > 0) {
+            return res.status(400).json({ 
+                success: false, 
+                message: `Worker already verified for this date (${existingVerified[0].weight_kg} kg). Edit the existing record instead.`,
+                existing_record: existingVerified[0]
+            });
+        }
 
         const { data: plucking, error } = await supabase
             .from('plucking_verified')
@@ -821,10 +848,11 @@ router.post('/plucking/verified', authorizeRoles('farm_owner', 'supervisor'), as
                 block_id,
                 plucking_date,
                 weight_kg,
-                field_grade,
-                notes
+                field_grade: field_grade || null,
+                notes: notes || null,
+                recorded_by: req.user.id
             })
-            .select()
+            .select('*, tea_workers(full_name), companies(name), blocks(name), users!recorded_by(username, role)')
             .single();
 
         if (error) throw error;
@@ -843,7 +871,7 @@ router.get('/plucking/verified/:worker_id?', authorizeRoles('farm_owner', 'super
 
         let query = supabase
             .from('plucking_verified')
-            .select('*, tea_workers(full_name), companies(name), blocks(name)')
+            .select('*, tea_workers(full_name), companies(name), blocks(name), users!recorded_by(username, role)')
             .order('plucking_date', { ascending: false });
 
         if (worker_id) {
@@ -858,6 +886,93 @@ router.get('/plucking/verified/:worker_id?', authorizeRoles('farm_owner', 'super
     } catch (error) {
         console.error('Fetch verified plucking error:', error);
         res.status(500).json({ success: false, message: 'Error fetching verified plucking.' });
+    }
+});
+
+// PUT /api/tea/plucking/verified/:id
+router.put('/plucking/verified/:id', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { plucking_date, company_id, block_id, weight_kg, field_grade, notes } = req.body;
+
+        const updateData = {};
+        if (plucking_date) updateData.plucking_date = plucking_date;
+        if (company_id) updateData.company_id = company_id;
+        if (block_id) updateData.block_id = block_id;
+        if (weight_kg !== undefined) updateData.weight_kg = weight_kg;
+        if (field_grade !== undefined) updateData.field_grade = field_grade || null;
+        if (notes !== undefined) updateData.notes = notes || null;
+
+        const { data: record, error } = await supabase
+            .from('plucking_verified')
+            .update(updateData)
+            .eq('id', id)
+            .select('*, tea_workers(full_name), companies(name), blocks(name), users!recorded_by(username, role)')
+            .single();
+
+        if (error) throw error;
+        if (!record) {
+            return res.status(404).json({ success: false, message: 'Record not found.' });
+        }
+
+        res.json({ success: true, record, message: 'Record updated successfully.' });
+    } catch (error) {
+        console.error('Update verified plucking error:', error);
+        res.status(500).json({ success: false, message: 'Error updating record.' });
+    }
+});
+
+// DELETE /api/tea/plucking/verified/:id
+router.delete('/plucking/verified/:id', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const { data: existing } = await supabase
+            .from('plucking_verified')
+            .select('id')
+            .eq('id', id)
+            .single();
+
+        if (!existing) {
+            return res.status(404).json({ success: false, message: 'Record not found.' });
+        }
+
+        const { error } = await supabase
+            .from('plucking_verified')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+
+        res.json({ success: true, message: 'Record deleted successfully.' });
+    } catch (error) {
+        console.error('Delete verified plucking error:', error);
+        res.status(500).json({ success: false, message: 'Error deleting record.' });
+    }
+});
+
+// GET /api/tea/plucking/verified/check/:workerId?date=YYYY-MM-DD
+router.get('/plucking/verified/check/:workerId', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
+    try {
+        const { workerId } = req.params;
+        const { date } = req.query;
+        const checkDate = date || new Date().toISOString().split('T')[0];
+
+        const { data: existing } = await supabase
+            .from('plucking_verified')
+            .select('*, companies(name), blocks(name), users!recorded_by(username, role)')
+            .eq('worker_id', workerId)
+            .eq('plucking_date', checkDate);
+
+        res.json({ 
+            success: true, 
+            has_verified: existing.length > 0, 
+            record_count: existing.length,
+            records: existing 
+        });
+    } catch (error) {
+        console.error('Check verified plucking error:', error);
+        res.status(500).json({ success: false, message: 'Error checking verification.' });
     }
 });
 
