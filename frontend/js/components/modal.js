@@ -1,5 +1,5 @@
 // ============================================
-// TALAEN FARM - Modal Component (Professional)
+// TALAEN FARM - Modal Component (Fixed Scrolling)
 // ============================================
 
 class Modal {
@@ -26,11 +26,11 @@ class Modal {
     open(title, content, options = {}) {
         const { size = 'max-w-lg', onClose, icon = 'fa-pen' } = options;
 
-        this.content.className = `bg-white rounded-2xl shadow-2xl w-full ${size} max-h-[92vh] overflow-hidden border border-stone-200`;
+        this.content.className = `bg-white rounded-2xl shadow-2xl w-full ${size} max-h-[90vh] flex flex-col overflow-hidden border border-stone-200`;
         
         this.content.innerHTML = `
-            <!-- Modal Header -->
-            <div class="sticky top-0 bg-white/98 backdrop-blur-md border-b border-stone-100 px-6 py-5 flex items-center justify-between z-10 rounded-t-2xl">
+            <!-- Modal Header - Fixed -->
+            <div class="flex-shrink-0 bg-white/98 backdrop-blur-md border-b border-stone-100 px-6 py-5 flex items-center justify-between z-10 rounded-t-2xl">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 bg-gradient-to-br from-slate-100 to-stone-100 rounded-xl flex items-center justify-center shadow-sm border border-stone-200/50">
                         <i class="fas ${icon} text-slate-600 text-sm"></i>
@@ -43,8 +43,8 @@ class Modal {
                 </button>
             </div>
             
-            <!-- Modal Body -->
-            <div class="p-6">
+            <!-- Modal Body - Scrollable -->
+            <div class="flex-1 overflow-y-auto p-6">
                 ${content}
             </div>
         `;
@@ -58,7 +58,7 @@ class Modal {
         
         // Focus trap - focus first input if exists
         setTimeout(() => {
-            const firstInput = this.content.querySelector('input, select, textarea');
+            const firstInput = this.content.querySelector('input:not([type="hidden"]), select, textarea');
             if (firstInput) {
                 firstInput.focus();
             }
@@ -95,8 +95,8 @@ class Modal {
             <form id="modalForm" class="space-y-5">
                 ${formFields}
                 
-                <!-- Form Actions -->
-                <div class="flex justify-end gap-3 pt-6 border-t border-stone-100">
+                <!-- Form Actions - Sticky at bottom -->
+                <div class="sticky bottom-0 bg-white pt-4 pb-1 border-t border-stone-100 flex justify-end gap-3">
                     <button type="button" 
                             class="px-5 py-2.5 text-stone-600 bg-stone-100 hover:bg-stone-200 rounded-xl transition-all font-medium flex items-center gap-2"
                             onclick="modal.close()">
