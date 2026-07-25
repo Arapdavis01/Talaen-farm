@@ -1286,6 +1286,10 @@ router.post('/debts', authorizeRoles('farm_owner', 'supervisor', 'store_manager'
     try {
         const { worker_id, amount, debt_date, description } = req.body;
 
+        if (!worker_id || !amount || !debt_date) {
+            return res.status(400).json({ success: false, message: 'Worker, amount, and date are required.' });
+        }
+
         // Insert debt
         const { data: debt, error } = await supabase
             .from('debts')
@@ -1296,7 +1300,7 @@ router.post('/debts', authorizeRoles('farm_owner', 'supervisor', 'store_manager'
                 description,
                 created_by: req.user.id
             })
-            .select()
+            .select('*, tea_workers(full_name)')
             .single();
 
         if (error) throw error;
@@ -1323,6 +1327,63 @@ router.post('/debts', authorizeRoles('farm_owner', 'supervisor', 'store_manager'
     }
 });
 
+// PUT /api/tea/debts/:id - Edit debt
+router.put('/debts/:id', authorizeRoles('farm_owner', 'supervisor', 'store_manager'), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { amount, debt_date, description } = req.body;
+
+        // Check if debt exists and is editable
+        const { data: existing } = await supabase
+            .from('debts')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (!existing) {
+            return res.status(404).json({ success: false, message: 'Debt not found.' });
+        }
+
+        if (existing.is_settled || existing.is_reversed) {
+            return res.status(400).json({ success: false, message: 'Cannot edit settled or reversed debt.' });
+        }
+
+        const updateData = {};
+        if (amount !== undefined) updateData.amount = amount;
+        if (debt_date) updateData.debt_date = debt_date;
+        if (description !== undefined) updateData.description = description;
+
+        const { data: debt, error } = await supabase
+            .from('debts')
+            .update(updateData)
+            .eq('id', id)
+            .select('*, tea_workers(full_name)')
+            .single();
+
+        if (error) throw error;
+
+        // Recalculate worker's total debt
+        const { data: workerDebts } = await supabase
+            .from('debts')
+            .select('amount')
+            .eq('worker_id', existing.worker_id)
+            .eq('is_settled', false)
+            .eq('is_reversed', false);
+
+        const totalDebt = workerDebts.reduce((sum, d) => sum + parseFloat(d.amount), 0);
+
+        await supabase
+            .from('tea_workers')
+            .update({ total_debt: totalDebt, updated_at: new Date() })
+            .eq('id', existing.worker_id);
+
+        res.json({ success: true, debt, message: 'Debt updated successfully.' });
+    } catch (error) {
+        console.error('Update debt error:', error);
+        res.status(500).json({ success: false, message: 'Error updating debt.' });
+    }
+});
+
 // POST /api/tea/debts/:id/reverse
 router.post('/debts/:id/reverse', authorizeRoles('farm_owner', 'supervisor', 'store_manager'), async (req, res) => {
     try {
@@ -1340,13 +1401,17 @@ router.post('/debts/:id/reverse', authorizeRoles('farm_owner', 'supervisor', 'st
             return res.status(404).json({ success: false, message: 'Debt not found.' });
         }
 
+        if (originalDebt.is_reversed) {
+            return res.status(400).json({ success: false, message: 'Debt is already reversed.' });
+        }
+
         // Create reversal record
         await supabase
             .from('debt_reversals')
             .insert({
                 debt_id: id,
                 reversal_amount: originalDebt.amount,
-                reason,
+                reason: reason || 'Reversed by user',
                 reversed_by: req.user.id
             });
 
@@ -1377,7 +1442,6 @@ router.post('/debts/:id/reverse', authorizeRoles('farm_owner', 'supervisor', 'st
         res.status(500).json({ success: false, message: 'Error reversing debt.' });
     }
 });
-
 // ============================================
 // PAY WORKER
 // POST /api/tea/pay-worker
