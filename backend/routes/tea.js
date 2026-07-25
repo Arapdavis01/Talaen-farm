@@ -1085,58 +1085,10 @@ router.get('/plucking/disputed', authorizeRoles('farm_owner', 'supervisor'), asy
     }
 });
 // ============================================
-// COMPARISON PANEL (Enhanced with Approval)
+// COMPARISON PANEL (Enhanced with Approval) - FIXED ORDER
 // ============================================
 
-// GET /api/tea/comparison/:worker_id?date=YYYY-MM-DD
-router.get('/comparison/:worker_id', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
-    try {
-        const { worker_id } = req.params;
-        const { date } = req.query;
-
-        let selfQuery = supabase
-            .from('plucking_self')
-            .select('*, companies(name), blocks(name)')
-            .eq('worker_id', worker_id);
-
-        let verifiedQuery = supabase
-            .from('plucking_verified')
-            .select('*, companies(name), blocks(name)')
-            .eq('worker_id', worker_id)
-            .eq('approval_status', 'disputed');
-
-        if (date) {
-            selfQuery = selfQuery.eq('plucking_date', date);
-            verifiedQuery = verifiedQuery.eq('plucking_date', date);
-        }
-
-        const [selfResult, verifiedResult] = await Promise.all([selfQuery, verifiedQuery]);
-
-        if (selfResult.error) throw selfResult.error;
-        if (verifiedResult.error) throw verifiedResult.error;
-
-        const selfTotal = selfResult.data.reduce((sum, r) => sum + parseFloat(r.weight_kg), 0);
-        const verifiedTotal = verifiedResult.data.reduce((sum, r) => sum + parseFloat(r.weight_kg), 0);
-
-        res.json({
-            success: true,
-            comparison: {
-                worker_id: worker_id,
-                date: date || 'all dates',
-                self_reported: { records: selfResult.data, total_kg: selfTotal },
-                verified: { records: verifiedResult.data, total_kg: verifiedTotal },
-                discrepancy: verifiedTotal - selfTotal,
-                status: verifiedResult.data.length > 0 ? 'disputed' : 'no_disputes',
-                message: verifiedResult.data.length > 0 
-                    ? `${verifiedResult.data.length} disputed record(s) need review` 
-                    : 'No disputes found for this worker'
-            }
-        });
-    } catch (error) {
-        console.error('Comparison error:', error);
-        res.status(500).json({ success: false, message: 'Error generating comparison.' });
-    }
-});
+// Static routes FIRST - Must be before /:worker_id
 
 // GET /api/tea/comparison/disputes - All disputed records
 router.get('/comparison/disputes', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
@@ -1210,7 +1162,6 @@ router.put('/comparison/resolve/:id', authorizeRoles('farm_owner', 'supervisor')
             return res.status(400).json({ success: false, message: 'Valid approved kg is required.' });
         }
 
-        // Get current record first
         const { data: current } = await supabase
             .from('plucking_verified')
             .select('notes')
@@ -1244,6 +1195,56 @@ router.put('/comparison/resolve/:id', authorizeRoles('farm_owner', 'supervisor')
     } catch (error) {
         console.error('Resolve dispute error:', error);
         res.status(500).json({ success: false, message: 'Error resolving dispute.' });
+    }
+});
+
+// Dynamic route LAST - /:worker_id must come AFTER static routes
+router.get('/comparison/:worker_id', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
+    try {
+        const { worker_id } = req.params;
+        const { date } = req.query;
+
+        let selfQuery = supabase
+            .from('plucking_self')
+            .select('*, companies(name), blocks(name)')
+            .eq('worker_id', worker_id);
+
+        let verifiedQuery = supabase
+            .from('plucking_verified')
+            .select('*, companies(name), blocks(name)')
+            .eq('worker_id', worker_id)
+            .eq('approval_status', 'disputed');
+
+        if (date) {
+            selfQuery = selfQuery.eq('plucking_date', date);
+            verifiedQuery = verifiedQuery.eq('plucking_date', date);
+        }
+
+        const [selfResult, verifiedResult] = await Promise.all([selfQuery, verifiedQuery]);
+
+        if (selfResult.error) throw selfResult.error;
+        if (verifiedResult.error) throw verifiedResult.error;
+
+        const selfTotal = selfResult.data.reduce((sum, r) => sum + parseFloat(r.weight_kg), 0);
+        const verifiedTotal = verifiedResult.data.reduce((sum, r) => sum + parseFloat(r.weight_kg), 0);
+
+        res.json({
+            success: true,
+            comparison: {
+                worker_id: worker_id,
+                date: date || 'all dates',
+                self_reported: { records: selfResult.data, total_kg: selfTotal },
+                verified: { records: verifiedResult.data, total_kg: verifiedTotal },
+                discrepancy: verifiedTotal - selfTotal,
+                status: verifiedResult.data.length > 0 ? 'disputed' : 'no_disputes',
+                message: verifiedResult.data.length > 0 
+                    ? `${verifiedResult.data.length} disputed record(s) need review` 
+                    : 'No disputes found for this worker'
+            }
+        });
+    } catch (error) {
+        console.error('Comparison error:', error);
+        res.status(500).json({ success: false, message: 'Error generating comparison.' });
     }
 });
 // ============================================
