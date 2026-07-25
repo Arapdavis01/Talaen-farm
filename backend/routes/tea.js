@@ -1086,8 +1086,9 @@ router.get('/plucking/disputed', authorizeRoles('farm_owner', 'supervisor'), asy
 });
 // ============================================
 // COMPARISON PANEL (Enhanced with Approval)
-// GET /api/tea/comparison/:worker_id?date=YYYY-MM-DD
 // ============================================
+
+// GET /api/tea/comparison/:worker_id?date=YYYY-MM-DD
 router.get('/comparison/:worker_id', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
     try {
         const { worker_id } = req.params;
@@ -1102,17 +1103,14 @@ router.get('/comparison/:worker_id', authorizeRoles('farm_owner', 'supervisor'),
             .from('plucking_verified')
             .select('*, companies(name), blocks(name), users!recorded_by(username, role)')
             .eq('worker_id', worker_id)
-            .eq('approval_status', 'disputed'); // Only show disputed records
+            .eq('approval_status', 'disputed');
 
         if (date) {
             selfQuery = selfQuery.eq('plucking_date', date);
             verifiedQuery = verifiedQuery.eq('plucking_date', date);
         }
 
-        const [selfResult, verifiedResult] = await Promise.all([
-            selfQuery,
-            verifiedQuery
-        ]);
+        const [selfResult, verifiedResult] = await Promise.all([selfQuery, verifiedQuery]);
 
         if (selfResult.error) throw selfResult.error;
         if (verifiedResult.error) throw verifiedResult.error;
@@ -1125,14 +1123,8 @@ router.get('/comparison/:worker_id', authorizeRoles('farm_owner', 'supervisor'),
             comparison: {
                 worker_id: worker_id,
                 date: date || 'all dates',
-                self_reported: {
-                    records: selfResult.data,
-                    total_kg: selfTotal
-                },
-                verified: {
-                    records: verifiedResult.data,
-                    total_kg: verifiedTotal
-                },
+                self_reported: { records: selfResult.data, total_kg: selfTotal },
+                verified: { records: verifiedResult.data, total_kg: verifiedTotal },
                 discrepancy: verifiedTotal - selfTotal,
                 status: verifiedResult.data.length > 0 ? 'disputed' : 'no_disputes',
                 message: verifiedResult.data.length > 0 
@@ -1146,20 +1138,23 @@ router.get('/comparison/:worker_id', authorizeRoles('farm_owner', 'supervisor'),
     }
 });
 
-// GET /api/tea/comparison/disputes - All disputed records across all workers
+// GET /api/tea/comparison/disputes - All disputed records
 router.get('/comparison/disputes', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
     try {
-        // Get all disputed verified records
-        const { data: disputedRecords, error } = await supabase
+        // Get all verified records, filter disputed in JS (safer if column doesn't exist)
+        const { data: allRecords, error } = await supabase
             .from('plucking_verified')
-            .select('*, tea_workers(full_name), companies(name), blocks(name), users!recorded_by(username, role)')
-            .eq('approval_status', 'disputed')
+            .select('*, tea_workers(full_name), companies(name), blocks(name)')
             .order('plucking_date', { ascending: false });
 
         if (error) throw error;
 
+        // Filter for disputed records
+        const disputedRecords = (allRecords || []).filter(r => r.approval_status === 'disputed');
+
         // For each disputed record, get the self-reported data
-        const disputesWithSelfData = await Promise.all(disputedRecords.map(async (record) => {
+        const disputesWithSelfData = [];
+        for (const record of disputedRecords) {
             const { data: selfData } = await supabase
                 .from('plucking_self')
                 .select('*, companies(name), blocks(name)')
@@ -1167,12 +1162,12 @@ router.get('/comparison/disputes', authorizeRoles('farm_owner', 'supervisor'), a
                 .eq('plucking_date', record.plucking_date)
                 .maybeSingle();
 
-            return {
+            disputesWithSelfData.push({
                 verified: record,
                 self_reported: selfData || null,
                 discrepancy: selfData ? parseFloat(record.weight_kg) - parseFloat(selfData.weight_kg) : null
-            };
-        }));
+            });
+        }
 
         res.json({
             success: true,
@@ -1184,11 +1179,11 @@ router.get('/comparison/disputes', authorizeRoles('farm_owner', 'supervisor'), a
         });
     } catch (error) {
         console.error('Fetch disputes error:', error);
-        res.status(500).json({ success: false, message: 'Error fetching disputes.' });
+        res.status(500).json({ success: false, message: 'Error fetching disputes: ' + error.message });
     }
 });
 
-// PUT /api/tea/comparison/resolve/:id - Resolve a dispute with final approved kg
+// PUT /api/tea/comparison/resolve/:id - Resolve a dispute
 router.put('/comparison/resolve/:id', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
     try {
         const { id } = req.params;
@@ -1198,18 +1193,27 @@ router.put('/comparison/resolve/:id', authorizeRoles('farm_owner', 'supervisor')
             return res.status(400).json({ success: false, message: 'Valid approved kg is required.' });
         }
 
+        // Get current notes first
+        const { data: current } = await supabase
+            .from('plucking_verified')
+            .select('notes')
+            .eq('id', id)
+            .single();
+
+        const updatedNotes = resolution_notes 
+            ? `${current?.notes || ''}\n[Resolution: ${resolution_notes}]` 
+            : current?.notes;
+
         const { data: record, error } = await supabase
             .from('plucking_verified')
             .update({ 
                 approved_kg: approved_kg, 
                 is_approved: true, 
                 approval_status: 'resolved',
-                notes: resolution_notes 
-                    ? `${record.notes || ''}\n[Resolution: ${resolution_notes}]` 
-                    : record.notes
+                notes: updatedNotes
             })
             .eq('id', id)
-            .select('*, tea_workers(full_name), companies(name), blocks(name), users!recorded_by(username, role)')
+            .select('*, tea_workers(full_name), companies(name), blocks(name)')
             .single();
 
         if (error) throw error;
