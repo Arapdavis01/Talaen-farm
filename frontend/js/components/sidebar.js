@@ -1,5 +1,5 @@
 // ============================================
-// TALAEN FARM - Sidebar Component (Improved)
+// TALAEN FARM - Sidebar Component (Professional)
 // ============================================
 
 class Sidebar {
@@ -87,10 +87,10 @@ class Sidebar {
     buildSidebarHTML(sections, module) {
         const sectionIcons = {
             system: 'fa-shield-halved',
-            management: 'fa-cog',
-            operations: 'fa-tasks',
+            management: 'fa-sliders',
+            operations: 'fa-list-check',
             financial: 'fa-calculator',
-            reports: 'fa-chart-bar'
+            reports: 'fa-chart-simple'
         };
 
         const sectionTitles = {
@@ -101,29 +101,29 @@ class Sidebar {
             reports: 'Reports'
         };
 
-        const moduleColor = module === 'tea' ? 'green' : 'blue';
+        const moduleAccent = module === 'tea' ? 'emerald' : 'sky';
         const moduleIcon = module === 'tea' ? 'fa-leaf' : 'fa-cow';
         const moduleLabel = module === 'tea' ? 'Tea Module' : 'Dairy Module';
 
         let html = '';
 
-        // Module indicator
+        // Module indicator badge
         html += `
-            <div class="px-3 mb-3">
-                <div class="flex items-center gap-2 px-3 py-2 bg-white/5 rounded-xl">
-                    <span class="w-6 h-6 bg-${moduleColor}-400/30 rounded-lg flex items-center justify-center">
-                        <i class="fas ${moduleIcon} text-${moduleColor}-300 text-xs"></i>
+            <div class="px-3 mb-4">
+                <div class="flex items-center gap-2.5 px-3 py-2.5 bg-white/5 rounded-xl border border-white/5">
+                    <span class="w-7 h-7 bg-${moduleAccent}-500/20 rounded-lg flex items-center justify-center">
+                        <i class="fas ${moduleIcon} text-${moduleAccent}-400 text-xs"></i>
                     </span>
-                    <span class="text-xs font-medium text-white/60 uppercase tracking-wider">${moduleLabel}</span>
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">${moduleLabel}</span>
                 </div>
             </div>
         `;
 
         // Back button
         html += `
-            <button class="w-full text-left text-green-200/80 hover:text-white text-sm py-2.5 px-3 rounded-xl hover:bg-white/10 transition-all mb-4 flex items-center gap-2 font-medium group"
+            <button class="w-full text-left text-slate-400 hover:text-white text-sm py-2.5 px-3 rounded-xl hover:bg-white/5 transition-all mb-5 flex items-center gap-2.5 font-medium group"
                     onclick="router.goToModuleSelector()">
-                <span class="w-6 h-6 bg-white/10 rounded-lg flex items-center justify-center group-hover:bg-white/20 transition-all">
+                <span class="w-7 h-7 bg-white/5 rounded-lg flex items-center justify-center group-hover:bg-white/10 transition-all">
                     <i class="fas fa-arrow-left text-xs"></i>
                 </span>
                 Back to Modules
@@ -134,14 +134,14 @@ class Sidebar {
         Object.entries(sections).forEach(([sectionKey, sectionItems]) => {
             if (sectionItems.length > 0) {
                 html += `
-                    <div class="mb-4">
+                    <div class="mb-5">
                         <div class="px-3 mb-2">
-                            <span class="text-xs font-semibold text-white/40 uppercase tracking-wider flex items-center gap-2">
-                                <i class="fas ${sectionIcons[sectionKey]} text-[10px]"></i>
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.08em] flex items-center gap-2">
+                                <i class="fas ${sectionIcons[sectionKey]} text-[9px]"></i>
                                 ${sectionTitles[sectionKey]}
                             </span>
                         </div>
-                        ${sectionItems.map(item => this.createNavItem(item, moduleColor)).join('')}
+                        ${sectionItems.map(item => this.createNavItem(item, moduleAccent)).join('')}
                     </div>
                 `;
             }
@@ -158,7 +158,7 @@ class Sidebar {
 
         const items = [];
 
-        // System section - User Management for admins
+        // System section
         if (isAdmin) {
             items.push(
                 { route: 'user-management', icon: 'fa-users-gear', label: 'User Management' }
@@ -168,11 +168,11 @@ class Sidebar {
         // Management section
         if (isAdmin) {
             items.push(
-                { route: 'tea-dashboard', icon: 'fa-th-large', label: 'Dashboard' },
+                { route: 'tea-dashboard', icon: 'fa-grid-2', label: 'Dashboard' },
                 { route: 'tea-workers', icon: 'fa-users', label: 'Workers' },
                 { route: 'tea-companies', icon: 'fa-building', label: 'Companies' },
-                { route: 'tea-blocks', icon: 'fa-map-marker-alt', label: 'Blocks' },
-                { route: 'tea-wage-rate', icon: 'fa-dollar-sign', label: 'Wage Rate' }
+                { route: 'tea-blocks', icon: 'fa-map-pin', label: 'Blocks' },
+                { route: 'tea-wage-rate', icon: 'fa-coins', label: 'Wage Rate' }
             );
         }
 
@@ -190,10 +190,10 @@ class Sidebar {
         // Financial section
         if (isAdmin) {
             items.push(
-                { route: 'tea-comparison', icon: 'fa-balance-scale', label: 'Comparison' },
+                { route: 'tea-comparison', icon: 'fa-scale-balanced', label: 'Comparison' },
                 { route: 'tea-debts', icon: 'fa-credit-card', label: 'Store Debts' },
-                { route: 'tea-pay-worker', icon: 'fa-hand-holding-usd', label: 'Pay Worker' },
-                { route: 'tea-pay-store', icon: 'fa-store-alt', label: 'Pay Store' }
+                { route: 'tea-pay-worker', icon: 'fa-hand-holding-dollar', label: 'Pay Worker' },
+                { route: 'tea-pay-store', icon: 'fa-shop', label: 'Pay Store' }
             );
         }
 
@@ -212,7 +212,7 @@ class Sidebar {
         // Reports section
         if (isAdmin) {
             items.push(
-                { route: 'tea-reports', icon: 'fa-file-invoice-dollar', label: 'Reports' }
+                { route: 'tea-reports', icon: 'fa-file-chart-column', label: 'Reports' }
             );
         }
 
@@ -227,7 +227,7 @@ class Sidebar {
 
         const items = [];
 
-        // System section - User Management for admins
+        // System section
         if (isAdmin) {
             items.push(
                 { route: 'user-management', icon: 'fa-users-gear', label: 'User Management' }
@@ -237,9 +237,9 @@ class Sidebar {
         // Management section
         if (isAdmin) {
             items.push(
-                { route: 'dairy-dashboard', icon: 'fa-th-large', label: 'Dashboard' },
+                { route: 'dairy-dashboard', icon: 'fa-grid-2', label: 'Dashboard' },
                 { route: 'dairy-cows', icon: 'fa-cow', label: 'Cows' },
-                { route: 'dairy-workers', icon: 'fa-user-hard-hat', label: 'Dairy Workers' },
+                { route: 'dairy-workers', icon: 'fa-user-helmet-safety', label: 'Dairy Workers' },
                 { route: 'dairy-buyers', icon: 'fa-user-tie', label: 'Milk Buyers' }
             );
         }
@@ -248,52 +248,52 @@ class Sidebar {
         if (isAdmin || isDairyWorker) {
             items.push(
                 { route: 'dairy-production', icon: 'fa-flask', label: 'Milk Production' },
-                { route: 'dairy-feed', icon: 'fa-seedling', label: 'Feed Records' }
+                { route: 'dairy-feed', icon: 'fa-wheat-awn', label: 'Feed Records' }
             );
         }
 
         if (isAdmin) {
             items.push(
-                { route: 'dairy-disposal', icon: 'fa-truck', label: 'Milk Disposal' }
+                { route: 'dairy-disposal', icon: 'fa-truck-fast', label: 'Milk Disposal' }
             );
         }
 
         // Financial section
         if (isAdmin) {
             items.push(
-                { route: 'dairy-pay-worker', icon: 'fa-hand-holding-usd', label: 'Pay Worker' },
-                { route: 'dairy-deliveries', icon: 'fa-shipping-fast', label: 'Deliveries' },
-                { route: 'dairy-buyer-payments', icon: 'fa-receipt', label: 'Buyer Payments' }
+                { route: 'dairy-pay-worker', icon: 'fa-hand-holding-dollar', label: 'Pay Worker' },
+                { route: 'dairy-deliveries', icon: 'fa-truck-ramp-box', label: 'Deliveries' },
+                { route: 'dairy-buyer-payments', icon: 'fa-file-invoice', label: 'Buyer Payments' }
             );
         }
 
         if (isBuyer) {
             items.push(
-                { route: 'dairy-deliveries', icon: 'fa-shipping-fast', label: 'My Deliveries' },
-                { route: 'dairy-buyer-payments', icon: 'fa-receipt', label: 'Payments' }
+                { route: 'dairy-deliveries', icon: 'fa-truck-ramp-box', label: 'My Deliveries' },
+                { route: 'dairy-buyer-payments', icon: 'fa-file-invoice', label: 'Payments' }
             );
         }
 
         // Reports section
         if (isAdmin) {
             items.push(
-                { route: 'dairy-reports', icon: 'fa-file-invoice-dollar', label: 'Reports' }
+                { route: 'dairy-reports', icon: 'fa-file-chart-column', label: 'Reports' }
             );
         }
 
         return items;
     }
 
-    createNavItem(item, moduleColor = 'green') {
+    createNavItem(item, moduleAccent = 'emerald') {
         return `
             <a href="#" data-route="${item.route}" 
-                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-green-100 hover:bg-white/10 transition-all cursor-pointer font-medium text-sm group mb-0.5">
-                <span class="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-white/20 transition-all">
-                    <i class="fas ${item.icon} text-xs"></i>
+                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:bg-white/5 transition-all cursor-pointer font-medium text-[13px] group mb-0.5">
+                <span class="w-8 h-8 bg-white/5 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-${moduleAccent}-500/15 transition-all">
+                    <i class="fas ${item.icon} text-xs group-hover:text-${moduleAccent}-400 transition-colors"></i>
                 </span>
-                <span class="flex-1">${item.label}</span>
+                <span class="flex-1 group-hover:text-slate-200 transition-colors">${item.label}</span>
                 <span class="opacity-0 group-hover:opacity-100 transition-opacity">
-                    <i class="fas fa-chevron-right text-[10px] text-white/40"></i>
+                    <i class="fas fa-chevron-right text-[9px] text-slate-600"></i>
                 </span>
             </a>
         `;
@@ -312,7 +312,6 @@ class Sidebar {
         }
     }
 
-    // Set active route programmatically
     setActiveRoute(route) {
         const link = this.nav.querySelector(`[data-route="${route}"]`);
         if (link) {
@@ -333,7 +332,6 @@ class Sidebar {
         this.overlay.classList.remove('hidden');
         this.isOpen = true;
         
-        // Update hamburger icon if navbar exists
         if (typeof navbar !== 'undefined' && navbar.updateHamburgerIcon) {
             navbar.updateHamburgerIcon(true);
         }
@@ -344,13 +342,11 @@ class Sidebar {
         this.overlay.classList.add('hidden');
         this.isOpen = false;
         
-        // Update hamburger icon if navbar exists
         if (typeof navbar !== 'undefined' && navbar.updateHamburgerIcon) {
             navbar.updateHamburgerIcon(false);
         }
     }
 
-    // Refresh sidebar for current module
     refresh() {
         if (this.currentModule) {
             this.build(this.currentModule);
