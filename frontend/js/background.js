@@ -17,7 +17,7 @@ class BackgroundManager {
                 overlay: 'from-slate-900/70 via-slate-800/60 to-slate-900/70'
             },
             tea: {
-                url: 'https://images.unsplash.com/photo-1598890777032-bde835ba27c2?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80',
+                url: 'https://images.unsplash.com/photo-1558160074-4d7d8bdf4256?auto=format&fit=crop&w=1920&q=80',
                 overlay: 'from-emerald-950/70 via-slate-900/60 to-slate-950/70'
             },
             dairy: {
