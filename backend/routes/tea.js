@@ -300,7 +300,7 @@ router.put('/workers/:id', authorizeRoles('farm_owner', 'supervisor'), async (re
     }
 });
 // ============================================
-// COMPANIES CRUD
+// COMPANIES CRUD (Enhanced)
 // ============================================
 
 // GET /api/tea/companies
@@ -320,14 +320,57 @@ router.get('/companies', authorizeRoles('farm_owner', 'supervisor', 'tea_worker'
     }
 });
 
+// GET /api/tea/companies/:id/stats
+router.get('/companies/:id/stats', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Get total kg bought by this company (verified plucking)
+        const { data: plucking } = await supabase
+            .from('plucking_verified')
+            .select('weight_kg')
+            .eq('company_id', id);
+
+        const totalKg = plucking.reduce((sum, p) => sum + parseFloat(p.weight_kg), 0);
+
+        // Get company buying rate
+        const { data: company } = await supabase
+            .from('companies')
+            .select('buying_rate')
+            .eq('id', id)
+            .single();
+
+        const revenue = totalKg * parseFloat(company?.buying_rate || 0);
+
+        res.json({
+            success: true,
+            stats: {
+                total_kg: totalKg,
+                revenue: revenue
+            }
+        });
+    } catch (error) {
+        console.error('Company stats error:', error);
+        res.status(500).json({ success: false, message: 'Error fetching company stats.' });
+    }
+});
+
 // POST /api/tea/companies
 router.post('/companies', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
     try {
-        const { name, buying_rate, phone } = req.body;
+        const { name, buying_rate, registration_number } = req.body;
+
+        if (!name || buying_rate === undefined) {
+            return res.status(400).json({ success: false, message: 'Company name and buying rate are required.' });
+        }
 
         const { data: company, error } = await supabase
             .from('companies')
-            .insert({ name, buying_rate, phone })
+            .insert({ 
+                name, 
+                buying_rate, 
+                registration_number 
+            })
             .select()
             .single();
 
@@ -344,16 +387,27 @@ router.post('/companies', authorizeRoles('farm_owner', 'supervisor'), async (req
 router.put('/companies/:id', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, buying_rate, phone, is_active } = req.body;
+        const { name, buying_rate, registration_number, is_active } = req.body;
+
+        // Build update object with only provided fields
+        const updateData = { updated_at: new Date() };
+        if (name !== undefined) updateData.name = name;
+        if (buying_rate !== undefined) updateData.buying_rate = buying_rate;
+        if (registration_number !== undefined) updateData.registration_number = registration_number;
+        if (is_active !== undefined) updateData.is_active = is_active;
 
         const { data: company, error } = await supabase
             .from('companies')
-            .update({ name, buying_rate, phone, is_active, updated_at: new Date() })
+            .update(updateData)
             .eq('id', id)
             .select()
             .single();
 
         if (error) throw error;
+
+        if (!company) {
+            return res.status(404).json({ success: false, message: 'Company not found.' });
+        }
 
         res.json({ success: true, company });
     } catch (error) {
@@ -361,7 +415,6 @@ router.put('/companies/:id', authorizeRoles('farm_owner', 'supervisor'), async (
         res.status(500).json({ success: false, message: 'Error updating company.' });
     }
 });
-
 // ============================================
 // BLOCKS CRUD
 // ============================================
