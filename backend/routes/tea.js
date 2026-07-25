@@ -828,15 +828,17 @@ router.post('/plucking/verified', authorizeRoles('farm_owner', 'supervisor'), as
         // Check if worker already verified for this date
         const { data: existingVerified } = await supabase
             .from('plucking_verified')
-            .select('id, weight_kg, companies(name), blocks(name)')
+            .select('id, weight_kg, companies(name), blocks(name), users!recorded_by(username)')
             .eq('worker_id', worker_id)
             .eq('plucking_date', plucking_date);
 
         if (existingVerified.length > 0) {
+            const record = existingVerified[0];
+            const verifiedBy = record.users?.username || 'another user';
             return res.status(400).json({ 
                 success: false, 
-                message: `Worker already verified for this date (${existingVerified[0].weight_kg} kg). Edit the existing record instead.`,
-                existing_record: existingVerified[0]
+                message: `Already verified for this date by ${verifiedBy} (${record.weight_kg} kg - ${record.companies?.name || 'N/A'}). Edit the existing record instead.`,
+                existing_record: record
             });
         }
 
@@ -975,7 +977,6 @@ router.get('/plucking/verified/check/:workerId', authorizeRoles('farm_owner', 's
         res.status(500).json({ success: false, message: 'Error checking verification.' });
     }
 });
-
 // ============================================
 // COMPARISON PANEL
 // GET /api/tea/comparison/:worker_id?date=YYYY-MM-DD
