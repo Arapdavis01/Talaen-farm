@@ -117,6 +117,7 @@ class ApiService {
     // Debts
     async getDebts(workerId = null) { const ep = workerId ? `/tea/debts/${workerId}` : '/tea/debts'; return this.get(ep); }
     async addDebt(debtData) { return this.post('/tea/debts', debtData); }
+    async updateDebt(debtId, debtData) { return this.put(`/tea/debts/${debtId}`, debtData); }
     async reverseDebt(debtId, reason) { return this.post(`/tea/debts/${debtId}/reverse`, { reason }); }
 
     // Payments
