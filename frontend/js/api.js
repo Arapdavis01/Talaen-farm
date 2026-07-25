@@ -210,19 +210,6 @@ class ApiService {
         return this.get(endpoint);
     }
 
-    async updateVerifiedPlucking(id, pluckingData) {
-        return this.put(`/tea/plucking/verified/${id}`, pluckingData);
-    }
-
-    async deleteVerifiedPlucking(id) {
-        return this.delete(`/tea/plucking/verified/${id}`);
-    }
-
-    async checkVerifiedPlucking(workerId, date = null) {
-        const endpoint = `/tea/plucking/verified/check/${workerId}${date ? '?date=' + date : ''}`;
-        return this.get(endpoint);
-    }
-
     // Comparison
     async getComparison(workerId, date = null) {
         let endpoint = `/tea/comparison/${workerId}`;
