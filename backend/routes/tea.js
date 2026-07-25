@@ -804,36 +804,113 @@ router.get('/reports/profit', authorizeRoles('farm_owner', 'supervisor'), async 
 // ============================================
 router.get('/dashboard', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
     try {
-        // Worker count
+        const today = new Date().toISOString().split('T')[0];
+        
+        // Get start of week (Monday)
+        const dayOfWeek = new Date().getDay();
+        const diff = new Date().setDate(new Date().getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+        const weekStart = new Date(diff).toISOString().split('T')[0];
+        
+        // Get start of month
+        const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+
+        // 1. Active Worker count
         const { count: workerCount } = await supabase
             .from('tea_workers')
             .select('*', { count: 'exact', head: true })
             .eq('is_active', true);
 
-        // Total kg today (verified)
-        const today = new Date().toISOString().split('T')[0];
+        // 2. Active Company count
+        const { count: companyCount } = await supabase
+            .from('companies')
+            .select('*', { count: 'exact', head: true })
+            .eq('is_active', true);
+
+        // 3. Today's verified plucking (kg)
         const { data: todayPlucking } = await supabase
             .from('plucking_verified')
             .select('weight_kg')
             .eq('plucking_date', today);
-
         const todayKg = todayPlucking.reduce((sum, p) => sum + parseFloat(p.weight_kg), 0);
 
-        // Total outstanding debt
-        const { data: allDebts } = await supabase
+        // 4. This month's verified plucking (kg)
+        const { data: monthPlucking } = await supabase
+            .from('plucking_verified')
+            .select('weight_kg')
+            .gte('plucking_date', monthStart);
+        const monthlyKg = monthPlucking.reduce((sum, p) => sum + parseFloat(p.weight_kg), 0);
+
+        // 5. This week's verified plucking (kg)
+        const { data: weekPlucking } = await supabase
+            .from('plucking_verified')
+            .select('weight_kg')
+            .gte('plucking_date', weekStart);
+        const weekKg = weekPlucking.reduce((sum, p) => sum + parseFloat(p.weight_kg), 0);
+
+        // 6. Outstanding worker debt (unsettled, not reversed)
+        const { data: outstandingDebts } = await supabase
             .from('debts')
             .select('amount')
             .eq('is_settled', false)
             .eq('is_reversed', false);
+        const outstandingDebt = outstandingDebts.reduce((sum, d) => sum + parseFloat(d.amount), 0);
 
-        const totalDebt = allDebts.reduce((sum, d) => sum + parseFloat(d.amount), 0);
+        // 7. Total store debt (ALL debts ever, not reversed)
+        const { data: allStoreDebts } = await supabase
+            .from('debts')
+            .select('amount')
+            .eq('is_reversed', false);
+        const totalStoreDebt = allStoreDebts.reduce((sum, d) => sum + parseFloat(d.amount), 0);
+
+        // 8. Current wage rate
+        const { data: wageRate } = await supabase
+            .from('wage_rate')
+            .select('rate_per_kg')
+            .eq('is_active', true)
+            .order('effective_from', { ascending: false })
+            .limit(1)
+            .single();
+
+        // 9. Workers with unsettled plucking (unpaid workers count)
+        const { data: unpaidWorkers } = await supabase
+            .from('plucking_verified')
+            .select('worker_id', { distinct: true })
+            .eq('is_settled', false);
+        const unpaidWorkersCount = unpaidWorkers?.length || 0;
+
+        // 10. Self vs Verified match percentage (today)
+        const { data: todaySelf } = await supabase
+            .from('plucking_self')
+            .select('weight_kg')
+            .eq('plucking_date', today);
+        const todaySelfKg = todaySelf.reduce((sum, p) => sum + parseFloat(p.weight_kg), 0);
+        
+        let matchPercentage = 100;
+        if (todayKg > 0 && todaySelfKg > 0) {
+            matchPercentage = Math.round((Math.min(todaySelfKg, todayKg) / Math.max(todaySelfKg, todayKg)) * 100);
+        } else if (todayKg === 0 && todaySelfKg === 0) {
+            matchPercentage = 100;
+        } else {
+            matchPercentage = 0;
+        }
+
+        // 11. Pending payments (workers with unsettled plucking)
+        const pendingPayments = unpaidWorkersCount;
 
         res.json({
             success: true,
             dashboard: {
-                worker_count: workerCount,
+                worker_count: workerCount || 0,
                 today_kg: todayKg,
-                total_outstanding_debt: totalDebt
+                monthly_kg: monthlyKg,
+                week_kg: weekKg,
+                outstanding_debt: outstandingDebt,
+                total_store_debt: totalStoreDebt,
+                company_count: companyCount || 0,
+                wage_rate: wageRate?.rate_per_kg || 0,
+                unpaid_workers_count: unpaidWorkersCount,
+                match_percentage: matchPercentage,
+                pending_payments: pendingPayments
             }
         });
     } catch (error) {
