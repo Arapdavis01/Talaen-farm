@@ -96,10 +96,10 @@ class ModuleSelector {
         mainContent.innerHTML = `
             <div class="min-h-[80vh] flex items-center justify-center py-8 px-4">
                 <div class="w-full max-w-5xl">
-                    <!-- Header -->
+                    <!-- Header with Enlarged Logo -->
                     <div class="text-center mb-14 animate-fadeInDown">
-                        <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-slate-700 to-slate-800 rounded-2xl mb-6 shadow-xl shadow-slate-800/20 overflow-hidden">
-                            <img src="assets/images/logo.png.jpg" alt="Logo" class="w-12 h-12 object-contain" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-tractor text-white text-3xl\'></i>'">
+                        <div class="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-slate-700 to-slate-800 rounded-2xl mb-6 shadow-xl shadow-slate-800/20 overflow-hidden">
+                            <img src="assets/images/logo.png.jpg" alt="Logo" class="w-full h-full object-cover" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-tractor text-white text-4xl\'></i>'">
                         </div>
                         <h1 class="text-4xl font-extrabold text-slate-800 mb-3 tracking-tight">
                             Welcome, <span class="text-emerald-700">${auth.getCurrentUser().full_name}</span>
