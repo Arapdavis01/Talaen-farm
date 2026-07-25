@@ -1,5 +1,5 @@
 // ============================================
-// TALAEN FARM - Modal Component (Improved)
+// TALAEN FARM - Modal Component (Professional)
 // ============================================
 
 class Modal {
@@ -26,18 +26,18 @@ class Modal {
     open(title, content, options = {}) {
         const { size = 'max-w-lg', onClose, icon = 'fa-pen' } = options;
 
-        this.content.className = `bg-white rounded-2xl shadow-2xl w-full ${size} max-h-[92vh] overflow-hidden border border-gray-100`;
+        this.content.className = `bg-white rounded-2xl shadow-2xl w-full ${size} max-h-[92vh] overflow-hidden border border-stone-200`;
         
         this.content.innerHTML = `
             <!-- Modal Header -->
-            <div class="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-gray-100 px-6 py-5 flex items-center justify-between z-10 rounded-t-2xl">
+            <div class="sticky top-0 bg-white/98 backdrop-blur-md border-b border-stone-100 px-6 py-5 flex items-center justify-between z-10 rounded-t-2xl">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-gradient-to-br from-green-100 to-emerald-100 rounded-xl flex items-center justify-center shadow-sm">
-                        <i class="fas ${icon} text-green-600 text-sm"></i>
+                    <div class="w-10 h-10 bg-gradient-to-br from-slate-100 to-stone-100 rounded-xl flex items-center justify-center shadow-sm border border-stone-200/50">
+                        <i class="fas ${icon} text-slate-600 text-sm"></i>
                     </div>
-                    <h3 class="text-lg font-bold text-gray-800">${title}</h3>
+                    <h3 class="text-lg font-bold text-slate-800 tracking-tight">${title}</h3>
                 </div>
-                <button class="w-9 h-9 flex items-center justify-center rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all" 
+                <button class="w-9 h-9 flex items-center justify-center rounded-xl text-stone-400 hover:text-slate-600 hover:bg-stone-100 transition-all" 
                         onclick="modal.close()" title="Close">
                     <i class="fas fa-times text-lg"></i>
                 </button>
@@ -85,7 +85,7 @@ class Modal {
     openForm(title, formFields, submitHandler, options = {}) {
         const { 
             submitText = 'Save', 
-            submitClass = 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-600/25',
+            submitClass = 'bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 shadow-lg shadow-emerald-600/20',
             submitIcon = 'fa-check',
             icon = 'fa-pen',
             size = 'max-w-lg'
@@ -96,9 +96,9 @@ class Modal {
                 ${formFields}
                 
                 <!-- Form Actions -->
-                <div class="flex justify-end gap-3 pt-6 border-t border-gray-100">
+                <div class="flex justify-end gap-3 pt-6 border-t border-stone-100">
                     <button type="button" 
-                            class="px-5 py-2.5 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all font-medium flex items-center gap-2"
+                            class="px-5 py-2.5 text-stone-600 bg-stone-100 hover:bg-stone-200 rounded-xl transition-all font-medium flex items-center gap-2"
                             onclick="modal.close()">
                         <i class="fas fa-times text-sm"></i> Cancel
                     </button>
@@ -148,26 +148,29 @@ class Modal {
     openConfirm(title, message, confirmHandler, options = {}) {
         const { 
             confirmText = 'Confirm', 
-            confirmClass = 'bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 shadow-lg shadow-red-600/25',
+            confirmClass = 'bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 shadow-lg shadow-red-600/20',
             confirmIcon = 'fa-check',
-            type = 'warning' // warning, danger, info
+            type = 'warning'
         } = options;
 
         const typeStyles = {
             warning: {
-                iconBg: 'bg-amber-100',
-                iconColor: 'text-amber-500',
-                icon: 'fa-exclamation-triangle'
+                iconBg: 'bg-amber-50',
+                iconColor: 'text-amber-600',
+                icon: 'fa-triangle-exclamation',
+                borderColor: 'border-amber-200'
             },
             danger: {
-                iconBg: 'bg-red-100',
-                iconColor: 'text-red-500',
-                icon: 'fa-trash-alt'
+                iconBg: 'bg-red-50',
+                iconColor: 'text-red-600',
+                icon: 'fa-trash-can',
+                borderColor: 'border-red-200'
             },
             info: {
-                iconBg: 'bg-blue-100',
-                iconColor: 'text-blue-500',
-                icon: 'fa-info-circle'
+                iconBg: 'bg-sky-50',
+                iconColor: 'text-sky-600',
+                icon: 'fa-circle-info',
+                borderColor: 'border-sky-200'
             }
         };
 
@@ -176,17 +179,17 @@ class Modal {
         const content = `
             <div class="text-center py-4">
                 <!-- Icon -->
-                <div class="w-20 h-20 ${style.iconBg} rounded-full flex items-center justify-center mx-auto mb-5 animate-bounceIn">
+                <div class="w-20 h-20 ${style.iconBg} rounded-full flex items-center justify-center mx-auto mb-5 animate-bounceIn border ${style.borderColor}">
                     <i class="fas ${style.icon} ${style.iconColor} text-3xl"></i>
                 </div>
                 
                 <!-- Title & Message -->
-                <h3 class="text-lg font-bold text-gray-800 mb-2">${title}</h3>
-                <p class="text-gray-500 mb-8 leading-relaxed">${message}</p>
+                <h3 class="text-lg font-bold text-slate-800 mb-2">${title}</h3>
+                <p class="text-stone-500 mb-8 leading-relaxed">${message}</p>
                 
                 <!-- Actions -->
                 <div class="flex justify-center gap-3">
-                    <button class="px-6 py-2.5 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all font-medium"
+                    <button class="px-6 py-2.5 text-stone-600 bg-stone-100 hover:bg-stone-200 rounded-xl transition-all font-medium"
                             onclick="modal.close()">
                         Cancel
                     </button>
@@ -198,13 +201,12 @@ class Modal {
             </div>
         `;
 
-        this.open(title, content, { icon: style.icon.replace('fa-', 'fa-') });
+        this.open(title, content, { icon: style.icon });
 
         setTimeout(() => {
             const btn = document.getElementById('confirmBtn');
             if (btn) {
                 btn.addEventListener('click', async () => {
-                    // Show loading
                     const originalText = btn.innerHTML;
                     btn.disabled = true;
                     btn.innerHTML = '<span class="spinner spinner-sm spinner-white"></span> Processing...';
@@ -229,22 +231,25 @@ class Modal {
     openAlert(title, message, type = 'success', options = {}) {
         const typeStyles = {
             success: {
-                iconBg: 'bg-green-100',
-                iconColor: 'text-green-500',
-                icon: 'fa-check-circle',
-                btnClass: 'bg-green-600 hover:bg-green-700'
+                iconBg: 'bg-emerald-50',
+                iconColor: 'text-emerald-600',
+                icon: 'fa-circle-check',
+                btnClass: 'bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-600/20',
+                borderColor: 'border-emerald-200'
             },
             error: {
-                iconBg: 'bg-red-100',
-                iconColor: 'text-red-500',
-                icon: 'fa-times-circle',
-                btnClass: 'bg-red-600 hover:bg-red-700'
+                iconBg: 'bg-red-50',
+                iconColor: 'text-red-600',
+                icon: 'fa-circle-xmark',
+                btnClass: 'bg-red-600 hover:bg-red-700 shadow-lg shadow-red-600/20',
+                borderColor: 'border-red-200'
             },
             info: {
-                iconBg: 'bg-blue-100',
-                iconColor: 'text-blue-500',
-                icon: 'fa-info-circle',
-                btnClass: 'bg-blue-600 hover:bg-blue-700'
+                iconBg: 'bg-sky-50',
+                iconColor: 'text-sky-600',
+                icon: 'fa-circle-info',
+                btnClass: 'bg-sky-600 hover:bg-sky-700 shadow-lg shadow-sky-600/20',
+                borderColor: 'border-sky-200'
             }
         };
 
@@ -253,19 +258,19 @@ class Modal {
 
         const content = `
             <div class="text-center py-4">
-                <div class="w-20 h-20 ${style.iconBg} rounded-full flex items-center justify-center mx-auto mb-5 animate-bounceIn">
+                <div class="w-20 h-20 ${style.iconBg} rounded-full flex items-center justify-center mx-auto mb-5 animate-bounceIn border ${style.borderColor}">
                     <i class="fas ${style.icon} ${style.iconColor} text-3xl"></i>
                 </div>
-                <h3 class="text-lg font-bold text-gray-800 mb-2">${title}</h3>
-                <p class="text-gray-500 mb-8">${message}</p>
-                <button class="px-8 py-2.5 text-white ${style.btnClass} rounded-xl transition-all font-medium shadow-lg"
+                <h3 class="text-lg font-bold text-slate-800 mb-2">${title}</h3>
+                <p class="text-stone-500 mb-8">${message}</p>
+                <button class="px-8 py-2.5 text-white ${style.btnClass} rounded-xl transition-all font-medium"
                         onclick="modal.close()">
                     ${buttonText}
                 </button>
             </div>
         `;
 
-        this.open(title, content, { icon: style.icon.replace('fa-', 'fa-') });
+        this.open(title, content, { icon: style.icon });
     }
 
     // Helper for loading modal
@@ -273,8 +278,8 @@ class Modal {
         const content = `
             <div class="text-center py-10">
                 <div class="spinner spinner-lg mx-auto mb-5"></div>
-                <p class="text-gray-600 font-medium">${message}</p>
-                <p class="text-gray-400 text-sm mt-1">Please wait...</p>
+                <p class="text-slate-600 font-medium">${message}</p>
+                <p class="text-stone-400 text-sm mt-1">Please wait...</p>
             </div>
         `;
 
