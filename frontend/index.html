@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover, shrink-to-fit=no">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1a1a2e">
@@ -29,21 +29,12 @@
                     },
                     colors: {
                         'brand': {
-                            50: '#f0fdf4',
-                            100: '#dcfce7',
-                            200: '#bbf7d0',
-                            300: '#86efac',
-                            400: '#4ade80',
-                            500: '#22c55e',
-                            600: '#059669',
-                            700: '#047857',
-                            800: '#065f46',
-                            900: '#064e3b',
+                            50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 300: '#86efac',
+                            400: '#4ade80', 500: '#22c55e', 600: '#059669', 700: '#047857',
+                            800: '#065f46', 900: '#064e3b',
                         },
                         'slate': {
-                            750: '#1e293b',
-                            850: '#1a1a2e',
-                            950: '#0f0f23',
+                            750: '#1e293b', 850: '#1a1a2e', 950: '#0f0f23',
                         }
                     }
                 }
@@ -51,7 +42,7 @@
         }
     </script>
 </head>
-<body class="font-inter bg-stone-50 antialiased">
+<body class="font-inter bg-stone-50 antialiased overflow-x-hidden">
     
     <!-- Full Screen Background -->
     <div id="appBackground" class="fixed inset-0 z-0 bg-cover bg-center bg-no-repeat transition-all duration-700" style="background-image: url('https://images.unsplash.com/photo-1499529112087-3cb3b73cec95?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');">
@@ -63,75 +54,34 @@
         <div class="relative w-full max-w-lg">
             <div class="relative bg-white/98 backdrop-blur-sm rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden border border-white/30 animate-fadeIn">
                 
-                <div class="relative h-48 sm:h-64 overflow-hidden">
-                    
-                    <!-- Tea Farm Image -->
+                <div class="relative h-40 sm:h-64 overflow-hidden">
                     <div class="absolute inset-0" style="clip-path: polygon(0 0, 100% 0, 0 100%);">
                         <img src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Tea Farm" class="w-full h-full object-cover">
                         <div class="absolute inset-0 bg-gradient-to-br from-emerald-800/50 to-emerald-900/30"></div>
-                        <div class="absolute top-3 sm:top-6 left-3 sm:left-6">
-                            <div class="flex items-center gap-2 bg-white/20 backdrop-blur-md rounded-xl sm:rounded-2xl px-3 sm:px-4 py-2 sm:py-2.5 shadow-lg border border-white/20">
-                                <div class="w-6 h-6 sm:w-8 sm:h-8 bg-emerald-500 rounded-lg sm:rounded-xl flex items-center justify-center">
-                                    <i class="fas fa-leaf text-white text-xs sm:text-sm"></i>
-                                </div>
-                                <div>
-                                    <p class="text-white text-xs sm:text-sm font-bold leading-tight">Tea Farm</p>
-                                    <p class="text-emerald-100 text-[8px] sm:text-[10px] leading-tight">Plucking & Sales</p>
-                                </div>
-                            </div>
-                        </div>
                     </div>
-                    
-                    <!-- Dairy Farm Image -->
                     <div class="absolute inset-0" style="clip-path: polygon(100% 0, 100% 100%, 0 100%);">
                         <img src="https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Dairy Farm" class="w-full h-full object-cover">
                         <div class="absolute inset-0 bg-gradient-to-tl from-sky-800/50 to-sky-900/30"></div>
-                        <div class="absolute bottom-3 sm:bottom-6 right-3 sm:right-6">
-                            <div class="flex items-center gap-2 bg-white/20 backdrop-blur-md rounded-xl sm:rounded-2xl px-3 sm:px-4 py-2 sm:py-2.5 shadow-lg border border-white/20">
-                                <div class="w-6 h-6 sm:w-8 sm:h-8 bg-sky-500 rounded-lg sm:rounded-xl flex items-center justify-center">
-                                    <i class="fas fa-cow text-white text-xs sm:text-sm"></i>
-                                </div>
-                                <div>
-                                    <p class="text-white text-xs sm:text-sm font-bold leading-tight">Dairy Farm</p>
-                                    <p class="text-sky-100 text-[8px] sm:text-[10px] leading-tight">Milk & Cattle</p>
-                                </div>
-                            </div>
-                        </div>
                     </div>
-                    
-                    <!-- Diagonal Divider -->
                     <div class="absolute inset-0 pointer-events-none" style="background: linear-gradient(135deg, transparent calc(50% - 1px), rgba(255,255,255,0.5) 50%, transparent calc(50% + 1px));"></div>
-                    
-                    <!-- Center Logo -->
                     <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
-                        <div class="w-16 h-16 sm:w-24 sm:h-24 bg-gradient-to-br from-slate-700 to-slate-800 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-2xl border-[2px] sm:border-[3px] border-white/60 overflow-hidden">
-                            <img src="assets/images/logo.png.jpg" alt="Logo" class="w-10 h-10 sm:w-full sm:h-full object-cover" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-tractor text-white text-xl sm:text-3xl\'></i>'">
+                        <div class="w-14 h-14 sm:w-24 sm:h-24 bg-gradient-to-br from-slate-700 to-slate-800 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-2xl border-2 sm:border-[3px] border-white/60 overflow-hidden">
+                            <img src="assets/images/logo.png.jpg" alt="Logo" class="w-9 h-9 sm:w-full sm:h-full object-cover" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-tractor text-white text-lg sm:text-3xl\'></i>'">
                         </div>
                     </div>
-                    
-                    <div class="absolute bottom-0 left-0 right-0 h-16 sm:h-24 bg-gradient-to-t from-black/70 to-transparent pointer-events-none"></div>
-                    
-                    <div class="absolute bottom-3 sm:bottom-5 left-0 right-0 text-center z-10">
-                        <h1 class="text-xl sm:text-2xl font-extrabold text-white drop-shadow-2xl tracking-tight">Talaen Farm</h1>
-                        <p class="text-white/70 text-[9px] sm:text-[11px] tracking-[0.2em] uppercase font-medium">Management System</p>
+                    <div class="absolute bottom-0 left-0 right-0 h-12 sm:h-24 bg-gradient-to-t from-black/70 to-transparent pointer-events-none"></div>
+                    <div class="absolute bottom-2 sm:bottom-5 left-0 right-0 text-center z-10">
+                        <h1 class="text-lg sm:text-2xl font-extrabold text-white drop-shadow-2xl tracking-tight">Talaen Farm</h1>
+                        <p class="text-white/70 text-[8px] sm:text-[11px] tracking-[0.2em] uppercase font-medium">Management System</p>
                     </div>
                 </div>
                 
-                <!-- Login Form -->
-                <div class="p-5 sm:p-8 pt-4 sm:pt-6">
-                    <div class="flex items-center justify-center gap-2 mb-4 sm:mb-5">
-                        <div class="h-px flex-1 bg-gradient-to-r from-transparent via-stone-300 to-transparent"></div>
-                        <span class="text-stone-400 text-[10px] sm:text-xs uppercase tracking-wider font-semibold flex items-center gap-1.5">
-                            <i class="fas fa-shield-halved text-emerald-600 text-[10px] sm:text-xs"></i> Secure Login
-                        </span>
-                        <div class="h-px flex-1 bg-gradient-to-r from-transparent via-stone-300 to-transparent"></div>
-                    </div>
-                    
-                    <form id="loginForm" class="space-y-4 sm:space-y-5">
+                <div class="p-4 sm:p-8 pt-3 sm:pt-6">
+                    <form id="loginForm" class="space-y-3 sm:space-y-5">
                         <div>
-                            <label class="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 sm:mb-2">Username</label>
-                            <div class="relative group">
-                                <span class="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center text-stone-400 group-focus-within:text-emerald-600 transition-colors">
+                            <label class="block text-xs sm:text-sm font-semibold text-slate-700 mb-1 sm:mb-2">Username</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center text-stone-400">
                                     <i class="fas fa-user text-sm"></i>
                                 </span>
                                 <input type="text" id="username" required 
@@ -139,11 +89,10 @@
                                     placeholder="Enter your username">
                             </div>
                         </div>
-                        
                         <div>
-                            <label class="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 sm:mb-2">Password</label>
-                            <div class="relative group">
-                                <span class="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center text-stone-400 group-focus-within:text-emerald-600 transition-colors">
+                            <label class="block text-xs sm:text-sm font-semibold text-slate-700 mb-1 sm:mb-2">Password</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center text-stone-400">
                                     <i class="fas fa-lock text-sm"></i>
                                 </span>
                                 <input type="password" id="password" required 
@@ -154,34 +103,25 @@
                                 </button>
                             </div>
                         </div>
-                        
                         <button type="submit" 
                             class="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 text-white py-3 sm:py-3.5 rounded-xl font-semibold active:from-emerald-700 active:to-emerald-800 transition-all active:scale-[0.98] shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 text-sm sm:text-base min-h-[48px]">
                             <i class="fas fa-sign-in-alt"></i> Sign In
                         </button>
                     </form>
-                    
-                    <div id="loginError" class="mt-3 sm:mt-4 text-red-500 text-xs sm:text-sm text-center hidden bg-red-50 border border-red-100 py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl">
-                        <i class="fas fa-exclamation-circle mr-1.5"></i>
-                        <span id="loginErrorText"></span>
-                    </div>
-                    
-                    <p class="text-center text-stone-400 text-[10px] sm:text-xs mt-4 sm:mt-6">
-                        &copy; 2024 Talaen Farm. All rights reserved.
-                    </p>
+                    <div id="loginError" class="mt-3 text-red-500 text-xs sm:text-sm text-center hidden bg-red-50 border border-red-100 py-2.5 px-3 rounded-xl"></div>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Main App Container -->
-    <div id="appContainer" class="hidden relative z-10 min-h-screen flex">
+    <div id="appContainer" class="hidden relative z-10 min-h-screen w-full">
         
-        <!-- Sidebar -->
-        <div id="sidebar" class="sidebar-mobile lg:flex flex-col w-72 bg-slate-850 text-slate-200 fixed h-full z-30 shadow-2xl border-r border-slate-700/50">
-            <div class="p-4 sm:p-6 border-b border-slate-700/50">
-                <div class="flex items-center gap-2 sm:gap-3 mb-1">
-                    <div class="w-10 h-10 sm:w-14 sm:h-14 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl flex items-center justify-center overflow-hidden shadow-lg shadow-emerald-900/30 flex-shrink-0">
+        <!-- Sidebar - Hidden on mobile by default -->
+        <div id="sidebar" class="sidebar-mobile flex flex-col w-72 max-w-[85vw] bg-slate-850 text-slate-200 fixed h-full z-30 shadow-2xl border-r border-slate-700/50" style="transform: translateX(-100%);">
+            <div class="p-4 sm:p-6 border-b border-slate-700/50 flex-shrink-0">
+                <div class="flex items-center gap-2 sm:gap-3">
+                    <div class="w-10 h-10 sm:w-14 sm:h-14 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl flex items-center justify-center overflow-hidden shadow-lg flex-shrink-0">
                         <img src="assets/images/logo.png.jpg" alt="Logo" class="w-6 h-6 sm:w-full sm:h-full object-cover" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-tractor text-white text-lg sm:text-2xl\'></i>'">
                     </div>
                     <div>
@@ -191,7 +131,7 @@
                 </div>
             </div>
             <nav id="sidebarNav" class="flex-1 overflow-y-auto py-3 sm:py-4 px-2 sm:px-3 space-y-0.5 sidebar-scroll"></nav>
-            <div class="p-3 sm:p-4 border-t border-slate-700/50">
+            <div class="p-3 sm:p-4 border-t border-slate-700/50 flex-shrink-0">
                 <button id="logoutBtn" class="w-full bg-red-500/10 active:bg-red-500/20 text-red-300 py-2.5 sm:py-3 rounded-xl transition-all text-xs sm:text-sm font-medium flex items-center justify-center gap-2 border border-red-500/20 active:border-red-500/30 min-h-[44px]">
                     <i class="fas fa-sign-out-alt"></i>Logout
                 </button>
@@ -200,22 +140,21 @@
         
         <div id="sidebarOverlay" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-20 lg:hidden sidebar-overlay-tap"></div>
         
-        <div class="flex-1 lg:ml-72">
-            <!-- Mobile Navbar -->
+        <!-- Main Content Area - Full width on mobile -->
+        <div class="flex-1 w-full lg:ml-72">
             <div id="mobileNavbar" class="lg:hidden bg-white/95 backdrop-blur-md shadow-sm px-3 sm:px-4 py-3 flex items-center justify-between sticky top-0 z-10 border-b border-stone-200 safe-top">
-                <button id="hamburgerBtn" class="text-slate-600 active:text-emerald-700 transition-colors w-10 h-10 flex items-center justify-center rounded-xl active:bg-stone-100 min-tap">
+                <button id="hamburgerBtn" class="text-slate-600 active:text-emerald-700 transition-colors w-10 h-10 flex items-center justify-center rounded-xl active:bg-stone-100 min-tap flex-shrink-0">
                     <i class="fas fa-bars text-lg sm:text-xl"></i>
                 </button>
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 flex-shrink-0">
                     <div class="w-8 h-8 sm:w-9 sm:h-9 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-lg flex items-center justify-center overflow-hidden">
                         <img src="assets/images/logo.png.jpg" alt="Logo" class="w-5 h-5 sm:w-full sm:h-full object-cover" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-tractor text-white text-xs sm:text-sm\'></i>'">
                     </div>
-                    <h2 class="font-bold text-slate-800 text-sm sm:text-base">Talaen Farm</h2>
+                    <h2 class="font-bold text-slate-800 text-sm sm:text-base truncate">Talaen Farm</h2>
                 </div>
-                <div class="w-10"></div>
+                <div class="w-10 flex-shrink-0"></div>
             </div>
-            
-            <main id="mainContent" class="p-3 sm:p-4 md:p-6 lg:p-8 safe-bottom"></main>
+            <main id="mainContent" class="p-3 sm:p-4 md:p-6 lg:p-8 safe-bottom w-full"></main>
         </div>
     </div>
 
@@ -239,8 +178,6 @@
     <script src="js/components/navbar.js"></script>
     <script src="js/modules/moduleSelector.js"></script>
     <script src="js/modules/userManagement.js"></script>
-    
-    <!-- Tea Module - Admin -->
     <script src="js/modules/tea/teaDashboard.js"></script>
     <script src="js/modules/tea/workers.js"></script>
     <script src="js/modules/tea/companies.js"></script>
@@ -253,29 +190,21 @@
     <script src="js/modules/tea/payWorker.js"></script>
     <script src="js/modules/tea/payStore.js"></script>
     <script src="js/modules/tea/reports.js"></script>
-    
-    <!-- Tea Module - Worker -->
     <script src="js/modules/tea/workerDashboard.js"></script>
     <script src="js/modules/tea/workerPlucking.js"></script>
     <script src="js/modules/tea/workerDebts.js"></script>
     <script src="js/modules/tea/workerStorePurchases.js"></script>
     <script src="js/modules/tea/workerPayments.js"></script>
     <script src="js/modules/tea/workerProfile.js"></script>
-    
-    <!-- Tea Module - Store Manager -->
     <script src="js/modules/tea/storeDashboard.js"></script>
     <script src="js/modules/tea/storeWorkerDebts.js"></script>
     <script src="js/modules/tea/storeProfile.js"></script>
-    
-    <!-- Tea Production Module -->
     <script src="js/modules/tea/farmInputs.js"></script>
     <script src="js/modules/tea/productionTargets.js"></script>
     <script src="js/modules/tea/inputCosts.js"></script>
     <script src="js/modules/tea/fertilizerSchedule.js"></script>
     <script src="js/modules/tea/pruningSchedule.js"></script>
     <script src="js/modules/tea/seasonalAnalysis.js"></script>
-    
-    <!-- Dairy Module -->
     <script src="js/modules/dairy/dairyDashboard.js"></script>
     <script src="js/modules/dairy/cows.js"></script>
     <script src="js/modules/dairy/dairyWorkers.js"></script>
@@ -287,7 +216,6 @@
     <script src="js/modules/dairy/deliveries.js"></script>
     <script src="js/modules/dairy/buyerPayments.js"></script>
     <script src="js/modules/dairy/dairyReports.js"></script>
-    
     <script src="js/app.js"></script>
 </body>
 </html>
