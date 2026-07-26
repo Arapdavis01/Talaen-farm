@@ -178,7 +178,6 @@
         <div id="sidebar" class="hidden lg:flex flex-col w-72 bg-slate-850 text-slate-200 fixed h-full z-30 shadow-2xl border-r border-slate-700/50">
             <div class="p-6 border-b border-slate-700/50">
                 <div class="flex items-center gap-3 mb-1">
-                    <!-- Sidebar Logo - Enlarged w-14 h-14 -->
                     <div class="w-14 h-14 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl flex items-center justify-center overflow-hidden shadow-lg shadow-emerald-900/30 flex-shrink-0">
                         <img src="assets/images/logo.png.jpg" alt="Logo" class="w-full h-full object-cover" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-tractor text-white text-2xl\'></i>'">
                     </div>
@@ -205,7 +204,6 @@
                     <i class="fas fa-bars text-xl"></i>
                 </button>
                 <div class="flex items-center gap-2.5">
-                    <!-- Mobile Logo -->
                     <div class="w-9 h-9 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-lg flex items-center justify-center overflow-hidden">
                         <img src="assets/images/logo.png.jpg" alt="Logo" class="w-full h-full object-cover" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-tractor text-white text-sm\'></i>'">
                     </div>
@@ -238,6 +236,8 @@
     <script src="js/components/navbar.js"></script>
     <script src="js/modules/moduleSelector.js"></script>
     <script src="js/modules/userManagement.js"></script>
+    
+    <!-- Tea Module -->
     <script src="js/modules/tea/teaDashboard.js"></script>
     <script src="js/modules/tea/workers.js"></script>
     <script src="js/modules/tea/companies.js"></script>
@@ -250,6 +250,16 @@
     <script src="js/modules/tea/payWorker.js"></script>
     <script src="js/modules/tea/payStore.js"></script>
     <script src="js/modules/tea/reports.js"></script>
+    
+    <!-- Tea Production Module (NEW) -->
+    <script src="js/modules/tea/farmInputs.js"></script>
+    <script src="js/modules/tea/productionTargets.js"></script>
+    <script src="js/modules/tea/inputCosts.js"></script>
+    <script src="js/modules/tea/fertilizerSchedule.js"></script>
+    <script src="js/modules/tea/pruningSchedule.js"></script>
+    <script src="js/modules/tea/seasonalAnalysis.js"></script>
+    
+    <!-- Dairy Module -->
     <script src="js/modules/dairy/dairyDashboard.js"></script>
     <script src="js/modules/dairy/cows.js"></script>
     <script src="js/modules/dairy/dairyWorkers.js"></script>
@@ -261,6 +271,7 @@
     <script src="js/modules/dairy/deliveries.js"></script>
     <script src="js/modules/dairy/buyerPayments.js"></script>
     <script src="js/modules/dairy/dairyReports.js"></script>
+    
     <script src="js/app.js"></script>
 </body>
 </html>
