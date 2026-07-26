@@ -128,7 +128,10 @@ class ApiService {
 
     // Reports
     async getTeaDashboard() { return this.get('/tea/dashboard'); }
-    async getProfitReport() { return this.get('/tea/reports/profit'); }
+    async getProfitReport(params = {}) { const q = new URLSearchParams(params).toString(); return this.get(`/tea/reports/profit${q ? '?' + q : ''}`); }
+    async getProductionReport(params = {}) { const q = new URLSearchParams(params).toString(); return this.get(`/tea/reports/production${q ? '?' + q : ''}`); }
+    async getWorkerPerformanceReport(params = {}) { const q = new URLSearchParams(params).toString(); return this.get(`/tea/reports/workers${q ? '?' + q : ''}`); }
+    async getDebtReport() { return this.get('/tea/reports/debts'); }
 
     // ============ DAIRY MODULE ============
     async getCows() { return this.get('/dairy/cows'); }
