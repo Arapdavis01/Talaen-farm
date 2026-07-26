@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1a1a2e">
     <title>Talaen Farm Management System</title>
@@ -149,14 +149,14 @@
                                 <input type="password" id="password" required 
                                     class="w-full pl-9 sm:pl-11 pr-10 sm:pr-12 py-2.5 sm:py-3 bg-stone-50 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all font-medium text-slate-800 placeholder-stone-400 text-sm"
                                     placeholder="Enter your password">
-                                <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 pr-3 sm:pr-4 flex items-center text-stone-400 hover:text-stone-600 transition-colors">
+                                <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 pr-3 sm:pr-4 flex items-center text-stone-400 active:text-stone-600 transition-colors min-tap">
                                     <i class="fas fa-eye text-sm"></i>
                                 </button>
                             </div>
                         </div>
                         
                         <button type="submit" 
-                            class="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 text-white py-3 sm:py-3.5 rounded-xl font-semibold hover:from-emerald-700 hover:to-emerald-800 transition-all active:scale-[0.98] shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 text-sm sm:text-base min-h-[48px]">
+                            class="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 text-white py-3 sm:py-3.5 rounded-xl font-semibold active:from-emerald-700 active:to-emerald-800 transition-all active:scale-[0.98] shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 text-sm sm:text-base min-h-[48px]">
                             <i class="fas fa-sign-in-alt"></i> Sign In
                         </button>
                     </form>
@@ -192,7 +192,7 @@
             </div>
             <nav id="sidebarNav" class="flex-1 overflow-y-auto py-3 sm:py-4 px-2 sm:px-3 space-y-0.5 sidebar-scroll"></nav>
             <div class="p-3 sm:p-4 border-t border-slate-700/50">
-                <button id="logoutBtn" class="w-full bg-red-500/10 hover:bg-red-500/20 text-red-300 py-2.5 sm:py-3 rounded-xl transition-all text-xs sm:text-sm font-medium flex items-center justify-center gap-2 border border-red-500/20 hover:border-red-500/30 min-h-[44px]">
+                <button id="logoutBtn" class="w-full bg-red-500/10 active:bg-red-500/20 text-red-300 py-2.5 sm:py-3 rounded-xl transition-all text-xs sm:text-sm font-medium flex items-center justify-center gap-2 border border-red-500/20 active:border-red-500/30 min-h-[44px]">
                     <i class="fas fa-sign-out-alt"></i>Logout
                 </button>
             </div>
