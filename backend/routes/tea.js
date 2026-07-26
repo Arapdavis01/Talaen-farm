@@ -1661,25 +1661,26 @@ router.get('/pay-worker/history/:worker_id?', authorizeRoles('farm_owner', 'supe
 });
 
 // ============================================
-// PAY STORE (Settle all debts)
+// PAY STORE (Settle all store debts)
 // POST /api/tea/pay-store
 // ============================================
 router.post('/pay-store', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
     try {
-        // Get all unsettled debts
+        // Get all unsettled store debts
         const { data: allDebts } = await supabase
             .from('debts')
             .select('*')
             .eq('is_settled', false)
             .eq('is_reversed', false);
 
-        if (allDebts.length === 0) {
-            return res.status(400).json({ success: false, message: 'No unsettled debts.' });
+        if (!allDebts || allDebts.length === 0) {
+            return res.status(400).json({ success: false, message: 'No unsettled store debts.' });
         }
 
         const totalStoreDebt = allDebts.reduce((sum, d) => sum + parseFloat(d.amount), 0);
+        const debtorCount = new Set(allDebts.map(d => d.worker_id)).size;
 
-        // Create settlement for store
+        // Create settlement for store (worker_id = null means store payment)
         const { data: settlement, error } = await supabase
             .from('settlements')
             .insert({
@@ -1696,14 +1697,15 @@ router.post('/pay-store', authorizeRoles('farm_owner', 'supervisor'), async (req
 
         if (error) throw error;
 
-        // Mark all debts as settled
+        // Mark ALL store debts as settled
         await supabase
             .from('debts')
             .update({ is_settled: true, settlement_id: settlement.id })
             .eq('is_settled', false)
             .eq('is_reversed', false);
 
-        // Reset all workers total debt
+        // Reset all workers total_debt to 0 (store debts cleared)
+        // IMPORTANT: Does NOT touch rolled_debt or roll_count
         await supabase
             .from('tea_workers')
             .update({ total_debt: 0, updated_at: new Date() })
@@ -1711,12 +1713,33 @@ router.post('/pay-store', authorizeRoles('farm_owner', 'supervisor'), async (req
 
         res.json({
             success: true,
-            message: `Store paid KES ${totalStoreDebt.toFixed(2)}`,
-            total_paid: totalStoreDebt
+            message: `Store paid KES ${totalStoreDebt.toFixed(2)}. ${allDebts.length} debts across ${debtorCount} workers cleared.`,
+            total_paid: totalStoreDebt,
+            debts_cleared: allDebts.length,
+            debtors: debtorCount
         });
     } catch (error) {
         console.error('Pay store error:', error);
         res.status(500).json({ success: false, message: 'Error processing store payment.' });
+    }
+});
+
+// GET /api/tea/pay-store/history - Store payment history
+router.get('/pay-store/history', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
+    try {
+        const { data: payments, error } = await supabase
+            .from('settlements')
+            .select('*')
+            .is('worker_id', null)
+            .order('created_at', { ascending: false })
+            .limit(20);
+
+        if (error) throw error;
+
+        res.json({ success: true, payments: payments || [] });
+    } catch (error) {
+        console.error('Store history error:', error);
+        res.status(500).json({ success: false, message: 'Error fetching store history.' });
     }
 });
 
