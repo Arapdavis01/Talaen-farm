@@ -23,35 +23,23 @@ class Sidebar {
             navItems = this.getDairyNavItems();
         }
 
-        // Group items by section
         const sections = this.groupItemsBySection(navItems, module);
-        
-        // Build sidebar HTML with sections
         this.nav.innerHTML = this.buildSidebarHTML(sections, module);
 
-        // Add click handlers
         this.nav.querySelectorAll('a[data-route]').forEach(link => {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
                 const route = link.dataset.route;
                 this.setActiveItem(link);
                 router.navigate(route);
-                
-                // Close sidebar on mobile
-                if (window.innerWidth < 1024) {
-                    this.close();
-                }
+                if (window.innerWidth < 1024) this.close();
             });
         });
 
-        // Highlight the dashboard route by default
         const dashboardRoute = module === 'tea' ? 'tea-dashboard' : 'dairy-dashboard';
         const dashboardLink = this.nav.querySelector(`[data-route="${dashboardRoute}"]`);
-        if (dashboardLink) {
-            this.setActiveItem(dashboardLink);
-        }
+        if (dashboardLink) this.setActiveItem(dashboardLink);
 
-        // Load dispute count for badge
         this.loadDisputeCount();
     }
 
@@ -63,9 +51,7 @@ class Sidebar {
                 this.disputeCount = response.total_disputes || 0;
                 this.updateDisputeBadge();
             }
-        } catch (e) {
-            // Silently fail - badge is optional
-        }
+        } catch (e) {}
     }
 
     updateDisputeBadge() {
@@ -85,6 +71,7 @@ class Sidebar {
         const managementItems = ['Dashboard', 'Workers', 'Dairy Workers', 'Companies', 'Milk Buyers', 'Blocks', 'Cows'];
         const settingsItems = ['Wage Rate'];
         const operationsItems = ['Self Plucking', 'Verified Plucking', 'Milk Production', 'Feed Records', 'Milk Disposal'];
+        const productionItems = ['Farm Inputs', 'Targets', 'Input Costs', 'Fertilizer', 'Pruning', 'Seasons'];
         const financialItems = ['Comparison', 'Store Debts', 'My Debts', 'Pay Worker', 'Pay Store', 'Deliveries', 'My Deliveries', 'Buyer Payments', 'Payments'];
         const reportItems = ['Reports'];
 
@@ -92,6 +79,7 @@ class Sidebar {
             system: [],
             management: [],
             operations: [],
+            production: [],
             financial: [],
             reports: []
         };
@@ -100,12 +88,12 @@ class Sidebar {
             if (systemItems.includes(item.label)) sections.system.push(item);
             else if (managementItems.includes(item.label)) sections.management.push(item);
             else if (operationsItems.includes(item.label)) sections.operations.push(item);
+            else if (productionItems.includes(item.label)) sections.production.push(item);
             else if (financialItems.includes(item.label)) sections.financial.push(item);
             else if (reportItems.includes(item.label)) sections.reports.push(item);
             else sections.management.push(item);
         });
 
-        // Remove empty sections
         Object.keys(sections).forEach(key => {
             if (sections[key].length === 0) delete sections[key];
         });
@@ -118,6 +106,7 @@ class Sidebar {
             system: 'fa-shield-halved',
             management: 'fa-sliders',
             operations: 'fa-list-check',
+            production: 'fa-tractor',
             financial: 'fa-calculator',
             reports: 'fa-chart-simple'
         };
@@ -126,6 +115,7 @@ class Sidebar {
             system: 'System',
             management: 'Management',
             operations: 'Operations',
+            production: 'Production',
             financial: 'Financial',
             reports: 'Reports'
         };
@@ -136,7 +126,6 @@ class Sidebar {
 
         let html = '';
 
-        // Module indicator badge
         html += `
             <div class="px-3 mb-4">
                 <div class="flex items-center gap-2.5 px-3 py-2.5 bg-white/5 rounded-xl border border-white/5">
@@ -148,7 +137,6 @@ class Sidebar {
             </div>
         `;
 
-        // Back button
         html += `
             <button class="w-full text-left text-slate-400 hover:text-white text-sm py-2.5 px-3 rounded-xl hover:bg-white/5 transition-all mb-5 flex items-center gap-2.5 font-medium group"
                     onclick="router.goToModuleSelector()">
@@ -159,7 +147,6 @@ class Sidebar {
             </button>
         `;
 
-        // Navigation sections
         Object.entries(sections).forEach(([sectionKey, sectionItems]) => {
             if (sectionItems.length > 0) {
                 html += `
@@ -187,14 +174,12 @@ class Sidebar {
 
         const items = [];
 
-        // System section
+        // System
         if (isAdmin) {
-            items.push(
-                { route: 'user-management', icon: 'fa-users-gear', label: 'User Management' }
-            );
+            items.push({ route: 'user-management', icon: 'fa-users-gear', label: 'User Management' });
         }
 
-        // Management section
+        // Management
         if (isAdmin) {
             items.push(
                 { route: 'tea-dashboard', icon: 'fa-grid-2', label: 'Dashboard' },
@@ -205,18 +190,25 @@ class Sidebar {
             );
         }
 
-        // Operations section
-        items.push(
-            { route: 'tea-plucking-self', icon: 'fa-leaf', label: 'Self Plucking' }
-        );
+        // Operations
+        items.push({ route: 'tea-plucking-self', icon: 'fa-leaf', label: 'Self Plucking' });
+        if (isAdmin) {
+            items.push({ route: 'tea-plucking-verified', icon: 'fa-check-double', label: 'Verified Plucking' });
+        }
 
+        // Production (NEW)
         if (isAdmin) {
             items.push(
-                { route: 'tea-plucking-verified', icon: 'fa-check-double', label: 'Verified Plucking' }
+                { route: 'tea-farm-inputs', icon: 'fa-seedling', label: 'Farm Inputs' },
+                { route: 'tea-targets', icon: 'fa-bullseye', label: 'Targets' },
+                { route: 'tea-input-costs', icon: 'fa-coins', label: 'Input Costs' },
+                { route: 'tea-fertilizer', icon: 'fa-calendar-check', label: 'Fertilizer' },
+                { route: 'tea-pruning', icon: 'fa-scissors', label: 'Pruning' },
+                { route: 'tea-seasonal', icon: 'fa-chart-line', label: 'Seasons' }
             );
         }
 
-        // Financial section
+        // Financial
         if (isAdmin) {
             items.push(
                 { route: 'tea-comparison', icon: 'fa-scale-balanced', label: 'Comparison', badge: true },
@@ -225,24 +217,12 @@ class Sidebar {
                 { route: 'tea-pay-store', icon: 'fa-shop', label: 'Pay Store' }
             );
         }
+        if (isStoreManager) items.push({ route: 'tea-debts', icon: 'fa-credit-card', label: 'Store Debts' });
+        if (isTeaWorker) items.push({ route: 'tea-debts', icon: 'fa-credit-card', label: 'My Debts' });
 
-        if (isStoreManager) {
-            items.push(
-                { route: 'tea-debts', icon: 'fa-credit-card', label: 'Store Debts' }
-            );
-        }
-
-        if (isTeaWorker) {
-            items.push(
-                { route: 'tea-debts', icon: 'fa-credit-card', label: 'My Debts' }
-            );
-        }
-
-        // Reports section
+        // Reports
         if (isAdmin) {
-            items.push(
-                { route: 'tea-reports', icon: 'fa-file-chart-column', label: 'Reports' }
-            );
+            items.push({ route: 'tea-reports', icon: 'fa-file-chart-column', label: 'Reports' });
         }
 
         return items;
@@ -256,14 +236,8 @@ class Sidebar {
 
         const items = [];
 
-        // System section
-        if (isAdmin) {
-            items.push(
-                { route: 'user-management', icon: 'fa-users-gear', label: 'User Management' }
-            );
-        }
+        if (isAdmin) items.push({ route: 'user-management', icon: 'fa-users-gear', label: 'User Management' });
 
-        // Management section
         if (isAdmin) {
             items.push(
                 { route: 'dairy-dashboard', icon: 'fa-grid-2', label: 'Dashboard' },
@@ -273,21 +247,14 @@ class Sidebar {
             );
         }
 
-        // Operations section
         if (isAdmin || isDairyWorker) {
             items.push(
                 { route: 'dairy-production', icon: 'fa-flask', label: 'Milk Production' },
                 { route: 'dairy-feed', icon: 'fa-wheat-awn', label: 'Feed Records' }
             );
         }
+        if (isAdmin) items.push({ route: 'dairy-disposal', icon: 'fa-truck-fast', label: 'Milk Disposal' });
 
-        if (isAdmin) {
-            items.push(
-                { route: 'dairy-disposal', icon: 'fa-truck-fast', label: 'Milk Disposal' }
-            );
-        }
-
-        // Financial section
         if (isAdmin) {
             items.push(
                 { route: 'dairy-pay-worker', icon: 'fa-hand-holding-dollar', label: 'Pay Worker' },
@@ -295,7 +262,6 @@ class Sidebar {
                 { route: 'dairy-buyer-payments', icon: 'fa-file-invoice', label: 'Buyer Payments' }
             );
         }
-
         if (isBuyer) {
             items.push(
                 { route: 'dairy-deliveries', icon: 'fa-truck-ramp-box', label: 'My Deliveries' },
@@ -303,12 +269,7 @@ class Sidebar {
             );
         }
 
-        // Reports section
-        if (isAdmin) {
-            items.push(
-                { route: 'dairy-reports', icon: 'fa-file-chart-column', label: 'Reports' }
-            );
-        }
+        if (isAdmin) items.push({ route: 'dairy-reports', icon: 'fa-file-chart-column', label: 'Reports' });
 
         return items;
     }
@@ -330,50 +291,19 @@ class Sidebar {
     }
 
     setActiveItem(activeLink) {
-        // Remove active class from all links
-        this.nav.querySelectorAll('a[data-route]').forEach(link => {
-            link.classList.remove('sidebar-link-active');
-        });
-        
-        // Add active class to clicked link
-        if (activeLink) {
-            activeLink.classList.add('sidebar-link-active');
-            this.activeRoute = activeLink.dataset.route;
-        }
+        this.nav.querySelectorAll('a[data-route]').forEach(link => link.classList.remove('sidebar-link-active'));
+        if (activeLink) { activeLink.classList.add('sidebar-link-active'); this.activeRoute = activeLink.dataset.route; }
     }
 
     setActiveRoute(route) {
         const link = this.nav.querySelector(`[data-route="${route}"]`);
-        if (link) {
-            this.setActiveItem(link);
-        }
+        if (link) this.setActiveItem(link);
     }
 
-    toggle() {
-        if (this.isOpen) { this.close(); } else { this.open(); }
-    }
-
-    open() {
-        this.sidebar.classList.add('sidebar-open');
-        this.overlay.classList.remove('hidden');
-        this.isOpen = true;
-        if (typeof navbar !== 'undefined' && navbar.updateHamburgerIcon) { navbar.updateHamburgerIcon(true); }
-    }
-
-    close() {
-        this.sidebar.classList.remove('sidebar-open');
-        this.overlay.classList.add('hidden');
-        this.isOpen = false;
-        if (typeof navbar !== 'undefined' && navbar.updateHamburgerIcon) { navbar.updateHamburgerIcon(false); }
-    }
-
-    refresh() {
-        if (this.currentModule) {
-            this.build(this.currentModule);
-            if (this.activeRoute) { this.setActiveRoute(this.activeRoute); }
-        }
-    }
+    toggle() { if (this.isOpen) this.close(); else this.open(); }
+    open() { this.sidebar.classList.add('sidebar-open'); this.overlay.classList.remove('hidden'); this.isOpen = true; if (typeof navbar !== 'undefined' && navbar.updateHamburgerIcon) navbar.updateHamburgerIcon(true); }
+    close() { this.sidebar.classList.remove('sidebar-open'); this.overlay.classList.add('hidden'); this.isOpen = false; if (typeof navbar !== 'undefined' && navbar.updateHamburgerIcon) navbar.updateHamburgerIcon(false); }
+    refresh() { if (this.currentModule) { this.build(this.currentModule); if (this.activeRoute) this.setActiveRoute(this.activeRoute); } }
 }
 
-// Create global sidebar instance
 const sidebar = new Sidebar();
