@@ -2104,6 +2104,42 @@ router.get('/worker/dashboard', authorizeRoles('tea_worker'), async (req, res) =
         res.status(500).json({ success: false, message: 'Error fetching worker dashboard.' });
     }
 });
+// GET /api/tea/worker/profile
+router.get('/worker/profile', authorizeRoles('tea_worker'), async (req, res) => {
+    try {
+        const workerId = req.user.linked_worker_id;
+        const { data: worker } = await supabase
+            .from('tea_workers')
+            .select('*')
+            .eq('id', workerId)
+            .single();
+
+        if (!worker) return res.status(404).json({ success: false, message: 'Worker not found.' });
+
+        // Get total kg
+        const { data: plucking } = await supabase
+            .from('plucking_self')
+            .select('weight_kg')
+            .eq('worker_id', workerId);
+        const totalKg = plucking.reduce((s, r) => s + parseFloat(r.weight_kg), 0);
+
+        // Get current debt
+        const { data: debts } = await supabase
+            .from('debts')
+            .select('amount')
+            .eq('worker_id', workerId)
+            .eq('is_settled', false)
+            .eq('is_reversed', false);
+        const currentDebt = debts.reduce((s, d) => s + parseFloat(d.amount), 0);
+
+        res.json({
+            success: true,
+            worker: { ...worker, total_kg: totalKg, current_debt: currentDebt }
+        });
+    } catch (e) {
+        res.status(500).json({ success: false, message: 'Error fetching profile.' });
+    }
+});
 
 // ============================================
 // FARM PRODUCTION MANAGEMENT
