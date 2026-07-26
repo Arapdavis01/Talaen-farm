@@ -37,7 +37,12 @@ class Sidebar {
         });
 
         const dashboardRoute = module === 'tea' ? 'tea-dashboard' : 'dairy-dashboard';
-        const dashboardLink = this.nav.querySelector(`[data-route="${dashboardRoute}"]`);
+        const workerDashboardRoute = module === 'tea' ? 'worker-dashboard' : null;
+        const user = auth.getCurrentUser();
+        const isWorker = user.role === 'tea_worker';
+        
+        const defaultRoute = isWorker ? workerDashboardRoute : dashboardRoute;
+        const dashboardLink = this.nav.querySelector(`[data-route="${defaultRoute}"]`);
         if (dashboardLink) this.setActiveItem(dashboardLink);
 
         this.loadDisputeCount();
@@ -69,14 +74,15 @@ class Sidebar {
     groupItemsBySection(items, module) {
         const systemItems = ['User Management'];
         const managementItems = ['Dashboard', 'Workers', 'Dairy Workers', 'Companies', 'Milk Buyers', 'Blocks', 'Cows'];
-        const settingsItems = ['Wage Rate'];
+        const workerItems = ['My Dashboard', 'Record Plucking', 'My Plucking', 'My Debts', 'Store Purchases', 'My Payments', 'My Profile'];
         const operationsItems = ['Self Plucking', 'Verified Plucking', 'Milk Production', 'Feed Records', 'Milk Disposal'];
         const productionItems = ['Farm Inputs', 'Targets', 'Input Costs', 'Fertilizer', 'Pruning', 'Seasons'];
-        const financialItems = ['Comparison', 'Store Debts', 'My Debts', 'Pay Worker', 'Pay Store', 'Deliveries', 'My Deliveries', 'Buyer Payments', 'Payments'];
+        const financialItems = ['Comparison', 'Store Debts', 'Pay Worker', 'Pay Store', 'Deliveries', 'My Deliveries', 'Buyer Payments', 'Payments'];
         const reportItems = ['Reports'];
 
         const sections = {
             system: [],
+            worker: [],
             management: [],
             operations: [],
             production: [],
@@ -86,6 +92,7 @@ class Sidebar {
 
         items.forEach(item => {
             if (systemItems.includes(item.label)) sections.system.push(item);
+            else if (workerItems.includes(item.label)) sections.worker.push(item);
             else if (managementItems.includes(item.label)) sections.management.push(item);
             else if (operationsItems.includes(item.label)) sections.operations.push(item);
             else if (productionItems.includes(item.label)) sections.production.push(item);
@@ -104,6 +111,7 @@ class Sidebar {
     buildSidebarHTML(sections, module) {
         const sectionIcons = {
             system: 'fa-shield-halved',
+            worker: 'fa-user',
             management: 'fa-sliders',
             operations: 'fa-list-check',
             production: 'fa-tractor',
@@ -113,6 +121,7 @@ class Sidebar {
 
         const sectionTitles = {
             system: 'System',
+            worker: 'My Account',
             management: 'Management',
             operations: 'Operations',
             production: 'Production',
@@ -174,6 +183,21 @@ class Sidebar {
 
         const items = [];
 
+        // ==================== TEA WORKER MENU ====================
+        if (isTeaWorker) {
+            items.push(
+                { route: 'worker-dashboard', icon: 'fa-home', label: 'My Dashboard' },
+                { route: 'tea-plucking-self', icon: 'fa-leaf', label: 'Record Plucking' },
+                { route: 'worker-plucking', icon: 'fa-list', label: 'My Plucking' },
+                { route: 'worker-debts', icon: 'fa-credit-card', label: 'My Debts' },
+                { route: 'worker-store', icon: 'fa-shopping-basket', label: 'Store Purchases' },
+                { route: 'worker-payments', icon: 'fa-money-bill-wave', label: 'My Payments' },
+                { route: 'worker-profile', icon: 'fa-id-card', label: 'My Profile' }
+            );
+            return items;
+        }
+
+        // ==================== ADMIN MENU ====================
         // System
         if (isAdmin) {
             items.push({ route: 'user-management', icon: 'fa-users-gear', label: 'User Management' });
@@ -196,7 +220,7 @@ class Sidebar {
             items.push({ route: 'tea-plucking-verified', icon: 'fa-check-double', label: 'Verified Plucking' });
         }
 
-        // Production (NEW)
+        // Production
         if (isAdmin) {
             items.push(
                 { route: 'tea-farm-inputs', icon: 'fa-seedling', label: 'Farm Inputs' },
@@ -218,7 +242,6 @@ class Sidebar {
             );
         }
         if (isStoreManager) items.push({ route: 'tea-debts', icon: 'fa-credit-card', label: 'Store Debts' });
-        if (isTeaWorker) items.push({ route: 'tea-debts', icon: 'fa-credit-card', label: 'My Debts' });
 
         // Reports
         if (isAdmin) {
