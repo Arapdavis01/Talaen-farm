@@ -2054,6 +2054,58 @@ router.get('/dashboard', authorizeRoles('farm_owner', 'supervisor'), async (req,
     }
 });
 // ============================================
+// WORKER DASHBOARD
+// GET /api/tea/worker/dashboard
+// ============================================
+router.get('/worker/dashboard', authorizeRoles('tea_worker'), async (req, res) => {
+    try {
+        const workerId = req.user.linked_worker_id;
+        const today = new Date().toISOString().split('T')[0];
+        const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+
+        const { data: todayPlucking } = await supabase
+            .from('plucking_self')
+            .select('weight_kg')
+            .eq('worker_id', workerId)
+            .eq('plucking_date', today);
+
+        const { data: monthPlucking } = await supabase
+            .from('plucking_self')
+            .select('weight_kg')
+            .eq('worker_id', workerId)
+            .gte('plucking_date', monthStart);
+
+        const { data: worker } = await supabase
+            .from('tea_workers')
+            .select('rolled_debt, roll_count')
+            .eq('id', workerId)
+            .single();
+
+        const { data: lastPayment } = await supabase
+            .from('settlements')
+            .select('*')
+            .eq('worker_id', workerId)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+
+        res.json({
+            success: true,
+            stats: {
+                today_kg: todayPlucking.reduce((s, r) => s + parseFloat(r.weight_kg), 0),
+                monthly_kg: monthPlucking.reduce((s, r) => s + parseFloat(r.weight_kg), 0),
+                rolled_debt: parseFloat(worker?.rolled_debt || 0),
+                roll_count: worker?.roll_count || 0,
+                last_payment: lastPayment || null
+            }
+        });
+    } catch (e) {
+        console.error('Worker dashboard error:', e);
+        res.status(500).json({ success: false, message: 'Error fetching worker dashboard.' });
+    }
+});
+
+// ============================================
 // FARM PRODUCTION MANAGEMENT
 // ============================================
 
