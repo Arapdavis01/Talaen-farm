@@ -123,6 +123,7 @@ class ApiService {
     // Payments
     async payWorker(workerId) { return this.post('/tea/pay-worker', { worker_id: workerId }); }
     async payStore() { return this.post('/tea/pay-store'); }
+    async getPaymentHistory(workerId = null) { const ep = workerId ? `/tea/pay-worker/history/${workerId}` : '/tea/pay-worker/history'; return this.get(ep); }
 
     // Reports
     async getTeaDashboard() { return this.get('/tea/dashboard'); }
