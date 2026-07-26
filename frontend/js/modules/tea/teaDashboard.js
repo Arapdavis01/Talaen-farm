@@ -161,62 +161,108 @@ class TeaDashboard {
                 })}
             </div>
 
-            <!-- Bottom Section: Quick Actions + Recent Activity -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Quick Actions -->
-                <div class="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
-                    <div class="flex items-center gap-3 mb-5">
-                        <div class="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center">
-                            <i class="fas fa-bolt text-emerald-600"></i>
-                        </div>
-                        <h3 class="font-bold text-slate-800">Quick Actions</h3>
-                    </div>
-                    <div class="space-y-3">
-                        <button onclick="router.navigate('tea-plucking-verified')" 
-                            class="w-full flex items-center justify-between p-4 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition-all group border border-emerald-100">
-                            <div class="flex items-center gap-3">
-                                <span class="w-9 h-9 bg-emerald-500 rounded-lg flex items-center justify-center">
-                                    <i class="fas fa-check-double text-white text-sm"></i>
-                                </span>
-                                <span class="font-medium text-emerald-800 text-sm">Record Verified Plucking</span>
-                            </div>
-                            <i class="fas fa-arrow-right text-emerald-400 group-hover:translate-x-1 transition-transform"></i>
-                        </button>
-                        
-                        <button onclick="router.navigate('tea-pay-worker')" 
-                            class="w-full flex items-center justify-between p-4 bg-amber-50 hover:bg-amber-100 rounded-xl transition-all group border border-amber-100">
-                            <div class="flex items-center gap-3">
-                                <span class="w-9 h-9 bg-amber-500 rounded-lg flex items-center justify-center">
-                                    <i class="fas fa-hand-holding-dollar text-white text-sm"></i>
-                                </span>
-                                <span class="font-medium text-amber-800 text-sm">Pay Workers</span>
-                            </div>
-                            <i class="fas fa-arrow-right text-amber-400 group-hover:translate-x-1 transition-transform"></i>
-                        </button>
-                        
-                        <button onclick="router.navigate('tea-reports')" 
-                            class="w-full flex items-center justify-between p-4 bg-sky-50 hover:bg-sky-100 rounded-xl transition-all group border border-sky-100">
-                            <div class="flex items-center gap-3">
-                                <span class="w-9 h-9 bg-sky-500 rounded-lg flex items-center justify-center">
-                                    <i class="fas fa-chart-bar text-white text-sm"></i>
-                                </span>
-                                <span class="font-medium text-sky-800 text-sm">View Reports</span>
-                            </div>
-                            <i class="fas fa-arrow-right text-sky-400 group-hover:translate-x-1 transition-transform"></i>
-                        </button>
-                        
-                        <button onclick="router.navigate('tea-plucking-self')" 
-                            class="w-full flex items-center justify-between p-4 bg-green-50 hover:bg-green-100 rounded-xl transition-all group border border-green-100">
-                            <div class="flex items-center gap-3">
-                                <span class="w-9 h-9 bg-green-500 rounded-lg flex items-center justify-center">
-                                    <i class="fas fa-leaf text-white text-sm"></i>
-                                </span>
-                                <span class="font-medium text-green-800 text-sm">Record Self Plucking</span>
-                            </div>
-                            <i class="fas fa-arrow-right text-green-400 group-hover:translate-x-1 transition-transform"></i>
-                        </button>
+           <!-- Bottom Section: Quick Actions + Recent Activity -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Quick Actions -->
+    <div class="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
+        <div class="flex items-center gap-3 mb-5">
+            <div class="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center">
+                <i class="fas fa-bolt text-emerald-600"></i>
+            </div>
+            <h3 class="font-bold text-slate-800">Quick Actions</h3>
+        </div>
+        <div class="space-y-2">
+            <!-- 1. Record Self Plucking -->
+            <button onclick="router.navigate('tea-plucking-self')" 
+                class="w-full flex items-center justify-between p-3.5 bg-green-50 hover:bg-green-100 rounded-xl transition-all group border border-green-100">
+                <div class="flex items-center gap-3">
+                    <span class="w-9 h-9 bg-green-500 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-leaf text-white text-sm"></i>
+                    </span>
+                    <div>
+                        <span class="font-medium text-green-800 text-sm">Record Self Plucking</span>
+                        <p class="text-[10px] text-green-500">Record plucking for workers</p>
                     </div>
                 </div>
+                <i class="fas fa-arrow-right text-green-400 group-hover:translate-x-1 transition-transform"></i>
+            </button>
+            
+            <!-- 2. Record Verified Plucking -->
+            <button onclick="router.navigate('tea-plucking-verified')" 
+                class="w-full flex items-center justify-between p-3.5 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition-all group border border-emerald-100">
+                <div class="flex items-center gap-3">
+                    <span class="w-9 h-9 bg-emerald-500 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-check-double text-white text-sm"></i>
+                    </span>
+                    <div>
+                        <span class="font-medium text-emerald-800 text-sm">Record Verified Plucking</span>
+                        <p class="text-[10px] text-emerald-500">Verify & approve plucking</p>
+                    </div>
+                </div>
+                <i class="fas fa-arrow-right text-emerald-400 group-hover:translate-x-1 transition-transform"></i>
+            </button>
+            
+            <!-- 3. Comparison Panel -->
+            <button onclick="router.navigate('tea-comparison')" 
+                class="w-full flex items-center justify-between p-3.5 bg-purple-50 hover:bg-purple-100 rounded-xl transition-all group border border-purple-100">
+                <div class="flex items-center gap-3">
+                    <span class="w-9 h-9 bg-purple-500 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-scale-balanced text-white text-sm"></i>
+                    </span>
+                    <div>
+                        <span class="font-medium text-purple-800 text-sm">Comparison Panel</span>
+                        <p class="text-[10px] text-purple-500">Resolve disputed records</p>
+                    </div>
+                </div>
+                <i class="fas fa-arrow-right text-purple-400 group-hover:translate-x-1 transition-transform"></i>
+            </button>
+            
+            <!-- 4. Store Debts -->
+            <button onclick="router.navigate('tea-debts')" 
+                class="w-full flex items-center justify-between p-3.5 bg-red-50 hover:bg-red-100 rounded-xl transition-all group border border-red-100">
+                <div class="flex items-center gap-3">
+                    <span class="w-9 h-9 bg-red-500 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-credit-card text-white text-sm"></i>
+                    </span>
+                    <div>
+                        <span class="font-medium text-red-800 text-sm">Store Debts</span>
+                        <p class="text-[10px] text-red-500">Manage worker store debts</p>
+                    </div>
+                </div>
+                <i class="fas fa-arrow-right text-red-400 group-hover:translate-x-1 transition-transform"></i>
+            </button>
+            
+            <!-- 5. Pay Workers -->
+            <button onclick="router.navigate('tea-pay-worker')" 
+                class="w-full flex items-center justify-between p-3.5 bg-amber-50 hover:bg-amber-100 rounded-xl transition-all group border border-amber-100">
+                <div class="flex items-center gap-3">
+                    <span class="w-9 h-9 bg-amber-500 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-hand-holding-dollar text-white text-sm"></i>
+                    </span>
+                    <div>
+                        <span class="font-medium text-amber-800 text-sm">Pay Workers</span>
+                        <p class="text-[10px] text-amber-500">Calculate & process payments</p>
+                    </div>
+                </div>
+                <i class="fas fa-arrow-right text-amber-400 group-hover:translate-x-1 transition-transform"></i>
+            </button>
+            
+            <!-- 6. Pay Store -->
+            <button onclick="router.navigate('tea-pay-store')" 
+                class="w-full flex items-center justify-between p-3.5 bg-orange-50 hover:bg-orange-100 rounded-xl transition-all group border border-orange-100">
+                <div class="flex items-center gap-3">
+                    <span class="w-9 h-9 bg-orange-500 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-shop text-white text-sm"></i>
+                    </span>
+                    <div>
+                        <span class="font-medium text-orange-800 text-sm">Pay Store</span>
+                        <p class="text-[10px] text-orange-500">Settle all store debts</p>
+                    </div>
+                </div>
+                <i class="fas fa-arrow-right text-orange-400 group-hover:translate-x-1 transition-transform"></i>
+            </button>
+        </div>
+    </div>
 
                 <!-- Recent Activity Summary -->
                 <div class="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
