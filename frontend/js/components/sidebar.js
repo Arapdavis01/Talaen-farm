@@ -36,12 +36,12 @@ class Sidebar {
             });
         });
 
-        const dashboardRoute = module === 'tea' ? 'tea-dashboard' : 'dairy-dashboard';
-        const workerDashboardRoute = module === 'tea' ? 'worker-dashboard' : null;
         const user = auth.getCurrentUser();
-        const isWorker = user.role === 'tea_worker';
+        let defaultRoute;
+        if (user.role === 'tea_worker') defaultRoute = 'worker-dashboard';
+        else if (user.role === 'store_manager') defaultRoute = 'store-dashboard';
+        else defaultRoute = module === 'tea' ? 'tea-dashboard' : 'dairy-dashboard';
         
-        const defaultRoute = isWorker ? workerDashboardRoute : dashboardRoute;
         const dashboardLink = this.nav.querySelector(`[data-route="${defaultRoute}"]`);
         if (dashboardLink) this.setActiveItem(dashboardLink);
 
@@ -76,6 +76,7 @@ class Sidebar {
         const systemItems = ['User Management'];
         const managementItems = ['Dashboard', 'Workers', 'Dairy Workers', 'Companies', 'Milk Buyers', 'Blocks', 'Cows'];
         const workerItems = ['My Dashboard', 'Record Plucking', 'My Plucking', 'My Debts', 'Store Purchases', 'My Payments', 'My Profile'];
+        const storeItems = ['Store Dashboard', 'Manage Debts', 'Worker Debts'];
         const operationsItems = ['Self Plucking', 'Verified Plucking', 'Milk Production', 'Feed Records', 'Milk Disposal'];
         const productionItems = ['Farm Inputs', 'Targets', 'Input Costs', 'Fertilizer', 'Pruning', 'Seasons'];
         const financialItems = ['Comparison', 'Store Debts', 'Pay Worker', 'Pay Store', 'Deliveries', 'My Deliveries', 'Buyer Payments', 'Payments'];
@@ -84,6 +85,7 @@ class Sidebar {
         const sections = {
             system: [],
             worker: [],
+            store: [],
             management: [],
             operations: [],
             production: [],
@@ -94,6 +96,7 @@ class Sidebar {
         items.forEach(item => {
             if (systemItems.includes(item.label)) sections.system.push(item);
             else if (workerItems.includes(item.label)) sections.worker.push(item);
+            else if (storeItems.includes(item.label)) sections.store.push(item);
             else if (managementItems.includes(item.label)) sections.management.push(item);
             else if (operationsItems.includes(item.label)) sections.operations.push(item);
             else if (productionItems.includes(item.label)) sections.production.push(item);
@@ -113,6 +116,7 @@ class Sidebar {
         const sectionIcons = {
             system: 'fa-shield-halved',
             worker: 'fa-user',
+            store: 'fa-store',
             management: 'fa-sliders',
             operations: 'fa-list-check',
             production: 'fa-tractor',
@@ -123,6 +127,7 @@ class Sidebar {
         const sectionTitles = {
             system: 'System',
             worker: 'My Account',
+            store: 'My Store',
             management: 'Management',
             operations: 'Operations',
             production: 'Production',
@@ -198,6 +203,17 @@ class Sidebar {
             return items;
         }
 
+        // ==================== STORE MANAGER MENU ====================
+        if (isStoreManager) {
+            items.push(
+                { route: 'store-dashboard', icon: 'fa-home', label: 'Store Dashboard' },
+                { route: 'tea-debts', icon: 'fa-credit-card', label: 'Manage Debts' },
+                { route: 'store-worker-debts', icon: 'fa-users', label: 'Worker Debts' },
+                { route: 'store-profile', icon: 'fa-id-card', label: 'My Profile' }
+            );
+            return items;
+        }
+
         // ==================== ADMIN MENU ====================
         if (isAdmin) {
             items.push({ route: 'user-management', icon: 'fa-users-gear', label: 'User Management' });
@@ -237,7 +253,6 @@ class Sidebar {
                 { route: 'tea-pay-store', icon: 'fa-shop', label: 'Pay Store' }
             );
         }
-        if (isStoreManager) items.push({ route: 'tea-debts', icon: 'fa-credit-card', label: 'Store Debts' });
 
         if (isAdmin) {
             items.push({ route: 'tea-reports', icon: 'fa-file-chart-column', label: 'Reports' });
