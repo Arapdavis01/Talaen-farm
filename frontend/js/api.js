@@ -133,6 +133,35 @@ class ApiService {
     async getWorkerPerformanceReport(params = {}) { const q = new URLSearchParams(params).toString(); return this.get(`/tea/reports/workers${q ? '?' + q : ''}`); }
     async getDebtReport() { return this.get('/tea/reports/debts'); }
 
+    // ============ FARM PRODUCTION MANAGEMENT ============
+    // Farm Inputs
+    async getFarmInputs() { return this.get('/tea/production/inputs'); }
+    async addFarmInput(data) { return this.post('/tea/production/inputs', data); }
+    async updateFarmInput(id, data) { return this.put(`/tea/production/inputs/${id}`, data); }
+    async deleteFarmInput(id) { return this.delete(`/tea/production/inputs/${id}`); }
+
+    // Production Targets
+    async getProductionTargets() { return this.get('/tea/production/targets'); }
+    async addProductionTarget(data) { return this.post('/tea/production/targets', data); }
+    async updateProductionTarget(id, data) { return this.put(`/tea/production/targets/${id}`, data); }
+    async deleteProductionTarget(id) { return this.delete(`/tea/production/targets/${id}`); }
+
+    // Fertilizer Schedule
+    async getFertilizerSchedule() { return this.get('/tea/production/fertilizer'); }
+    async addFertilizer(data) { return this.post('/tea/production/fertilizer', data); }
+    async updateFertilizer(id, data) { return this.put(`/tea/production/fertilizer/${id}`, data); }
+    async deleteFertilizer(id) { return this.delete(`/tea/production/fertilizer/${id}`); }
+
+    // Pruning Schedule
+    async getPruningSchedule() { return this.get('/tea/production/pruning'); }
+    async addPruning(data) { return this.post('/tea/production/pruning', data); }
+    async updatePruning(id, data) { return this.put(`/tea/production/pruning/${id}`, data); }
+    async deletePruning(id) { return this.delete(`/tea/production/pruning/${id}`); }
+
+    // Input Costs & Seasonal Analysis
+    async getInputCosts() { return this.get('/tea/production/costs'); }
+    async getSeasonalAnalysis() { return this.get('/tea/production/seasonal'); }
+
     // ============ DAIRY MODULE ============
     async getCows() { return this.get('/dairy/cows'); }
     async createCow(cowData) { return this.post('/dairy/cows', cowData); }
