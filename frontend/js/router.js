@@ -23,8 +23,9 @@ class Router {
             const module = this.getModule();
             const user = auth.getCurrentUser();
             if (module === 'tea') {
-                // Redirect worker to worker dashboard, admin to tea dashboard
-                this.navigate(user.role === 'tea_worker' ? 'worker-dashboard' : 'tea-dashboard');
+                if (user.role === 'tea_worker') this.navigate('worker-dashboard');
+                else if (user.role === 'store_manager') this.navigate('store-dashboard');
+                else this.navigate('tea-dashboard');
             } else if (module === 'dairy') {
                 this.navigate('dairy-dashboard');
             }
@@ -73,6 +74,15 @@ class Router {
                 return;
             }
 
+            // ==================== STORE MANAGER ROUTES ====================
+            if (isStoreManager) {
+                this.register('store-dashboard', () => TeaStoreDashboard.show());
+                this.register('tea-debts', () => TeaDebts.show());
+                this.register('store-worker-debts', () => TeaStoreWorkerDebts.show());
+                this.register('store-profile', () => TeaStoreProfile.show());
+                return;
+            }
+
             // ==================== ADMIN ROUTES ====================
             // Management
             this.register('tea-dashboard', () => TeaDashboard.show());
@@ -103,9 +113,6 @@ class Router {
                 this.register('tea-debts', () => TeaDebts.show());
                 this.register('tea-pay-worker', () => TeaPayWorker.show());
                 this.register('tea-pay-store', () => TeaPayStore.show());
-            }
-            if (isStoreManager) {
-                this.register('tea-debts', () => TeaDebts.show());
             }
             
             // Reports
