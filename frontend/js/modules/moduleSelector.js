@@ -150,8 +150,12 @@ class ModuleSelector {
             // Build sidebar
             sidebar.build(module);
             
-            // Navigate to dashboard
-            const dashboardRoute = module === 'tea' ? 'tea-dashboard' : 'dairy-dashboard';
+            // Navigate to correct dashboard based on role
+            const user = auth.getCurrentUser();
+            const isTeaWorker = user.role === 'tea_worker';
+            const dashboardRoute = module === 'tea' 
+                ? (isTeaWorker ? 'worker-dashboard' : 'tea-dashboard') 
+                : 'dairy-dashboard';
             router.navigate(dashboardRoute);
         }, 300);
     }
