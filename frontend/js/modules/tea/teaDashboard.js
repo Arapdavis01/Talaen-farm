@@ -45,12 +45,13 @@ class TeaDashboard {
 
         try {
             const response = await api.getTeaDashboard();
-            
             if (response.success) {
                 TeaDashboard.renderDashboard(response.dashboard);
             }
         } catch (error) {
-            document.getElementById('dashboardContent').innerHTML = `
+            const container = document.getElementById('dashboardContent');
+            if (!container) return;
+            container.innerHTML = `
                 <div class="bg-white rounded-2xl border border-stone-200 p-12 text-center">
                     <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
                         <i class="fas fa-exclamation-circle text-red-500 text-2xl"></i>
@@ -66,6 +67,9 @@ class TeaDashboard {
     }
 
     static renderDashboard(data) {
+        const container = document.getElementById('dashboardContent');
+        if (!container) return;
+
         const {
             worker_count,
             today_kg,
@@ -80,7 +84,7 @@ class TeaDashboard {
             pending_payments
         } = data;
 
-        document.getElementById('dashboardContent').innerHTML = `
+        container.innerHTML = `
             <!-- Top Stats Row -->
             <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
                 ${TeaDashboard.statCard({
