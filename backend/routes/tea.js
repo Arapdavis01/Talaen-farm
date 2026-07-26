@@ -2140,6 +2140,31 @@ router.get('/worker/profile', authorizeRoles('tea_worker'), async (req, res) => 
         res.status(500).json({ success: false, message: 'Error fetching profile.' });
     }
 });
+// ============================================
+// STORE MANAGER DASHBOARD
+// GET /api/tea/store/dashboard
+// ============================================
+router.get('/store/dashboard', authorizeRoles('store_manager'), async (req, res) => {
+    try {
+        const today = new Date().toISOString().split('T')[0];
+        const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+
+        // All debts
+        const { data: allDebts } = await supabase.from('debts').select('amount, debt_date, is_settled, is_reversed, worker_id');
+        
+        const totalDebt = allDebts.filter(d => !d.is_settled && !d.is_reversed).reduce((s, d) => s + parseFloat(d.amount), 0);
+        const activeDebtors = new Set(allDebts.filter(d => !d.is_settled && !d.is_reversed).map(d => d.worker_id)).size;
+        const todayAdditions = allDebts.filter(d => d.debt_date === today).reduce((s, d) => s + parseFloat(d.amount), 0);
+        const monthAdditions = allDebts.filter(d => d.debt_date >= monthStart).reduce((s, d) => s + parseFloat(d.amount), 0);
+
+        res.json({
+            success: true,
+            stats: { total_debt: totalDebt, active_debtors: activeDebtors, today_additions: todayAdditions, month_additions: monthAdditions }
+        });
+    } catch (e) {
+        res.status(500).json({ success: false, message: 'Error fetching store dashboard.' });
+    }
+});
 
 // ============================================
 // FARM PRODUCTION MANAGEMENT
