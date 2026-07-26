@@ -152,10 +152,18 @@ class ModuleSelector {
             
             // Navigate to correct dashboard based on role
             const user = auth.getCurrentUser();
-            const isTeaWorker = user.role === 'tea_worker';
-            const dashboardRoute = module === 'tea' 
-                ? (isTeaWorker ? 'worker-dashboard' : 'tea-dashboard') 
-                : 'dairy-dashboard';
+            let dashboardRoute;
+            if (module === 'tea') {
+                if (user.role === 'tea_worker') {
+                    dashboardRoute = 'worker-dashboard';
+                } else if (user.role === 'store_manager') {
+                    dashboardRoute = 'store-dashboard';
+                } else {
+                    dashboardRoute = 'tea-dashboard';
+                }
+            } else {
+                dashboardRoute = 'dairy-dashboard';
+            }
             router.navigate(dashboardRoute);
         }, 300);
     }
