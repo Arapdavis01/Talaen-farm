@@ -1745,10 +1745,13 @@ router.get('/pay-store/history', authorizeRoles('farm_owner', 'supervisor'), asy
 
 // ============================================
 // REPORTS
-// GET /api/tea/reports/profit
 // ============================================
+
+// GET /api/tea/reports/profit - Profit report with date filters
 router.get('/reports/profit', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
     try {
+        const { start_date, end_date } = req.query;
+
         // Get current wage rate
         const { data: wageRate } = await supabase
             .from('wage_rate')
@@ -1758,7 +1761,7 @@ router.get('/reports/profit', authorizeRoles('farm_owner', 'supervisor'), async 
 
         const ratePerKg = wageRate ? parseFloat(wageRate.rate_per_kg) : 0;
 
-        // Get companies with their plucking totals
+        // Get companies
         const { data: companies } = await supabase
             .from('companies')
             .select('*')
@@ -1767,12 +1770,17 @@ router.get('/reports/profit', authorizeRoles('farm_owner', 'supervisor'), async 
         const reportData = [];
 
         for (const company of companies) {
-            // Total kg sold to this company (from verified plucking)
-            const { data: plucking } = await supabase
+            // Total kg sold to this company
+            let query = supabase
                 .from('plucking_verified')
                 .select('weight_kg')
                 .eq('company_id', company.id)
                 .eq('is_settled', true);
+
+            if (start_date) query = query.gte('plucking_date', start_date);
+            if (end_date) query = query.lte('plucking_date', end_date);
+
+            const { data: plucking } = await query;
 
             const totalKg = plucking.reduce((sum, p) => sum + parseFloat(p.weight_kg), 0);
             const revenue = totalKg * parseFloat(company.buying_rate);
@@ -1799,7 +1807,129 @@ router.get('/reports/profit', authorizeRoles('farm_owner', 'supervisor'), async 
         });
     } catch (error) {
         console.error('Profit report error:', error);
-        res.status(500).json({ success: false, message: 'Error generating report.' });
+        res.status(500).json({ success: false, message: 'Error generating profit report.' });
+    }
+});
+
+// GET /api/tea/reports/production - Production summary
+router.get('/reports/production', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
+    try {
+        const { start_date, end_date } = req.query;
+
+        let vQuery = supabase.from('plucking_verified').select('weight_kg, companies(name), blocks(name)');
+        let sQuery = supabase.from('plucking_self').select('weight_kg');
+
+        if (start_date) { vQuery = vQuery.gte('plucking_date', start_date); sQuery = sQuery.gte('plucking_date', start_date); }
+        if (end_date) { vQuery = vQuery.lte('plucking_date', end_date); sQuery = sQuery.lte('plucking_date', end_date); }
+
+        const [vRes, sRes] = await Promise.all([vQuery, sQuery]);
+
+        if (vRes.error) throw vRes.error;
+        if (sRes.error) throw sRes.error;
+
+        const totalVerified = vRes.data.reduce((s, r) => s + parseFloat(r.weight_kg), 0);
+        const totalSelf = sRes.data.reduce((s, r) => s + parseFloat(r.weight_kg), 0);
+
+        // By company
+        const byCompany = {};
+        vRes.data.forEach(r => {
+            const n = r.companies?.name || 'Unknown';
+            byCompany[n] = (byCompany[n] || 0) + parseFloat(r.weight_kg);
+        });
+
+        // By block
+        const byBlock = {};
+        vRes.data.forEach(r => {
+            const n = r.blocks?.name || 'Unknown';
+            byBlock[n] = (byBlock[n] || 0) + parseFloat(r.weight_kg);
+        });
+
+        res.json({
+            success: true,
+            total_kg: totalVerified + totalSelf,
+            total_self_kg: totalSelf,
+            total_verified_kg: totalVerified,
+            by_company: Object.entries(byCompany).map(([name, total_kg]) => ({ name, total_kg })),
+            by_block: Object.entries(byBlock).map(([name, total_kg]) => ({ name, total_kg }))
+        });
+    } catch (error) {
+        console.error('Production report error:', error);
+        res.status(500).json({ success: false, message: 'Error generating production report.' });
+    }
+});
+
+// GET /api/tea/reports/workers - Worker performance
+router.get('/reports/workers', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
+    try {
+        const { start_date, end_date } = req.query;
+
+        let query = supabase
+            .from('plucking_verified')
+            .select('weight_kg, tea_workers!inner(full_name)');
+
+        if (start_date) query = query.gte('plucking_date', start_date);
+        if (end_date) query = query.lte('plucking_date', end_date);
+
+        const { data, error } = await query;
+        if (error) throw error;
+
+        // Group by worker
+        const workerKg = {};
+        data.forEach(r => {
+            const n = r.tea_workers?.full_name || 'Unknown';
+            workerKg[n] = (workerKg[n] || 0) + parseFloat(r.weight_kg);
+        });
+
+        const sorted = Object.entries(workerKg)
+            .map(([full_name, total_kg]) => ({ full_name, total_kg }))
+            .sort((a, b) => b.total_kg - a.total_kg);
+
+        const totalWorkers = Object.keys(workerKg).length;
+        const totalKg = sorted.reduce((s, w) => s + w.total_kg, 0);
+
+        res.json({
+            success: true,
+            top_workers: sorted.slice(0, 10),
+            total_workers: totalWorkers,
+            avg_kg: totalWorkers > 0 ? totalKg / totalWorkers : 0
+        });
+    } catch (error) {
+        console.error('Worker report error:', error);
+        res.status(500).json({ success: false, message: 'Error generating worker report.' });
+    }
+});
+
+// GET /api/tea/reports/debts - Debt summary
+router.get('/reports/debts', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
+    try {
+        const { data: debts, error } = await supabase
+            .from('debts')
+            .select('amount, is_settled, is_reversed, tea_workers(full_name)');
+
+        if (error) throw error;
+
+        const total = debts.reduce((s, d) => s + parseFloat(d.amount), 0);
+        const unsettled = debts.filter(d => !d.is_settled && !d.is_reversed).reduce((s, d) => s + parseFloat(d.amount), 0);
+        const settled = debts.filter(d => d.is_settled).reduce((s, d) => s + parseFloat(d.amount), 0);
+
+        // By worker (unsettled only)
+        const workerDebts = {};
+        debts.filter(d => !d.is_settled && !d.is_reversed).forEach(d => {
+            const n = d.tea_workers?.full_name || 'Unknown';
+            workerDebts[n] = (workerDebts[n] || 0) + parseFloat(d.amount);
+        });
+
+        res.json({
+            success: true,
+            total_debt: total,
+            unsettled_debt: unsettled,
+            settled_debt: settled,
+            debtor_count: Object.keys(workerDebts).length,
+            by_worker: Object.entries(workerDebts).map(([full_name, total_debt]) => ({ full_name, total_debt }))
+        });
+    } catch (error) {
+        console.error('Debt report error:', error);
+        res.status(500).json({ success: false, message: 'Error generating debt report.' });
     }
 });
 
