@@ -1,5 +1,5 @@
 // ============================================
-// TALAEN FARM - Modal Component (Fixed Scrolling)
+// TALAEN FARM - Modal Component (Mobile Optimized)
 // ============================================
 
 class Modal {
@@ -15,36 +15,49 @@ class Modal {
             }
         });
 
-        // Close on Escape key
+        // Close on Escape key (desktop only)
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && this.isOpen) {
                 this.close();
             }
         });
+
+        // Prevent touch move on modal background
+        this.container.addEventListener('touchmove', (e) => {
+            if (e.target === this.container) {
+                e.preventDefault();
+            }
+        }, { passive: false });
     }
 
     open(title, content, options = {}) {
         const { size = 'max-w-lg', onClose, icon = 'fa-pen' } = options;
 
-        this.content.className = `bg-white rounded-2xl shadow-2xl w-full ${size} max-h-[90vh] flex flex-col overflow-hidden border border-stone-200`;
+        const isMobile = window.innerWidth < 640;
+        const mobileClass = isMobile ? 'rounded-t-2xl' : 'rounded-2xl';
+        
+        this.content.className = `bg-white ${mobileClass} shadow-2xl w-full ${isMobile ? '' : size} ${isMobile ? 'max-h-[92vh]' : 'max-h-[90vh]'} flex flex-col overflow-hidden border border-stone-200`;
         
         this.content.innerHTML = `
+            <!-- Drag Handle (Mobile only) -->
+            ${isMobile ? '<div class="flex-shrink-0 flex justify-center pt-2 pb-1"><div class="w-10 h-1.5 bg-stone-300 rounded-full"></div></div>' : ''}
+            
             <!-- Modal Header - Fixed -->
-            <div class="flex-shrink-0 bg-white/98 backdrop-blur-md border-b border-stone-100 px-6 py-5 flex items-center justify-between z-10 rounded-t-2xl">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-gradient-to-br from-slate-100 to-stone-100 rounded-xl flex items-center justify-center shadow-sm border border-stone-200/50">
-                        <i class="fas ${icon} text-slate-600 text-sm"></i>
+            <div class="flex-shrink-0 bg-white/98 backdrop-blur-md border-b border-stone-100 px-5 sm:px-6 py-4 sm:py-5 flex items-center justify-between z-10 ${isMobile ? 'rounded-t-2xl' : 'rounded-t-2xl'}">
+                <div class="flex items-center gap-2 sm:gap-3">
+                    <div class="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-slate-100 to-stone-100 rounded-xl flex items-center justify-center shadow-sm border border-stone-200/50">
+                        <i class="fas ${icon} text-slate-600 text-xs sm:text-sm"></i>
                     </div>
-                    <h3 class="text-lg font-bold text-slate-800 tracking-tight">${title}</h3>
+                    <h3 class="text-base sm:text-lg font-bold text-slate-800 tracking-tight">${title}</h3>
                 </div>
-                <button class="w-9 h-9 flex items-center justify-center rounded-xl text-stone-400 hover:text-slate-600 hover:bg-stone-100 transition-all" 
+                <button class="w-9 h-9 sm:w-9 sm:h-9 flex items-center justify-center rounded-xl text-stone-400 active:text-slate-600 active:bg-stone-100 transition-all min-tap" 
                         onclick="modal.close()" title="Close">
                     <i class="fas fa-times text-lg"></i>
                 </button>
             </div>
             
             <!-- Modal Body - Scrollable -->
-            <div class="flex-1 overflow-y-auto p-6">
+            <div class="flex-1 overflow-y-auto px-5 sm:px-6 py-4 sm:py-6">
                 ${content}
             </div>
         `;
@@ -55,6 +68,7 @@ class Modal {
 
         // Prevent body scroll
         document.body.style.overflow = 'hidden';
+        document.body.classList.add('no-scroll');
         
         // Focus trap - focus first input if exists
         setTimeout(() => {
@@ -62,11 +76,10 @@ class Modal {
             if (firstInput) {
                 firstInput.focus();
             }
-        }, 200);
+        }, 300);
     }
 
     close() {
-        // Add closing animation
         this.content.classList.add('modal-closing');
         
         setTimeout(() => {
@@ -74,6 +87,7 @@ class Modal {
             this.content.classList.remove('modal-closing');
             this.isOpen = false;
             document.body.style.overflow = '';
+            document.body.classList.remove('no-scroll');
         }, 200);
 
         if (this.onCloseCallback) {
@@ -85,25 +99,25 @@ class Modal {
     openForm(title, formFields, submitHandler, options = {}) {
         const { 
             submitText = 'Save', 
-            submitClass = 'bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 shadow-lg shadow-emerald-600/20',
+            submitClass = 'bg-gradient-to-r from-emerald-600 to-emerald-700 active:from-emerald-700 active:to-emerald-800 shadow-lg shadow-emerald-600/20',
             submitIcon = 'fa-check',
             icon = 'fa-pen',
             size = 'max-w-lg'
         } = options;
 
         const formHtml = `
-            <form id="modalForm" class="space-y-5">
+            <form id="modalForm" class="space-y-4 sm:space-y-5">
                 ${formFields}
                 
                 <!-- Form Actions - Sticky at bottom -->
-                <div class="sticky bottom-0 bg-white pt-4 pb-1 border-t border-stone-100 flex justify-end gap-3">
+                <div class="sticky bottom-0 bg-white pt-3 sm:pt-4 pb-1 border-t border-stone-100 flex justify-end gap-2 sm:gap-3">
                     <button type="button" 
-                            class="px-5 py-2.5 text-stone-600 bg-stone-100 hover:bg-stone-200 rounded-xl transition-all font-medium flex items-center gap-2"
+                            class="px-4 sm:px-5 py-2.5 text-stone-600 bg-stone-100 active:bg-stone-200 rounded-xl transition-all font-medium flex items-center gap-2 text-sm min-h-[44px]"
                             onclick="modal.close()">
                         <i class="fas fa-times text-sm"></i> Cancel
                     </button>
                     <button type="submit" 
-                            class="px-5 py-2.5 text-white ${submitClass} rounded-xl transition-all font-medium flex items-center gap-2">
+                            class="px-4 sm:px-5 py-2.5 text-white ${submitClass} rounded-xl transition-all font-medium flex items-center gap-2 text-sm min-h-[44px]">
                         <i class="fas ${submitIcon} text-sm"></i> ${submitText}
                     </button>
                 </div>
@@ -112,7 +126,6 @@ class Modal {
 
         this.open(title, formHtml, { size, icon });
 
-        // Add submit handler with loading state
         setTimeout(() => {
             const form = document.getElementById('modalForm');
             if (form) {
@@ -122,7 +135,6 @@ class Modal {
                     const submitBtn = form.querySelector('button[type="submit"]');
                     const originalText = submitBtn.innerHTML;
                     
-                    // Show loading state
                     submitBtn.disabled = true;
                     submitBtn.innerHTML = `
                         <span class="spinner spinner-sm spinner-white"></span>
@@ -135,7 +147,6 @@ class Modal {
                         console.error('Form submit error:', error);
                         showToast(error.message || 'An error occurred', 'error');
                     } finally {
-                        // Restore button
                         submitBtn.disabled = false;
                         submitBtn.innerHTML = originalText;
                     }
@@ -148,7 +159,7 @@ class Modal {
     openConfirm(title, message, confirmHandler, options = {}) {
         const { 
             confirmText = 'Confirm', 
-            confirmClass = 'bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 shadow-lg shadow-red-600/20',
+            confirmClass = 'bg-gradient-to-r from-red-600 to-rose-600 active:from-red-700 active:to-rose-700 shadow-lg shadow-red-600/20',
             confirmIcon = 'fa-check',
             type = 'warning'
         } = options;
@@ -177,24 +188,21 @@ class Modal {
         const style = typeStyles[type] || typeStyles.warning;
 
         const content = `
-            <div class="text-center py-4">
-                <!-- Icon -->
-                <div class="w-20 h-20 ${style.iconBg} rounded-full flex items-center justify-center mx-auto mb-5 animate-bounceIn border ${style.borderColor}">
-                    <i class="fas ${style.icon} ${style.iconColor} text-3xl"></i>
+            <div class="text-center py-2 sm:py-4">
+                <div class="w-16 h-16 sm:w-20 sm:h-20 ${style.iconBg} rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-5 animate-bounceIn border ${style.borderColor}">
+                    <i class="fas ${style.icon} ${style.iconColor} text-2xl sm:text-3xl"></i>
                 </div>
                 
-                <!-- Title & Message -->
-                <h3 class="text-lg font-bold text-slate-800 mb-2">${title}</h3>
-                <p class="text-stone-500 mb-8 leading-relaxed">${message}</p>
+                <h3 class="text-base sm:text-lg font-bold text-slate-800 mb-2">${title}</h3>
+                <p class="text-stone-500 mb-6 sm:mb-8 leading-relaxed text-sm sm:text-base">${message}</p>
                 
-                <!-- Actions -->
-                <div class="flex justify-center gap-3">
-                    <button class="px-6 py-2.5 text-stone-600 bg-stone-100 hover:bg-stone-200 rounded-xl transition-all font-medium"
+                <div class="flex justify-center gap-2 sm:gap-3">
+                    <button class="px-5 sm:px-6 py-2.5 text-stone-600 bg-stone-100 active:bg-stone-200 rounded-xl transition-all font-medium text-sm min-h-[44px]"
                             onclick="modal.close()">
                         Cancel
                     </button>
                     <button id="confirmBtn" 
-                            class="px-6 py-2.5 text-white ${confirmClass} rounded-xl transition-all font-medium flex items-center gap-2">
+                            class="px-5 sm:px-6 py-2.5 text-white ${confirmClass} rounded-xl transition-all font-medium flex items-center gap-2 text-sm min-h-[44px]">
                         <i class="fas ${confirmIcon} text-sm"></i> ${confirmText}
                     </button>
                 </div>
@@ -231,25 +239,16 @@ class Modal {
     openAlert(title, message, type = 'success', options = {}) {
         const typeStyles = {
             success: {
-                iconBg: 'bg-emerald-50',
-                iconColor: 'text-emerald-600',
-                icon: 'fa-circle-check',
-                btnClass: 'bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-600/20',
-                borderColor: 'border-emerald-200'
+                iconBg: 'bg-emerald-50', iconColor: 'text-emerald-600', icon: 'fa-circle-check',
+                btnClass: 'bg-emerald-600 active:bg-emerald-700 shadow-lg shadow-emerald-600/20', borderColor: 'border-emerald-200'
             },
             error: {
-                iconBg: 'bg-red-50',
-                iconColor: 'text-red-600',
-                icon: 'fa-circle-xmark',
-                btnClass: 'bg-red-600 hover:bg-red-700 shadow-lg shadow-red-600/20',
-                borderColor: 'border-red-200'
+                iconBg: 'bg-red-50', iconColor: 'text-red-600', icon: 'fa-circle-xmark',
+                btnClass: 'bg-red-600 active:bg-red-700 shadow-lg shadow-red-600/20', borderColor: 'border-red-200'
             },
             info: {
-                iconBg: 'bg-sky-50',
-                iconColor: 'text-sky-600',
-                icon: 'fa-circle-info',
-                btnClass: 'bg-sky-600 hover:bg-sky-700 shadow-lg shadow-sky-600/20',
-                borderColor: 'border-sky-200'
+                iconBg: 'bg-sky-50', iconColor: 'text-sky-600', icon: 'fa-circle-info',
+                btnClass: 'bg-sky-600 active:bg-sky-700 shadow-lg shadow-sky-600/20', borderColor: 'border-sky-200'
             }
         };
 
@@ -257,13 +256,13 @@ class Modal {
         const { buttonText = 'OK' } = options;
 
         const content = `
-            <div class="text-center py-4">
-                <div class="w-20 h-20 ${style.iconBg} rounded-full flex items-center justify-center mx-auto mb-5 animate-bounceIn border ${style.borderColor}">
-                    <i class="fas ${style.icon} ${style.iconColor} text-3xl"></i>
+            <div class="text-center py-2 sm:py-4">
+                <div class="w-16 h-16 sm:w-20 sm:h-20 ${style.iconBg} rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-5 animate-bounceIn border ${style.borderColor}">
+                    <i class="fas ${style.icon} ${style.iconColor} text-2xl sm:text-3xl"></i>
                 </div>
-                <h3 class="text-lg font-bold text-slate-800 mb-2">${title}</h3>
-                <p class="text-stone-500 mb-8">${message}</p>
-                <button class="px-8 py-2.5 text-white ${style.btnClass} rounded-xl transition-all font-medium"
+                <h3 class="text-base sm:text-lg font-bold text-slate-800 mb-2">${title}</h3>
+                <p class="text-stone-500 mb-6 sm:mb-8 text-sm sm:text-base">${message}</p>
+                <button class="px-6 sm:px-8 py-2.5 text-white ${style.btnClass} rounded-xl transition-all font-medium text-sm min-h-[44px]"
                         onclick="modal.close()">
                     ${buttonText}
                 </button>
@@ -276,10 +275,10 @@ class Modal {
     // Helper for loading modal
     openLoading(message = 'Loading...') {
         const content = `
-            <div class="text-center py-10">
-                <div class="spinner spinner-lg mx-auto mb-5"></div>
-                <p class="text-slate-600 font-medium">${message}</p>
-                <p class="text-stone-400 text-sm mt-1">Please wait...</p>
+            <div class="text-center py-8 sm:py-10">
+                <div class="spinner spinner-lg mx-auto mb-4 sm:mb-5"></div>
+                <p class="text-slate-600 font-medium text-sm sm:text-base">${message}</p>
+                <p class="text-stone-400 text-xs sm:text-sm mt-1">Please wait...</p>
             </div>
         `;
 
