@@ -2053,5 +2053,217 @@ router.get('/dashboard', authorizeRoles('farm_owner', 'supervisor'), async (req,
         res.status(500).json({ success: false, message: 'Error fetching dashboard.' });
     }
 });
+// ============================================
+// FARM PRODUCTION MANAGEMENT
+// ============================================
+
+// ==================== FARM INPUTS ====================
+router.get('/production/inputs', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
+    try {
+        const { data, error } = await supabase.from('farm_inputs').select('*, blocks(name)').order('applied_date', { ascending: false });
+        if (error) throw error;
+        res.json({ success: true, inputs: data || [] });
+    } catch (e) { res.status(500).json({ success: false, message: 'Error fetching inputs.' }); }
+});
+
+router.post('/production/inputs', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
+    try {
+        const { input_type, name, quantity, unit, cost, block_id, applied_date, notes } = req.body;
+        const { data, error } = await supabase.from('farm_inputs').insert({ input_type, name, quantity, unit, cost, block_id, applied_date, notes, created_by: req.user.id }).select().single();
+        if (error) throw error;
+        res.status(201).json({ success: true, input: data });
+    } catch (e) { res.status(500).json({ success: false, message: 'Error adding input.' }); }
+});
+
+router.put('/production/inputs/:id', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { data, error } = await supabase.from('farm_inputs').update(req.body).eq('id', id).select().single();
+        if (error) throw error;
+        res.json({ success: true, input: data });
+    } catch (e) { res.status(500).json({ success: false, message: 'Error updating input.' }); }
+});
+
+router.delete('/production/inputs/:id', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
+    try {
+        const { error } = await supabase.from('farm_inputs').delete().eq('id', req.params.id);
+        if (error) throw error;
+        res.json({ success: true, message: 'Input deleted.' });
+    } catch (e) { res.status(500).json({ success: false, message: 'Error deleting input.' }); }
+});
+
+// ==================== PRODUCTION TARGETS ====================
+router.get('/production/targets', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
+    try {
+        const { data, error } = await supabase.from('production_targets').select('*, blocks(name)').order('target_date', { ascending: false });
+        if (error) throw error;
+        res.json({ success: true, targets: data || [] });
+    } catch (e) { res.status(500).json({ success: false, message: 'Error fetching targets.' }); }
+});
+
+router.post('/production/targets', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
+    try {
+        const { block_id, target_date, target_kg } = req.body;
+        const { data, error } = await supabase.from('production_targets').insert({ block_id, target_date, target_kg, created_by: req.user.id }).select().single();
+        if (error) throw error;
+        res.status(201).json({ success: true, target: data });
+    } catch (e) { res.status(500).json({ success: false, message: 'Error adding target.' }); }
+});
+
+router.put('/production/targets/:id', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
+    try {
+        const { data, error } = await supabase.from('production_targets').update(req.body).eq('id', req.params.id).select().single();
+        if (error) throw error;
+        res.json({ success: true, target: data });
+    } catch (e) { res.status(500).json({ success: false, message: 'Error updating target.' }); }
+});
+
+router.delete('/production/targets/:id', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
+    try {
+        const { error } = await supabase.from('production_targets').delete().eq('id', req.params.id);
+        if (error) throw error;
+        res.json({ success: true, message: 'Target deleted.' });
+    } catch (e) { res.status(500).json({ success: false, message: 'Error deleting target.' }); }
+});
+
+// ==================== FERTILIZER SCHEDULE ====================
+router.get('/production/fertilizer', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
+    try {
+        const { data, error } = await supabase.from('fertilizer_schedule').select('*, blocks(name)').order('application_date', { ascending: false });
+        if (error) throw error;
+        res.json({ success: true, schedule: data || [] });
+    } catch (e) { res.status(500).json({ success: false, message: 'Error fetching schedule.' }); }
+});
+
+router.post('/production/fertilizer', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
+    try {
+        const { block_id, fertilizer_name, quantity, unit, application_date, next_application_date, cost, notes } = req.body;
+        const { data, error } = await supabase.from('fertilizer_schedule').insert({ block_id, fertilizer_name, quantity, unit, application_date, next_application_date, cost, notes, created_by: req.user.id }).select().single();
+        if (error) throw error;
+        res.status(201).json({ success: true, fertilizer: data });
+    } catch (e) { res.status(500).json({ success: false, message: 'Error adding fertilizer.' }); }
+});
+
+router.put('/production/fertilizer/:id', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
+    try {
+        const { data, error } = await supabase.from('fertilizer_schedule').update(req.body).eq('id', req.params.id).select().single();
+        if (error) throw error;
+        res.json({ success: true, fertilizer: data });
+    } catch (e) { res.status(500).json({ success: false, message: 'Error updating fertilizer.' }); }
+});
+
+router.delete('/production/fertilizer/:id', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
+    try {
+        const { error } = await supabase.from('fertilizer_schedule').delete().eq('id', req.params.id);
+        if (error) throw error;
+        res.json({ success: true, message: 'Fertilizer deleted.' });
+    } catch (e) { res.status(500).json({ success: false, message: 'Error deleting fertilizer.' }); }
+});
+
+// ==================== PRUNING SCHEDULE ====================
+router.get('/production/pruning', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
+    try {
+        const { data, error } = await supabase.from('pruning_schedule').select('*, blocks(name)').order('pruning_date', { ascending: false });
+        if (error) throw error;
+        res.json({ success: true, schedule: data || [] });
+    } catch (e) { res.status(500).json({ success: false, message: 'Error fetching schedule.' }); }
+});
+
+router.post('/production/pruning', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
+    try {
+        const { block_id, pruning_date, pruning_type, next_pruning_date, workers_count, notes } = req.body;
+        const { data, error } = await supabase.from('pruning_schedule').insert({ block_id, pruning_date, pruning_type, next_pruning_date, workers_count, notes, created_by: req.user.id }).select().single();
+        if (error) throw error;
+        res.status(201).json({ success: true, pruning: data });
+    } catch (e) { res.status(500).json({ success: false, message: 'Error adding pruning.' }); }
+});
+
+router.put('/production/pruning/:id', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
+    try {
+        const { data, error } = await supabase.from('pruning_schedule').update(req.body).eq('id', req.params.id).select().single();
+        if (error) throw error;
+        res.json({ success: true, pruning: data });
+    } catch (e) { res.status(500).json({ success: false, message: 'Error updating pruning.' }); }
+});
+
+router.delete('/production/pruning/:id', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
+    try {
+        const { error } = await supabase.from('pruning_schedule').delete().eq('id', req.params.id);
+        if (error) throw error;
+        res.json({ success: true, message: 'Pruning deleted.' });
+    } catch (e) { res.status(500).json({ success: false, message: 'Error deleting pruning.' }); }
+});
+
+// ==================== INPUT COST SUMMARY ====================
+router.get('/production/costs', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
+    try {
+        const [inputsRes, fertilizerRes] = await Promise.all([
+            supabase.from('farm_inputs').select('cost, input_type, applied_date'),
+            supabase.from('fertilizer_schedule').select('cost, application_date')
+        ]);
+        const inputCosts = (inputsRes.data || []).reduce((s, i) => s + parseFloat(i.cost || 0), 0);
+        const fertCosts = (fertilizerRes.data || []).reduce((s, f) => s + parseFloat(f.cost || 0), 0);
+        
+        // Monthly breakdown
+        const monthly = {};
+        (inputsRes.data || []).forEach(i => {
+            const m = i.applied_date ? i.applied_date.substring(0, 7) : 'unknown';
+            monthly[m] = (monthly[m] || 0) + parseFloat(i.cost || 0);
+        });
+        (fertilizerRes.data || []).forEach(f => {
+            const m = f.application_date ? f.application_date.substring(0, 7) : 'unknown';
+            monthly[m] = (monthly[m] || 0) + parseFloat(f.cost || 0);
+        });
+
+        res.json({
+            success: true,
+            total_input_cost: inputCosts,
+            total_fertilizer_cost: fertCosts,
+            total_cost: inputCosts + fertCosts,
+            monthly_breakdown: Object.entries(monthly).map(([month, cost]) => ({ month, cost }))
+        });
+    } catch (e) { res.status(500).json({ success: false, message: 'Error fetching costs.' }); }
+});
+
+// ==================== SEASONAL ANALYSIS ====================
+router.get('/production/seasonal', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
+    try {
+        const { data: plucking, error } = await supabase
+            .from('plucking_verified')
+            .select('weight_kg, plucking_date, blocks(name)')
+            .order('plucking_date', { ascending: true });
+
+        if (error) throw error;
+
+        // Group by month
+        const monthly = {};
+        const byBlock = {};
+        plucking.forEach(p => {
+            const month = p.plucking_date.substring(0, 7);
+            monthly[month] = (monthly[month] || 0) + parseFloat(p.weight_kg);
+            const block = p.blocks?.name || 'Unknown';
+            if (!byBlock[block]) byBlock[block] = {};
+            byBlock[block][month] = (byBlock[block][month] || 0) + parseFloat(p.weight_kg);
+        });
+
+        // Calculate season totals
+        const seasons = { 'Jan-Mar': 0, 'Apr-Jun': 0, 'Jul-Sep': 0, 'Oct-Dec': 0 };
+        Object.entries(monthly).forEach(([month, kg]) => {
+            const m = parseInt(month.split('-')[1]);
+            if (m <= 3) seasons['Jan-Mar'] += kg;
+            else if (m <= 6) seasons['Apr-Jun'] += kg;
+            else if (m <= 9) seasons['Jul-Sep'] += kg;
+            else seasons['Oct-Dec'] += kg;
+        });
+
+        res.json({
+            success: true,
+            monthly: Object.entries(monthly).map(([month, kg]) => ({ month, kg })),
+            by_block: byBlock,
+            seasons,
+            total_kg: plucking.reduce((s, p) => s + parseFloat(p.weight_kg), 0)
+        });
+    } catch (e) { res.status(500).json({ success: false, message: 'Error fetching seasonal data.' }); }
+});
 
 module.exports = router;
