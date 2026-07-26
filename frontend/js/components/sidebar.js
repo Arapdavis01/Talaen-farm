@@ -49,7 +49,8 @@ class Sidebar {
     }
 
     async loadDisputeCount() {
-        if (this.currentModule !== 'tea') return;
+        const user = auth.getCurrentUser();
+        if (this.currentModule !== 'tea' || user.role === 'tea_worker') return;
         try {
             const response = await api.getDisputedRecords();
             if (response.success) {
@@ -198,12 +199,10 @@ class Sidebar {
         }
 
         // ==================== ADMIN MENU ====================
-        // System
         if (isAdmin) {
             items.push({ route: 'user-management', icon: 'fa-users-gear', label: 'User Management' });
         }
 
-        // Management
         if (isAdmin) {
             items.push(
                 { route: 'tea-dashboard', icon: 'fa-grid-2', label: 'Dashboard' },
@@ -214,13 +213,11 @@ class Sidebar {
             );
         }
 
-        // Operations
         items.push({ route: 'tea-plucking-self', icon: 'fa-leaf', label: 'Self Plucking' });
         if (isAdmin) {
             items.push({ route: 'tea-plucking-verified', icon: 'fa-check-double', label: 'Verified Plucking' });
         }
 
-        // Production
         if (isAdmin) {
             items.push(
                 { route: 'tea-farm-inputs', icon: 'fa-seedling', label: 'Farm Inputs' },
@@ -232,7 +229,6 @@ class Sidebar {
             );
         }
 
-        // Financial
         if (isAdmin) {
             items.push(
                 { route: 'tea-comparison', icon: 'fa-scale-balanced', label: 'Comparison', badge: true },
@@ -243,7 +239,6 @@ class Sidebar {
         }
         if (isStoreManager) items.push({ route: 'tea-debts', icon: 'fa-credit-card', label: 'Store Debts' });
 
-        // Reports
         if (isAdmin) {
             items.push({ route: 'tea-reports', icon: 'fa-file-chart-column', label: 'Reports' });
         }
