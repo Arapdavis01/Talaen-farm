@@ -50,7 +50,8 @@ class Sidebar {
 
     async loadDisputeCount() {
         const user = auth.getCurrentUser();
-        if (this.currentModule !== 'tea' || user.role === 'tea_worker') return;
+        // Skip for workers, store managers, and non-admin roles
+        if (this.currentModule !== 'tea' || user.role === 'tea_worker' || user.role === 'store_manager') return;
         try {
             const response = await api.getDisputedRecords();
             if (response.success) {
