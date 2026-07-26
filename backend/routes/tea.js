@@ -1443,7 +1443,7 @@ router.post('/debts/:id/reverse', authorizeRoles('farm_owner', 'supervisor', 'st
     }
 });
 // ============================================
-// PAY WORKER
+// PAY WORKER (With Debt Rolling)
 // POST /api/tea/pay-worker
 // ============================================
 router.post('/pay-worker', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
@@ -1461,6 +1461,17 @@ router.post('/pay-worker', authorizeRoles('farm_owner', 'supervisor'), async (re
             return res.status(400).json({ success: false, message: 'No active wage rate set.' });
         }
 
+        // Get worker info (for rolled debt and roll count)
+        const { data: worker } = await supabase
+            .from('tea_workers')
+            .select('rolled_debt, roll_count, full_name')
+            .eq('id', worker_id)
+            .single();
+
+        if (!worker) {
+            return res.status(404).json({ success: false, message: 'Worker not found.' });
+        }
+
         // Get approved AND unsettled verified plucking (only approved records)
         const { data: approvedPlucking } = await supabase
             .from('plucking_verified')
@@ -1470,7 +1481,6 @@ router.post('/pay-worker', authorizeRoles('farm_owner', 'supervisor'), async (re
             .eq('is_approved', true);
 
         if (!approvedPlucking || approvedPlucking.length === 0) {
-            // Check if there are disputed records
             const { data: disputedRecords } = await supabase
                 .from('plucking_verified')
                 .select('id')
@@ -1481,7 +1491,7 @@ router.post('/pay-worker', authorizeRoles('farm_owner', 'supervisor'), async (re
             if (disputedRecords && disputedRecords.length > 0) {
                 return res.status(400).json({ 
                     success: false, 
-                    message: `Cannot process payment. ${disputedRecords.length} disputed record(s) need resolution first. Go to Comparison to resolve.`,
+                    message: `Cannot process payment. ${disputedRecords.length} disputed record(s) need resolution first.`,
                     disputed_count: disputedRecords.length
                 });
             }
@@ -1492,7 +1502,7 @@ router.post('/pay-worker', authorizeRoles('farm_owner', 'supervisor'), async (re
             });
         }
 
-        // Calculate total kg using approved_kg (or weight_kg if approved_kg is null)
+        // Calculate total kg using approved_kg
         const totalKg = approvedPlucking.reduce((sum, p) => {
             const kg = p.approved_kg || p.weight_kg;
             return sum + parseFloat(kg);
@@ -1505,15 +1515,19 @@ router.post('/pay-worker', authorizeRoles('farm_owner', 'supervisor'), async (re
         // Calculate gross pay
         const grossPay = totalKg * parseFloat(wageRate.rate_per_kg);
 
-        // Get unsettled debts
-        const { data: unsettledDebts } = await supabase
+        // Get current store debts (unsettled, not reversed)
+        const { data: storeDebts } = await supabase
             .from('debts')
             .select('amount')
             .eq('worker_id', worker_id)
             .eq('is_settled', false)
             .eq('is_reversed', false);
 
-        const totalDebt = unsettledDebts.reduce((sum, d) => sum + parseFloat(d.amount), 0);
+        const newStoreDebt = storeDebts.reduce((sum, d) => sum + parseFloat(d.amount), 0);
+
+        // Total Debt = Previously rolled debt + New store debt
+        const rolledDebt = parseFloat(worker.rolled_debt || 0);
+        const totalDebt = rolledDebt + newStoreDebt;
 
         // Calculate net pay
         const netPay = grossPay - totalDebt;
@@ -1535,7 +1549,7 @@ router.post('/pay-worker', authorizeRoles('farm_owner', 'supervisor'), async (re
 
         if (error) throw error;
 
-        // Mark only approved plucking as settled
+        // Mark plucking as settled
         await supabase
             .from('plucking_verified')
             .update({ is_settled: true, settlement_id: settlement.id })
@@ -1543,17 +1557,32 @@ router.post('/pay-worker', authorizeRoles('farm_owner', 'supervisor'), async (re
             .eq('is_settled', false)
             .eq('is_approved', true);
 
-        // Mark debts as settled if net pay > 0
+        let remainingDebt = 0;
+        let newRollCount = 0;
+        let alertMessage = null;
+
         if (netPay > 0) {
+            // Worker gets paid - clear all debts
             await supabase
                 .from('debts')
                 .update({ is_settled: true, settlement_id: settlement.id })
                 .eq('worker_id', worker_id)
                 .eq('is_settled', false)
                 .eq('is_reversed', false);
+
+            remainingDebt = 0;
+            newRollCount = 0;
+        } else {
+            // Worker gets nothing - debt rolls forward
+            remainingDebt = totalDebt;
+            newRollCount = (worker.roll_count || 0) + 1;
+
+            if (newRollCount >= 3) {
+                alertMessage = `⚠️ ALERT: ${worker.full_name} has ${newRollCount} consecutive unpaid cycles. Manual intervention required!`;
+            }
         }
 
-        // Update worker total debt
+        // Update worker: remaining debt, roll count, total debt
         const { data: remainingDebts } = await supabase
             .from('debts')
             .select('amount')
@@ -1561,32 +1590,73 @@ router.post('/pay-worker', authorizeRoles('farm_owner', 'supervisor'), async (re
             .eq('is_settled', false)
             .eq('is_reversed', false);
 
-        const remainingDebt = remainingDebts.reduce((sum, d) => sum + parseFloat(d.amount), 0);
+        const currentRemainingDebt = remainingDebts.reduce((sum, d) => sum + parseFloat(d.amount), 0);
 
         await supabase
             .from('tea_workers')
-            .update({ total_debt: remainingDebt, updated_at: new Date() })
+            .update({ 
+                total_debt: currentRemainingDebt,
+                rolled_debt: remainingDebt,
+                roll_count: newRollCount,
+                updated_at: new Date() 
+            })
             .eq('id', worker_id);
 
-        // Count records settled
         const recordsSettled = approvedPlucking.length;
 
         res.json({
             success: true,
             settlement: {
+                worker_name: worker.full_name,
                 gross_pay: grossPay,
+                rolled_debt: rolledDebt,
+                new_store_debt: newStoreDebt,
                 total_debt: totalDebt,
                 net_pay: netPay > 0 ? netPay : 0,
                 kg_settled: totalKg,
                 records_settled: recordsSettled,
+                remaining_debt: remainingDebt,
+                roll_count: newRollCount,
+                alert: alertMessage,
+                status: netPay > 0 ? 'paid' : 'rolled',
                 message: netPay > 0 
                     ? `Worker paid KES ${netPay.toFixed(2)} for ${totalKg.toFixed(2)} kg (${recordsSettled} records)` 
-                    : 'Gross pay fully offset by debts. No cash payment.'
+                    : `Gross pay (KES ${grossPay.toFixed(2)}) fully offset by debt (KES ${totalDebt.toFixed(2)}). KES ${remainingDebt.toFixed(2)} rolls forward. Roll #${newRollCount}.`
             }
         });
     } catch (error) {
         console.error('Pay worker error:', error);
         res.status(500).json({ success: false, message: 'Error processing payment.' });
+    }
+});
+
+// GET /api/tea/pay-worker/history/:worker_id? - Payment history
+router.get('/pay-worker/history/:worker_id?', authorizeRoles('farm_owner', 'supervisor', 'tea_worker'), async (req, res) => {
+    try {
+        let worker_id = req.params.worker_id;
+
+        if (req.user.role === 'tea_worker') {
+            worker_id = req.user.linked_worker_id;
+        }
+
+        let query = supabase
+            .from('settlements')
+            .select('*, tea_workers(full_name)')
+            .order('created_at', { ascending: false })
+            .limit(20);
+
+        if (worker_id) {
+            query = query.eq('worker_id', worker_id);
+        }
+
+        const { data: payments, error } = await query;
+
+        if (error) throw error;
+
+        res.json({ success: true, payments: payments || [] });
+    } catch (error) {
+        console.error('Payment history error:', error);
+        res.status(500).json({ success: false, message: 'Error fetching payment history.' });
     }
 });
 
