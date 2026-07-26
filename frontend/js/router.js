@@ -21,8 +21,13 @@ class Router {
         } else {
             console.error(`Route not found: ${path}`);
             const module = this.getModule();
-            if (module === 'tea') this.navigate('tea-dashboard');
-            else if (module === 'dairy') this.navigate('dairy-dashboard');
+            const user = auth.getCurrentUser();
+            if (module === 'tea') {
+                // Redirect worker to worker dashboard, admin to tea dashboard
+                this.navigate(user.role === 'tea_worker' ? 'worker-dashboard' : 'tea-dashboard');
+            } else if (module === 'dairy') {
+                this.navigate('dairy-dashboard');
+            }
         }
     }
 
@@ -51,6 +56,24 @@ class Router {
         this.register('user-management', () => UserManagement.show());
         
         if (module === 'tea') {
+            const user = auth.getCurrentUser();
+            const isWorker = user.role === 'tea_worker';
+            const isAdmin = user.role === 'farm_owner' || user.role === 'supervisor';
+            const isStoreManager = user.role === 'store_manager';
+
+            // ==================== WORKER ROUTES ====================
+            if (isWorker) {
+                this.register('worker-dashboard', () => TeaWorkerDashboard.show());
+                this.register('tea-plucking-self', () => TeaPluckingSelf.show());
+                this.register('worker-plucking', () => TeaWorkerPlucking.show());
+                this.register('worker-debts', () => TeaWorkerDebts.show());
+                this.register('worker-store', () => TeaWorkerStorePurchases.show());
+                this.register('worker-payments', () => TeaWorkerPayments.show());
+                this.register('worker-profile', () => TeaWorkerProfile.show());
+                return;
+            }
+
+            // ==================== ADMIN ROUTES ====================
             // Management
             this.register('tea-dashboard', () => TeaDashboard.show());
             this.register('tea-workers', () => TeaWorkers.show());
@@ -60,24 +83,35 @@ class Router {
             
             // Operations
             this.register('tea-plucking-self', () => TeaPluckingSelf.show());
-            this.register('tea-plucking-verified', () => TeaPluckingVerified.show());
+            if (isAdmin) {
+                this.register('tea-plucking-verified', () => TeaPluckingVerified.show());
+            }
             
-            // Production (NEW)
-            this.register('tea-farm-inputs', () => TeaFarmInputs.show());
-            this.register('tea-targets', () => TeaProductionTargets.show());
-            this.register('tea-input-costs', () => TeaInputCosts.show());
-            this.register('tea-fertilizer', () => TeaFertilizerSchedule.show());
-            this.register('tea-pruning', () => TeaPruningSchedule.show());
-            this.register('tea-seasonal', () => TeaSeasonalAnalysis.show());
+            // Production
+            if (isAdmin) {
+                this.register('tea-farm-inputs', () => TeaFarmInputs.show());
+                this.register('tea-targets', () => TeaProductionTargets.show());
+                this.register('tea-input-costs', () => TeaInputCosts.show());
+                this.register('tea-fertilizer', () => TeaFertilizerSchedule.show());
+                this.register('tea-pruning', () => TeaPruningSchedule.show());
+                this.register('tea-seasonal', () => TeaSeasonalAnalysis.show());
+            }
             
             // Financial
-            this.register('tea-comparison', () => TeaComparison.show());
-            this.register('tea-debts', () => TeaDebts.show());
-            this.register('tea-pay-worker', () => TeaPayWorker.show());
-            this.register('tea-pay-store', () => TeaPayStore.show());
+            if (isAdmin) {
+                this.register('tea-comparison', () => TeaComparison.show());
+                this.register('tea-debts', () => TeaDebts.show());
+                this.register('tea-pay-worker', () => TeaPayWorker.show());
+                this.register('tea-pay-store', () => TeaPayStore.show());
+            }
+            if (isStoreManager) {
+                this.register('tea-debts', () => TeaDebts.show());
+            }
             
             // Reports
-            this.register('tea-reports', () => TeaReports.show());
+            if (isAdmin) {
+                this.register('tea-reports', () => TeaReports.show());
+            }
             
         } else if (module === 'dairy') {
             this.register('dairy-dashboard', () => DairyDashboard.show());
