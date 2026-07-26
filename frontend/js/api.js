@@ -39,19 +39,28 @@ class ApiService {
         try {
             const options = { method, headers: this.getHeaders() };
             if (body && method !== 'GET') { options.body = JSON.stringify(body); }
+            
             const response = await fetch(`${this.baseUrl}${endpoint}`, options);
+            
+            // Handle expired/invalid token - clone response before reading
             if (response.status === 401 || response.status === 403) {
-                const data = await response.json().catch(() => ({}));
-                if (data.message === 'Invalid or expired token.' || data.message === 'Access denied. No token provided.' || data.message === 'Authentication required.') {
+                const cloned = response.clone();
+                const errData = await cloned.json().catch(() => ({}));
+                if (errData.message === 'Invalid or expired token.' || 
+                    errData.message === 'Access denied. No token provided.' || 
+                    errData.message === 'Authentication required.') {
                     this.handleSessionExpired();
                     throw new Error('Session expired. Redirecting to login...');
                 }
             }
+            
             const data = await response.json();
             if (!response.ok) { throw new Error(data.message || 'Request failed'); }
             return data;
         } catch (error) {
-            if (error.message !== 'Session expired. Redirecting to login...') { console.error(`API Error [${method} ${endpoint}]:`, error); }
+            if (error.message !== 'Session expired. Redirecting to login...') { 
+                console.error(`API Error [${method} ${endpoint}]:`, error); 
+            }
             throw error;
         }
     }
@@ -134,31 +143,26 @@ class ApiService {
     async getDebtReport() { return this.get('/tea/reports/debts'); }
 
     // ============ FARM PRODUCTION MANAGEMENT ============
-    // Farm Inputs
     async getFarmInputs() { return this.get('/tea/production/inputs'); }
     async addFarmInput(data) { return this.post('/tea/production/inputs', data); }
     async updateFarmInput(id, data) { return this.put(`/tea/production/inputs/${id}`, data); }
     async deleteFarmInput(id) { return this.delete(`/tea/production/inputs/${id}`); }
 
-    // Production Targets
     async getProductionTargets() { return this.get('/tea/production/targets'); }
     async addProductionTarget(data) { return this.post('/tea/production/targets', data); }
     async updateProductionTarget(id, data) { return this.put(`/tea/production/targets/${id}`, data); }
     async deleteProductionTarget(id) { return this.delete(`/tea/production/targets/${id}`); }
 
-    // Fertilizer Schedule
     async getFertilizerSchedule() { return this.get('/tea/production/fertilizer'); }
     async addFertilizer(data) { return this.post('/tea/production/fertilizer', data); }
     async updateFertilizer(id, data) { return this.put(`/tea/production/fertilizer/${id}`, data); }
     async deleteFertilizer(id) { return this.delete(`/tea/production/fertilizer/${id}`); }
 
-    // Pruning Schedule
     async getPruningSchedule() { return this.get('/tea/production/pruning'); }
     async addPruning(data) { return this.post('/tea/production/pruning', data); }
     async updatePruning(id, data) { return this.put(`/tea/production/pruning/${id}`, data); }
     async deletePruning(id) { return this.delete(`/tea/production/pruning/${id}`); }
 
-    // Input Costs & Seasonal Analysis
     async getInputCosts() { return this.get('/tea/production/costs'); }
     async getSeasonalAnalysis() { return this.get('/tea/production/seasonal'); }
 
