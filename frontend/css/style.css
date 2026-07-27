@@ -41,7 +41,7 @@ body {
 .safe-right { padding-right: env(safe-area-inset-right, 0px); }
 
 /* ============================================
-   TOUCH TARGETS
+   TOUCH TARGETS (always 44x44 minimum)
    ============================================ */
 .min-tap { min-width: 44px; min-height: 44px; }
 
@@ -111,10 +111,6 @@ body {
 .animate-slideInRight { animation: slideInRight 0.5s ease-out; }
 .animate-bounceIn { animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
 
-@media (max-width: 640px) {
-    .modal-slide-up { animation: modalSlideUp 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important; }
-}
-
 /* ============================================
    CUSTOM SCROLLBAR
    ============================================ */
@@ -138,7 +134,7 @@ body {
 }
 
 /* ============================================
-   SIDEBAR - Mobile + Desktop
+   SIDEBAR - Mobile + Desktop (touch‑friendly)
    ============================================ */
 #sidebar {
     position: fixed;
@@ -187,6 +183,10 @@ body {
     -webkit-tap-highlight-color: transparent;
     user-select: none;
     -webkit-user-select: none;
+    min-height: 48px;                  /* larger touch target */
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;            /* spacious for fingers */
 }
 
 #sidebarNav a:active { background: rgba(255, 255, 255, 0.08); }
@@ -200,7 +200,7 @@ body {
 }
 
 #sidebarOverlay { transition: opacity 0.3s ease; }
-.sidebar-overlay-tap { cursor: pointer; }
+.sidebar-overlay-tap { cursor: pointer; touch-action: manipulation; }
 
 /* ============================================
    CARD STYLES
@@ -209,6 +209,8 @@ body {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     background: #ffffff;
     border: 1px solid #e7e5e4;
+    width: 100%;                       /* ensures no overflow */
+    min-width: 0;
 }
 .stat-card:active { transform: scale(0.98); }
 @media (hover: hover) {
@@ -222,7 +224,12 @@ body {
 /* ============================================
    MODULE SELECTOR CARDS
    ============================================ */
-.module-card { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; overflow: hidden; position: relative; }
+.module-card {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    overflow: hidden;
+    position: relative;
+}
 .module-card:active { transform: scale(0.97); }
 .module-card-image { transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1); }
 .module-card-overlay { transition: background 0.4s ease; }
@@ -233,20 +240,63 @@ body {
 }
 
 /* ============================================
-   MODAL STYLES
+   MODALS – Visible & Usable on All Phones
    ============================================ */
-#modalContent { animation: modalSlideIn 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
-#modalContent.modal-closing { animation: modalSlideOut 0.25s ease-in forwards; }
-#modalContainer { transition: opacity 0.3s ease; }
+/* The container that darkens the background */
+#modalContainer {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    display: flex;
+    align-items: center;               /* centered by default on all devices */
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    padding: 1rem;
+    /* Use dynamic viewport so modal resizes correctly when mobile browser bars appear/disappear */
+    max-height: 100dvh;
+    max-height: 100vh;
+    transition: opacity 0.3s ease;
+}
 
+/* The actual modal box */
+#modalContent {
+    background: white;
+    border-radius: 1.5rem;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    max-width: 34rem;                 /* a bit wider than before for phone forms */
+    max-height: 90dvh;
+    max-height: 90vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    animation: modalSlideIn 0.3s ease-out;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    /* Safe area padding for notch devices */
+    margin: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* Closing animation */
+#modalContent.modal-closing {
+    animation: modalSlideOut 0.25s ease-in forwards;
+}
+
+/* On small screens, slide up from bottom (one‑handed friendly) */
 @media (max-width: 640px) {
+    #modalContainer {
+        align-items: flex-end;        /* modal sits at the bottom of the screen */
+        padding: 0.5rem;
+    }
+
     #modalContent {
-        border-radius: 1.5rem 1.5rem 0 0 !important;
-        max-height: 92vh !important;
-        margin: 0 !important;
+        border-radius: 1.5rem 1.5rem 0 0;
+        max-height: 85dvh;
+        max-height: 85vh;
+        animation: modalSlideUp 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     }
 }
 
+/* Focus styles inside modals */
 #modalContent input:focus,
 #modalContent select:focus,
 #modalContent textarea:focus {
@@ -256,7 +306,33 @@ body {
 }
 
 /* ============================================
-   TABLE STYLES
+   LOGIN MODAL – Centered, no display conflict
+   ============================================ */
+#loginModal {
+    /* display is controlled by JS via inline style */
+    align-items: center;
+    justify-content: center;
+}
+
+#loginModal > div {
+    margin: auto;
+}
+
+@media (max-width: 640px) {
+    #loginModal {
+        align-items: center;           /* keep centered even on small phones */
+        padding: 0.75rem;
+    }
+    
+    #loginModal > div {
+        max-width: 95vw;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+}
+
+/* ============================================
+   TABLE STYLES (mobile‑first card layout)
    ============================================ */
 .responsive-table { border-collapse: separate; border-spacing: 0; width: 100%; }
 .responsive-table thead th {
@@ -269,6 +345,7 @@ body {
 .responsive-table tfoot td { padding: 0.75rem 1rem; font-weight: 700; background: #fafaf9; border-top: 2px solid #e7e5e4; }
 @media (hover: hover) { .responsive-table tbody tr:hover { background: #f0fdf4; } }
 
+/* On small screens, convert table to stacked cards */
 @media (max-width: 768px) {
     .responsive-table thead { display: none; }
     .responsive-table tbody tr {
@@ -309,11 +386,19 @@ button:active { transform: scale(0.97); }
 button:disabled { opacity: 0.55; cursor: not-allowed; transform: none !important; }
 @media (max-width: 640px) { button { min-height: 44px; } }
 
-input, select, textarea { transition: all 0.2s ease; color: #1c1917; font-size: 16px !important; }
-input:focus, select:focus, textarea:focus {
-    box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.08); outline: none; border-color: #059669;
+input, select, textarea {
+    transition: all 0.2s ease;
+    color: #1c1917;
+    font-size: 16px !important;        /* prevent iOS zoom */
 }
-@media (max-width: 640px) { input, select { min-height: 44px; } }
+input:focus, select:focus, textarea:focus {
+    box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.08);
+    outline: none;
+    border-color: #059669;
+}
+@media (max-width: 640px) {
+    input, select { min-height: 44px; }
+}
 
 .badge {
     display: inline-flex; align-items: center; gap: 0.15rem;
@@ -347,21 +432,43 @@ input:focus, select:focus, textarea:focus {
     -webkit-backdrop-filter: blur(18px); border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
+/* ============================================
+   RESPONSIVE TYPOGRAPHY (fluid scaling)
+   ============================================ */
+h1, .h1 { font-size: clamp(1.25rem, 5vw, 2rem); }
+h2, .h2 { font-size: clamp(1.125rem, 4.5vw, 1.75rem); }
+h3, .h3 { font-size: clamp(1rem, 4vw, 1.5rem); }
+h4, .h4 { font-size: clamp(0.875rem, 3.5vw, 1.25rem); }
+p, .text-base { font-size: clamp(0.8125rem, 3vw, 1rem); }
+small, .text-sm { font-size: clamp(0.75rem, 2.5vw, 0.875rem); }
+.text-xs { font-size: clamp(0.625rem, 2vw, 0.75rem); }
+
+/* Stat card numbers scale too */
+.stat-card .text-2xl { font-size: clamp(1.25rem, 5vw, 1.75rem) !important; }
+.stat-card .text-xl  { font-size: clamp(1.125rem, 4.5vw, 1.5rem) !important; }
+
+/* ============================================
+   ULTRA‑RESPONSIVE GRID & SPACING
+   ============================================ */
+/* On very small phones, force single column */
+@media (max-width: 400px) {
+    .grid-cols-2,
+    .grid-cols-2.md\:grid-cols-4,
+    .grid-cols-2.md\:grid-cols-5 {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* General fallback: large screens keep original columns */
 @media (max-width: 1024px) { .lg\:ml-72 { margin-left: 0 !important; } }
 @media (max-width: 768px) {
-    .grid-cols-1.md\:grid-cols-2, .grid-cols-1.md\:grid-cols-3 { grid-template-columns: repeat(1, 1fr); }
+    .grid-cols-1.md\:grid-cols-2,
+    .grid-cols-1.md\:grid-cols-3 { grid-template-columns: repeat(1, 1fr); }
     .grid-cols-1.md\:grid-cols-4 { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 640px) {
     #mainContent { padding: 0.6rem; }
-    h1 { font-size: 1.25rem !important; }
-    h2 { font-size: 1.1rem !important; }
-    h3 { font-size: 1rem !important; }
     .stat-card { padding: 0.75rem !important; }
-    .stat-card .text-2xl { font-size: 1.1rem !important; }
-    .stat-card .text-xl { font-size: 1rem !important; }
-    .grid-cols-2 { grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
-    .grid-cols-2.md\:grid-cols-4, .grid-cols-2.md\:grid-cols-5 { grid-template-columns: repeat(2, 1fr); }
     .space-y-6 > * + * { margin-top: 1rem; }
     .gap-6 { gap: 0.75rem; }
     .gap-4 { gap: 0.5rem; }
@@ -393,30 +500,4 @@ input:focus, select:focus, textarea:focus {
 .z-toast { z-index: 50; }
 .z-login { z-index: 50; }
 .sidebar-scroll { -webkit-overflow-scrolling: touch; overflow-y: auto; }
-body.no-scroll { overflow: hidden; position: fixed; width: 100%; }   
-
-/* ============================================
-   LOGIN MODAL - CENTERING (no !important)
-   ============================================ */
-#loginModal {
-    /* display is controlled by JS via inline style */
-    align-items: center;
-    justify-content: center;
-}
-
-#loginModal > div {
-    margin: auto;
-}
-
-@media (max-width: 640px) {
-    #loginModal {
-        align-items: center;
-        padding: 0.75rem;
-    }
-    
-    #loginModal > div {
-        max-width: 95vw;
-        max-height: 90vh;
-        overflow-y: auto;
-    }
-}
+body.no-scroll { overflow: hidden; position: fixed; width: 100%; }
