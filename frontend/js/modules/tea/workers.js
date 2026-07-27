@@ -412,7 +412,7 @@ class TeaWorkers {
         window.open(`${CONFIG.API_URL}/tea/workers/export/csv`, '_blank');
     }
 
-    // ---------- ADD WORKER FORM (phone‑optimized, no autofocus) ----------
+    // ---------- ADD WORKER FORM ----------
     static showAddForm() {
         const formFields = `
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -483,6 +483,7 @@ class TeaWorkers {
             </div>
         `;
 
+        // Call modal.openForm with all required options
         modal.openForm('Add New Worker', formFields, async (e) => {
             const workerData = {
                 full_name: document.getElementById('workerName').value,
@@ -510,7 +511,7 @@ class TeaWorkers {
         });
     }
 
-    // ---------- EDIT WORKER FORM (phone‑optimized, no autofocus) ----------
+    // ---------- EDIT WORKER FORM ----------
     static async showEditForm(workerId) {
         const worker = TeaWorkers.allWorkers.find(w => w.id === workerId);
         if (!worker) { showToast('Worker not found.', 'error'); return; }
@@ -608,7 +609,7 @@ class TeaWorkers {
         );
     }
 
-    // ---------- RESET PASSWORD (no autofocus) ----------
+    // ---------- RESET PASSWORD ----------
     static showResetPasswordForm(workerId, workerName) {
         modal.openForm(`Reset Password: ${workerName}`, `
             <div>
