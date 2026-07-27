@@ -46,63 +46,60 @@
         <div class="absolute inset-0 bg-gradient-to-br from-slate-900/80 via-slate-800/70 to-slate-900/80"></div>
     </div>
     
-    <!-- Login Modal - Force Centered -->
-    <div id="loginModal" class="fixed inset-0 z-50 flex items-center justify-center p-2">
-        <div class="relative w-full max-w-sm">
-            <div class="relative bg-white rounded-2xl shadow-2xl overflow-hidden animate-fadeIn">
-                
-                <!-- Compact Header -->
-                <div class="relative h-32 overflow-hidden">
-                    <div class="absolute inset-0" style="clip-path: polygon(0 0, 100% 0, 0 100%);">
-                        <img src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Tea" class="w-full h-full object-cover">
-                        <div class="absolute inset-0 bg-gradient-to-br from-emerald-800/60 to-emerald-900/40"></div>
-                    </div>
-                    <div class="absolute inset-0" style="clip-path: polygon(100% 0, 100% 100%, 0 100%);">
-                        <img src="https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Dairy" class="w-full h-full object-cover">
-                        <div class="absolute inset-0 bg-gradient-to-tl from-sky-800/60 to-sky-900/40"></div>
-                    </div>
-                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
-                        <div class="w-12 h-12 bg-slate-800 rounded-xl flex items-center justify-center shadow-xl border-2 border-white/50 overflow-hidden">
-                            <img src="assets/images/logo.png.jpg" alt="Logo" class="w-8 h-8 object-cover" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-tractor text-white text-xl\'></i>'">
-                        </div>
-                    </div>
-                    <div class="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-black/60 to-transparent"></div>
-                    <div class="absolute bottom-1.5 left-0 right-0 text-center z-10">
-                        <h1 class="text-base font-extrabold text-white tracking-tight">Talaen Farm</h1>
+   <!-- Login Modal - Pure Inline Styles for Centering -->
+<div id="loginModal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 50; display: flex; align-items: center; justify-content: center; padding: 12px;">
+    <div style="width: 100%; max-width: 360px;">
+        <div style="background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.25);">
+            
+            <!-- Header -->
+            <div style="position: relative; height: 120px; overflow: hidden;">
+                <div style="position: absolute; inset: 0; clip-path: polygon(0 0, 100% 0, 0 100%);">
+                    <img src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" style="width: 100%; height: 100%; object-fit: cover;">
+                    <div style="position: absolute; inset: 0; background: linear-gradient(135deg, rgba(6,78,59,0.6), rgba(6,78,59,0.4));"></div>
+                </div>
+                <div style="position: absolute; inset: 0; clip-path: polygon(100% 0, 100% 100%, 0 100%);">
+                    <img src="https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" style="width: 100%; height: 100%; object-fit: cover;">
+                    <div style="position: absolute; inset: 0; background: linear-gradient(315deg, rgba(8,47,73,0.6), rgba(8,47,73,0.4));"></div>
+                </div>
+                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 20;">
+                    <div style="width: 48px; height: 48px; background: #1e293b; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(255,255,255,0.5); overflow: hidden;">
+                        <img src="assets/images/logo.png.jpg" style="width: 32px; height: 32px; object-fit: cover;" onerror="this.style.display='none'; this.innerHTML='<i style=color:white;font-size:20px class=fas fa-tractor></i>'">
                     </div>
                 </div>
-                
-                <!-- Login Form -->
-                <div class="p-4">
-                    <form id="loginForm" class="space-y-3">
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Username</label>
-                            <input type="text" id="username" required 
-                                class="w-full px-3 py-2.5 bg-stone-50 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all font-medium text-slate-800 text-sm"
-                                placeholder="Enter your username">
+                <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 40px; background: linear-gradient(transparent, rgba(0,0,0,0.6));"></div>
+                <h1 style="position: absolute; bottom: 6px; left: 0; right: 0; text-align: center; color: white; font-size: 16px; font-weight: 800; margin: 0; z-index: 10;">Talaen Farm</h1>
+            </div>
+            
+            <!-- Form -->
+            <div style="padding: 16px;">
+                <form id="loginForm" style="display: flex; flex-direction: column; gap: 12px;">
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 600; color: #334155; margin-bottom: 4px;">Username</label>
+                        <input type="text" id="username" required 
+                            style="width: 100%; padding: 10px 12px; background: #fafaf9; border: 2px solid #e7e5e4; border-radius: 12px; font-size: 14px; outline: none; box-sizing: border-box;"
+                            placeholder="Enter your username">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 600; color: #334155; margin-bottom: 4px;">Password</label>
+                        <div style="position: relative;">
+                            <input type="password" id="password" required 
+                                style="width: 100%; padding: 10px 40px 10px 12px; background: #fafaf9; border: 2px solid #e7e5e4; border-radius: 12px; font-size: 14px; outline: none; box-sizing: border-box;"
+                                placeholder="Enter your password">
+                            <button type="button" id="togglePassword" style="position: absolute; right: 0; top: 0; bottom: 0; padding: 0 12px; background: none; border: none; color: #a8a29e; cursor: pointer; font-size: 14px;">
+                                <i class="fas fa-eye"></i>
+                            </button>
                         </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Password</label>
-                            <div class="relative">
-                                <input type="password" id="password" required 
-                                    class="w-full px-3 pr-10 py-2.5 bg-stone-50 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all font-medium text-slate-800 text-sm"
-                                    placeholder="Enter your password">
-                                <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 pr-3 flex items-center text-stone-400 active:text-stone-600 min-tap">
-                                    <i class="fas fa-eye text-sm"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <button type="submit" 
-                            class="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 text-white py-3 rounded-xl font-semibold active:from-emerald-700 active:to-emerald-800 transition-all active:scale-[0.98] shadow-lg shadow-emerald-600/20 text-sm min-h-[48px]">
-                            <i class="fas fa-sign-in-alt mr-2"></i>Sign In
-                        </button>
-                    </form>
-                    <div id="loginError" class="mt-2 text-red-500 text-xs text-center hidden bg-red-50 border border-red-100 py-2 px-3 rounded-xl"></div>
-                </div>
+                    </div>
+                    <button type="submit" 
+                        style="width: 100%; padding: 12px; background: linear-gradient(135deg, #059669, #047857); color: white; border: none; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; min-height: 48px;">
+                        <i class="fas fa-sign-in-alt" style="margin-right: 8px;"></i>Sign In
+                    </button>
+                </form>
+                <div id="loginError" style="display: none; margin-top: 8px; padding: 8px 12px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; color: #ef4444; font-size: 12px; text-align: center;"></div>
             </div>
         </div>
     </div>
-
+</div>
     <!-- Main App Container -->
     <div id="appContainer" class="hidden relative z-10 min-h-screen w-full">
         
