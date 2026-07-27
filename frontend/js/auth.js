@@ -33,6 +33,12 @@ class AuthManager {
                 const appContainer = document.getElementById('appContainer');
                 if (loginModal) loginModal.style.display = 'none';
                 if (appContainer) appContainer.classList.remove('hidden');
+                
+                // Initialize modules if available
+                const availableModules = JSON.parse(localStorage.getItem('available_modules') || '[]');
+                if (availableModules.length > 0) {
+                    this.initializeApp(this.currentUser, availableModules);
+                }
             }
         }
 
@@ -193,7 +199,7 @@ class AuthManager {
                 // Start periodic token check
                 this.startTokenCheck();
 
-                // Hide login modal using inline style, show app
+                // 🔴 CRITICAL FIX: Hide login modal using inline style
                 document.getElementById('loginModal').style.display = 'none';
                 document.getElementById('appContainer').classList.remove('hidden');
 
@@ -232,7 +238,9 @@ class AuthManager {
         this.currentModule = null;
         
         // Show module selector first
-        ModuleSelector.show(availableModules);
+        if (typeof ModuleSelector !== 'undefined') {
+            ModuleSelector.show(availableModules);
+        }
     }
 
     getRoleDisplay(role) {
