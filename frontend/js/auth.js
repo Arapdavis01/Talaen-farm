@@ -27,6 +27,12 @@ class AuthManager {
                 
                 // Start periodic token check
                 this.startTokenCheck();
+                
+                // Hide login modal and show app
+                const loginModal = document.getElementById('loginModal');
+                const appContainer = document.getElementById('appContainer');
+                if (loginModal) loginModal.style.display = 'none';
+                if (appContainer) appContainer.classList.remove('hidden');
             }
         }
 
@@ -107,16 +113,17 @@ class AuthManager {
         this.currentUser = null;
         api.setToken(null);
         
-        // Update UI
+        // Update UI - USE INLINE STYLES for login modal
         const loginModal = document.getElementById('loginModal');
         const appContainer = document.getElementById('appContainer');
         const loginForm = document.getElementById('loginForm');
         const loginError = document.getElementById('loginError');
         
         if (appContainer) appContainer.classList.add('hidden');
-        if (loginModal) loginModal.classList.remove('hidden');
+        // Use inline style display:flex to show (not class-based)
+        if (loginModal) loginModal.style.display = 'flex';
         if (loginForm) loginForm.reset();
-        if (loginError) loginError.classList.add('hidden');
+        if (loginError) loginError.style.display = 'none';
         
         if (!silent) {
             showToast('Logged out successfully.', 'info');
@@ -166,7 +173,7 @@ class AuthManager {
         // Show loading state
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Signing in...';
-        errorDiv.classList.add('hidden');
+        errorDiv.style.display = 'none';
 
         try {
             const response = await api.login(username, password);
@@ -186,8 +193,8 @@ class AuthManager {
                 // Start periodic token check
                 this.startTokenCheck();
 
-                // Hide login, show app
-                document.getElementById('loginModal').classList.add('hidden');
+                // Hide login modal using inline style, show app
+                document.getElementById('loginModal').style.display = 'none';
                 document.getElementById('appContainer').classList.remove('hidden');
 
                 // Initialize the app
@@ -214,7 +221,7 @@ class AuthManager {
         } else {
             errorDiv.textContent = message;
         }
-        errorDiv.classList.remove('hidden');
+        errorDiv.style.display = 'block';
     }
 
     initializeApp(user, availableModules) {
