@@ -26,12 +26,7 @@ class Modal {
 
     /**
      * Open the modal with any HTML content.
-     * @param {string} title - modal heading
-     * @param {string} content - inner HTML (the body)
-     * @param {object} [options]
-     * @param {string} [options.size='max-w-lg'] - Tailwind max width class
-     * @param {function} [options.onClose] - callback after close
-     * @param {string} [options.icon='fa-pen'] - Font Awesome icon for the header
+     * The keyboard does NOT open automatically – the user must tap a field.
      */
     open(title, content, options = {}) {
         const {
@@ -40,8 +35,6 @@ class Modal {
             icon = 'fa-pen'
         } = options;
 
-        // Use the responsive styling already defined in style.css / index.html
-        // We only add the content structure; the outer container's classes stay the same.
         this.content.innerHTML = `
             <!-- Drag Handle (visible only on mobile) -->
             <div class="sm:hidden flex justify-center pt-2 pb-1">
@@ -68,7 +61,7 @@ class Modal {
             </div>
         `;
 
-        // Show the container (remove the 'hidden' class)
+        // Show container
         this.container.classList.remove('hidden');
         this.isOpen = true;
         this.onCloseCallback = onClose;
@@ -76,21 +69,14 @@ class Modal {
         // Prevent background scroll
         document.body.classList.add('no-scroll');
 
-        // ***** CRUCIAL FOR MOBILE: focus first input so keyboard opens *****
-        setTimeout(() => {
-            const firstInput = this.content.querySelector('input:not([type="hidden"]), select, textarea');
-            if (firstInput) {
-                firstInput.focus();
-                // Smoothly scroll the input into the centre of the viewport
-                firstInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-        }, 350); // wait for the slide‑up animation to finish
+        // IMPORTANT: Do NOT auto-focus any input.
+        // The user will see the form first, then tap to open the keyboard.
     }
 
     close() {
         if (!this.isOpen) return;
 
-        // Trigger closing animation (CSS class modal-closing)
+        // Trigger closing animation
         this.content.classList.add('modal-closing');
 
         const finishClose = () => {
@@ -104,19 +90,12 @@ class Modal {
         };
 
         this.content.addEventListener('animationend', finishClose, { once: true });
-        // Fallback in case animation doesn't fire
+        // Fallback
         setTimeout(finishClose, 400);
     }
 
     // ========== Convenience methods ==========
 
-    /**
-     * Open a form with a submit handler.
-     * @param {string} title
-     * @param {string} formFields - HTML for the form fields (inside a <form>)
-     * @param {function} submitHandler - called with the form submit event, must handle its own async logic
-     * @param {object} [options] - icon, size, submitText, submitClass, submitIcon
-     */
     openForm(title, formFields, submitHandler, options = {}) {
         const {
             submitText = 'Save',
@@ -167,9 +146,6 @@ class Modal {
         }, 100);
     }
 
-    /**
-     * Confirmation dialog.
-     */
     openConfirm(title, message, confirmHandler, options = {}) {
         const {
             confirmText = 'Confirm',
