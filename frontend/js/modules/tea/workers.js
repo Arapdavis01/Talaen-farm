@@ -412,13 +412,13 @@ class TeaWorkers {
         window.open(`${CONFIG.API_URL}/tea/workers/export/csv`, '_blank');
     }
 
-    // ---------- ADD WORKER FORM (phone‑optimized) ----------
+    // ---------- ADD WORKER FORM (phone‑optimized, no autofocus) ----------
     static showAddForm() {
         const formFields = `
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="md:col-span-2">
                     <label class="block text-sm font-semibold text-slate-700 mb-1.5">Full Name *</label>
-                    <input type="text" id="workerName" required autofocus inputmode="text"
+                    <input type="text" id="workerName" required inputmode="text"
                         class="w-full px-3.5 py-2.5 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all min-h-[48px]"
                         placeholder="Enter full name">
                 </div>
@@ -484,7 +484,6 @@ class TeaWorkers {
         `;
 
         modal.openForm('Add New Worker', formFields, async (e) => {
-            // Gather data from the form fields
             const workerData = {
                 full_name: document.getElementById('workerName').value,
                 phone: document.getElementById('workerPhone').value,
@@ -511,7 +510,7 @@ class TeaWorkers {
         });
     }
 
-    // ---------- EDIT WORKER FORM (phone‑optimized) ----------
+    // ---------- EDIT WORKER FORM (phone‑optimized, no autofocus) ----------
     static async showEditForm(workerId) {
         const worker = TeaWorkers.allWorkers.find(w => w.id === workerId);
         if (!worker) { showToast('Worker not found.', 'error'); return; }
@@ -520,7 +519,7 @@ class TeaWorkers {
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="md:col-span-2">
                     <label class="block text-sm font-semibold text-slate-700 mb-1.5">Full Name *</label>
-                    <input type="text" id="editWorkerName" value="${worker.full_name}" required autofocus inputmode="text"
+                    <input type="text" id="editWorkerName" value="${worker.full_name}" required inputmode="text"
                         class="w-full px-3.5 py-2.5 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none min-h-[48px]">
                 </div>
                 <div>
@@ -609,12 +608,12 @@ class TeaWorkers {
         );
     }
 
-    // ---------- RESET PASSWORD ----------
+    // ---------- RESET PASSWORD (no autofocus) ----------
     static showResetPasswordForm(workerId, workerName) {
         modal.openForm(`Reset Password: ${workerName}`, `
             <div>
                 <label class="block text-sm font-semibold text-slate-700 mb-1.5">New Password *</label>
-                <input type="password" id="resetPassword" required autofocus
+                <input type="password" id="resetPassword" required
                     class="w-full px-3.5 py-2.5 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none min-h-[48px]"
                     placeholder="Min. 6 characters">
             </div>
