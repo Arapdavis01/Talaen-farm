@@ -7,12 +7,12 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1a1a2e">
     <title>Talaen Farm Management System</title>
-    
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
-    
+
     <script>
         tailwind.config = {
             theme: {
@@ -26,19 +26,18 @@
             }
         }
     </script>
-    <!-- NO more internal <style> block overriding login modal display -->
 </head>
 <body class="font-inter bg-stone-50 antialiased overflow-x-hidden">
-    
+
+    <!-- Background Image with Overlay -->
     <div id="appBackground" class="fixed inset-0 z-0 bg-cover bg-center bg-no-repeat transition-all duration-700" style="background-image: url('https://images.unsplash.com/photo-1499529112087-3cb3b73cec95?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');">
         <div class="absolute inset-0 bg-gradient-to-br from-slate-900/80 via-slate-800/70 to-slate-900/80"></div>
     </div>
-    
-    <!-- Login Modal - Pure Inline Styles for Centering -->
+
+    <!-- Login Modal – Always centered, shows on load, hidden via JS -->
     <div id="loginModal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 50; display: flex; align-items: center; justify-content: center; padding: 12px;">
         <div style="width: 100%; max-width: 360px;">
             <div style="background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.25);">
-                
                 <!-- Header -->
                 <div style="position: relative; height: 120px; overflow: hidden;">
                     <div style="position: absolute; inset: 0; clip-path: polygon(0 0, 100% 0, 0 100%);">
@@ -55,43 +54,42 @@
                         </div>
                     </div>
                     <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 40px; background: linear-gradient(transparent, rgba(0,0,0,0.6));"></div>
-                    <h1 style="position: absolute; bottom: 6px; left: 0; right: 0; text-align: center; color: white; font-size: 16px; font-weight: 800; margin: 0; z-index: 10;">Talaen Farm</h1>
+                    <h1 style="position: absolute; bottom: 6px; left: 0; right: 0; text-align: center; color: white; font-size: clamp(14px, 4vw, 16px); font-weight: 800; margin: 0; z-index: 10;">Talaen Farm</h1>
                 </div>
-                
                 <!-- Form -->
                 <div style="padding: 16px;">
-                    <form id="loginForm" style="display: flex; flex-direction: column; gap: 12px;">
+                    <form id="loginForm" style="display: flex; flex-direction: column; gap: 12px;" autocomplete="on">
                         <div>
-                            <label style="display: block; font-size: 12px; font-weight: 600; color: #334155; margin-bottom: 4px;">Username</label>
-                            <input type="text" id="username" required 
-                                style="width: 100%; padding: 10px 12px; background: #fafaf9; border: 2px solid #e7e5e4; border-radius: 12px; font-size: 14px; outline: none; box-sizing: border-box;"
+                            <label style="display: block; font-size: clamp(12px, 3vw, 13px); font-weight: 600; color: #334155; margin-bottom: 4px;">Username</label>
+                            <input type="text" id="username" required inputmode="text" autocomplete="username"
+                                style="width: 100%; padding: 10px 12px; background: #fafaf9; border: 2px solid #e7e5e4; border-radius: 12px; font-size: 16px; outline: none; box-sizing: border-box; min-height: 48px;"
                                 placeholder="Enter your username">
                         </div>
                         <div>
-                            <label style="display: block; font-size: 12px; font-weight: 600; color: #334155; margin-bottom: 4px;">Password</label>
+                            <label style="display: block; font-size: clamp(12px, 3vw, 13px); font-weight: 600; color: #334155; margin-bottom: 4px;">Password</label>
                             <div style="position: relative;">
-                                <input type="password" id="password" required 
-                                    style="width: 100%; padding: 10px 40px 10px 12px; background: #fafaf9; border: 2px solid #e7e5e4; border-radius: 12px; font-size: 14px; outline: none; box-sizing: border-box;"
+                                <input type="password" id="password" required inputmode="text" autocomplete="current-password"
+                                    style="width: 100%; padding: 10px 40px 10px 12px; background: #fafaf9; border: 2px solid #e7e5e4; border-radius: 12px; font-size: 16px; outline: none; box-sizing: border-box; min-height: 48px;"
                                     placeholder="Enter your password">
-                                <button type="button" id="togglePassword" style="position: absolute; right: 0; top: 0; bottom: 0; padding: 0 12px; background: none; border: none; color: #a8a29e; cursor: pointer; font-size: 14px;">
+                                <button type="button" id="togglePassword" style="position: absolute; right: 0; top: 0; bottom: 0; padding: 0 12px; background: none; border: none; color: #a8a29e; cursor: pointer; font-size: 16px; touch-action: manipulation;">
                                     <i class="fas fa-eye"></i>
                                 </button>
                             </div>
                         </div>
-                        <button type="submit" 
-                            style="width: 100%; padding: 12px; background: linear-gradient(135deg, #059669, #047857); color: white; border: none; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; min-height: 48px;">
+                        <button type="submit"
+                            style="width: 100%; padding: 12px; background: linear-gradient(135deg, #059669, #047857); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; min-height: 48px; touch-action: manipulation;">
                             <i class="fas fa-sign-in-alt" style="margin-right: 8px;"></i>Sign In
                         </button>
                     </form>
-                    <div id="loginError" style="display: none; margin-top: 8px; padding: 8px 12px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; color: #ef4444; font-size: 12px; text-align: center;"></div>
+                    <div id="loginError" style="display: none; margin-top: 8px; padding: 8px 12px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; color: #ef4444; font-size: 14px; text-align: center;"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Main App Container -->
+    <!-- Main App Container (hidden until login) -->
     <div id="appContainer" class="hidden relative z-10 min-h-screen w-full">
-        
+        <!-- Sidebar -->
         <div id="sidebar" class="flex flex-col w-72 max-w-[85vw] bg-slate-850 text-slate-200 fixed h-full z-30 shadow-2xl border-r border-slate-700/50">
             <div class="p-4 sm:p-6 border-b border-slate-700/50 flex-shrink-0">
                 <div class="flex items-center gap-2 sm:gap-3">
@@ -106,17 +104,18 @@
             </div>
             <nav id="sidebarNav" class="flex-1 overflow-y-auto py-3 sm:py-4 px-2 sm:px-3 space-y-0.5 sidebar-scroll"></nav>
             <div class="p-3 sm:p-4 border-t border-slate-700/50 flex-shrink-0">
-                <button id="logoutBtn" class="w-full bg-red-500/10 active:bg-red-500/20 text-red-300 py-2.5 sm:py-3 rounded-xl transition-all text-xs sm:text-sm font-medium flex items-center justify-center gap-2 border border-red-500/20 active:border-red-500/30 min-h-[44px]">
+                <button id="logoutBtn" class="w-full bg-red-500/10 active:bg-red-500/20 text-red-300 py-2.5 sm:py-3 rounded-xl transition-all text-xs sm:text-sm font-medium flex items-center justify-center gap-2 border border-red-500/20 active:border-red-500/30 min-h-[44px] touch-action:manipulation">
                     <i class="fas fa-sign-out-alt"></i>Logout
                 </button>
             </div>
         </div>
-        
-        <div id="sidebarOverlay" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-20 lg:hidden sidebar-overlay-tap"></div>
-        
+        <!-- Sidebar overlay -->
+        <div id="sidebarOverlay" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-20 lg:hidden sidebar-overlay-tap touch-action:manipulation"></div>
+
         <div class="flex-1 w-full lg:ml-72">
+            <!-- Mobile Navbar -->
             <div id="mobileNavbar" class="lg:hidden bg-white/95 backdrop-blur-md shadow-sm px-3 sm:px-4 py-3 flex items-center justify-between sticky top-0 z-10 border-b border-stone-200 safe-top">
-                <button id="hamburgerBtn" class="text-slate-600 active:text-emerald-700 transition-colors w-10 h-10 flex items-center justify-center rounded-xl active:bg-stone-100 min-tap flex-shrink-0">
+                <button id="hamburgerBtn" class="text-slate-600 active:text-emerald-700 transition-colors w-10 h-10 flex items-center justify-center rounded-xl active:bg-stone-100 min-tap flex-shrink-0 touch-action:manipulation">
                     <i class="fas fa-bars text-lg sm:text-xl"></i>
                 </button>
                 <div class="flex items-center gap-2 flex-shrink-0">
@@ -127,16 +126,20 @@
                 </div>
                 <div class="w-10 flex-shrink-0"></div>
             </div>
+            <!-- Main Content Area -->
             <main id="mainContent" class="p-3 sm:p-4 md:p-6 lg:p-8 safe-bottom w-full"></main>
         </div>
     </div>
 
-    <div id="toastContainer" class="fixed top-4 right-2 sm:right-4 z-50 space-y-2 sm:space-y-3 w-[calc(100%-1rem)] sm:w-auto max-w-sm"></div>
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed top-4 right-2 sm:right-4 z-50 space-y-2 sm:space-y-3 w-[calc(100%-1rem)] sm:w-auto max-w-sm pointer-events-none"></div>
+
+    <!-- Generic Modal Container (used for all app modals) -->
     <div id="modalContainer" class="hidden fixed inset-0 z-40 flex items-end sm:items-center justify-center sm:p-4 bg-black/60 backdrop-blur-sm">
-        <div id="modalContent" class="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-lg max-h-[92vh] sm:max-h-[90vh] overflow-y-auto border border-stone-200 modal-slide-up"></div>
+        <div id="modalContent" class="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-lg max-h-[85vh] sm:max-h-[90vh] overflow-y-auto border border-stone-200 modal-slide-up touch-action:manipulation"></div>
     </div>
 
-    <!-- All login/logout logic is now handled by auth.js -->
+    <!-- JavaScript: all login/logout/UI logic is handled by external files -->
     <script src="js/config.js"></script>
     <script src="js/api.js"></script>
     <script src="js/auth.js"></script>
@@ -187,5 +190,33 @@
     <script src="js/modules/dairy/buyerPayments.js"></script>
     <script src="js/modules/dairy/dairyReports.js"></script>
     <script src="js/app.js"></script>
+
+    <!-- Lock body scroll when any modal or login is visible -->
+    <script>
+        (function() {
+            function toggleBodyScroll() {
+                const loginVisible = document.getElementById('loginModal')?.style.display !== 'none';
+                const genericModalVisible = !document.getElementById('modalContainer')?.classList.contains('hidden');
+                document.body.classList.toggle('no-scroll', loginVisible || genericModalVisible);
+            }
+
+            // Observe login modal style changes
+            const loginObserver = new MutationObserver(toggleBodyScroll);
+            const loginEl = document.getElementById('loginModal');
+            if (loginEl) {
+                loginObserver.observe(loginEl, { attributes: true, attributeFilter: ['style'] });
+            }
+
+            // Observe generic modal class changes
+            const modalObserver = new MutationObserver(toggleBodyScroll);
+            const modalEl = document.getElementById('modalContainer');
+            if (modalEl) {
+                modalObserver.observe(modalEl, { attributes: true, attributeFilter: ['class'] });
+            }
+
+            // Initial check
+            toggleBodyScroll();
+        })();
+    </script>
 </body>
 </html>
