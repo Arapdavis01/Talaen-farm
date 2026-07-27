@@ -395,26 +395,26 @@ input:focus, select:focus, textarea:focus {
 .sidebar-scroll { -webkit-overflow-scrolling: touch; overflow-y: auto; }
 body.no-scroll { overflow: hidden; position: fixed; width: 100%; }   
 /* ============================================
-   LOGIN MODAL - FORCE CENTER ON ALL DEVICES
+   LOGIN MODAL - CENTERING
    ============================================ */
 #loginModal {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
+    /* display is controlled via inline style by JS */
+    align-items: center;
+    justify-content: center;
 }
 
 #loginModal > div {
-    margin: auto !important;
+    margin: auto;
 }
 
 @media (max-width: 640px) {
     #loginModal {
-        align-items: center !important;
-        padding: 0.75rem !important;
+        align-items: center;
+        padding: 0.75rem;
     }
     
     #loginModal > div {
-        max-width: 95vw !important;
+        max-width: 95vw;
         max-height: 90vh;
         overflow-y: auto;
     }
