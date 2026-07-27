@@ -26,19 +26,7 @@
             }
         }
     </script>
-    <style>
-        /* Force login modal to center on all screens */
-        #loginModal {
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-        }
-        @media (max-width: 640px) {
-            #loginModal > div {
-                max-width: 95vw !important;
-            }
-        }
-    </style>
+    <!-- NO more internal <style> block overriding login modal display -->
 </head>
 <body class="font-inter bg-stone-50 antialiased overflow-x-hidden">
     
@@ -148,103 +136,7 @@
         <div id="modalContent" class="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-lg max-h-[92vh] sm:max-h-[90vh] overflow-y-auto border border-stone-200 modal-slide-up"></div>
     </div>
 
-    <!-- Login Modal Hide Script - Must run immediately -->
-    <script>
-        // Password toggle functionality
-        document.getElementById('togglePassword').addEventListener('click', function() {
-            const passwordInput = document.getElementById('password');
-            const icon = this.querySelector('i');
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
-            } else {
-                passwordInput.type = 'password';
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
-            }
-        });
-
-        // Login form handler
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const loginError = document.getElementById('loginError');
-            
-            // Hide any previous error
-            loginError.style.display = 'none';
-            
-            // Simple validation
-            if (!username || !password) {
-                loginError.textContent = 'Please enter both username and password';
-                loginError.style.display = 'block';
-                return;
-            }
-            
-            // For demo purposes - accept any non-empty credentials
-            // In production, this would be an API call
-            if (username && password) {
-                // Store auth data
-                const userData = {
-                    username: username,
-                    role: username.toLowerCase().includes('admin') ? 'admin' : 'worker',
-                    name: username.charAt(0).toUpperCase() + username.slice(1),
-                    token: 'demo-token-' + Date.now()
-                };
-                
-                localStorage.setItem('talaen_auth', JSON.stringify(userData));
-                
-                // Hide login modal
-                document.getElementById('loginModal').style.display = 'none';
-                
-                // Show app container
-                document.getElementById('appContainer').classList.remove('hidden');
-                
-                // Update sidebar role
-                const sidebarRole = document.getElementById('sidebarRole');
-                if (sidebarRole) {
-                    sidebarRole.textContent = userData.role.charAt(0).toUpperCase() + userData.role.slice(1);
-                }
-            } else {
-                loginError.textContent = 'Invalid username or password';
-                loginError.style.display = 'block';
-            }
-        });
-
-        // Check if user is already logged in
-        window.addEventListener('DOMContentLoaded', function() {
-            const savedAuth = localStorage.getItem('talaen_auth');
-            if (savedAuth) {
-                try {
-                    const userData = JSON.parse(savedAuth);
-                    if (userData.token) {
-                        // User is already logged in
-                        document.getElementById('loginModal').style.display = 'none';
-                        document.getElementById('appContainer').classList.remove('hidden');
-                        
-                        const sidebarRole = document.getElementById('sidebarRole');
-                        if (sidebarRole && userData.role) {
-                            sidebarRole.textContent = userData.role.charAt(0).toUpperCase() + userData.role.slice(1);
-                        }
-                    }
-                } catch (e) {
-                    // Invalid saved data, show login
-                    localStorage.removeItem('talaen_auth');
-                }
-            }
-        });
-
-        // Logout functionality
-        document.getElementById('logoutBtn').addEventListener('click', function() {
-            localStorage.removeItem('talaen_auth');
-            document.getElementById('loginModal').style.display = 'flex';
-            document.getElementById('appContainer').classList.add('hidden');
-            document.getElementById('loginForm').reset();
-        });
-    </script>
-
+    <!-- All login/logout logic is now handled by auth.js -->
     <script src="js/config.js"></script>
     <script src="js/api.js"></script>
     <script src="js/auth.js"></script>
