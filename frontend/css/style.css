@@ -394,11 +394,12 @@ input:focus, select:focus, textarea:focus {
 .z-login { z-index: 50; }
 .sidebar-scroll { -webkit-overflow-scrolling: touch; overflow-y: auto; }
 body.no-scroll { overflow: hidden; position: fixed; width: 100%; }   
+
 /* ============================================
-   LOGIN MODAL - CENTERING
+   LOGIN MODAL - CENTERING (no !important)
    ============================================ */
 #loginModal {
-    /* display is controlled via inline style by JS */
+    /* display is controlled by JS via inline style */
     align-items: center;
     justify-content: center;
 }
