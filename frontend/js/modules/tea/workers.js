@@ -1,15 +1,14 @@
 // ============================================
-// TALAEN FARM - Tea Workers Management (Enhanced)
+// TALAEN FARM - Tea Workers Management (Phone‑Optimized)
 // ============================================
 
 class TeaWorkers {
-    static currentView = 'table'; // table or cards
+    static currentView = 'table';
     static selectedWorkers = new Set();
     static allWorkers = [];
 
     static async show() {
         const mainContent = document.getElementById('mainContent');
-        
         mainContent.innerHTML = `
             <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
@@ -18,66 +17,66 @@ class TeaWorkers {
                 </div>
                 <div class="flex gap-2">
                     <button onclick="TeaWorkers.exportCSV()" 
-                        class="bg-white border border-stone-200 text-slate-600 px-4 py-2.5 rounded-xl hover:bg-stone-50 transition-all flex items-center gap-2 text-sm font-medium shadow-sm">
+                        class="bg-white border border-stone-200 text-slate-600 px-4 py-2.5 rounded-xl active:bg-stone-50 transition-all flex items-center gap-2 text-sm font-medium shadow-sm min-h-[44px]">
                         <i class="fas fa-download"></i> Export
                     </button>
                     <button onclick="TeaWorkers.showAddForm()" 
-                        class="bg-gradient-to-r from-emerald-600 to-emerald-700 text-white px-5 py-2.5 rounded-xl hover:from-emerald-700 hover:to-emerald-800 transition-all flex items-center gap-2 text-sm font-medium shadow-lg shadow-emerald-600/20">
+                        class="bg-gradient-to-r from-emerald-600 to-emerald-700 text-white px-5 py-2.5 rounded-xl active:from-emerald-700 active:to-emerald-800 transition-all flex items-center gap-2 text-sm font-medium shadow-lg shadow-emerald-600/20 min-h-[44px]">
                         <i class="fas fa-plus"></i> Add Worker
                     </button>
                 </div>
             </div>
-            
+
             <!-- Stats Cards -->
             <div id="workerStats" class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6"></div>
-            
+
             <!-- Toolbar -->
             <div class="bg-white rounded-2xl border border-stone-200 p-4 mb-4 shadow-sm">
                 <div class="flex flex-wrap items-center gap-3">
                     <div class="relative flex-1 min-w-[200px]">
                         <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 text-sm"></i>
-                        <input type="text" id="workerSearch" placeholder="Search by name, phone or ID..." 
+                        <input type="search" id="workerSearch" placeholder="Search by name, phone or ID..." 
                             class="w-full pl-10 pr-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none text-sm"
                             oninput="TeaWorkers.filterWorkers()">
                     </div>
                     <select id="statusFilter" onchange="TeaWorkers.filterWorkers()" 
-                        class="px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none">
+                        class="px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none min-h-[44px]">
                         <option value="">All Status</option>
                         <option value="active">Active</option>
                         <option value="inactive">Inactive</option>
                     </select>
                     <select id="typeFilter" onchange="TeaWorkers.filterWorkers()" 
-                        class="px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none">
+                        class="px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none min-h-[44px]">
                         <option value="">All Types</option>
                         <option value="permanent">Permanent</option>
                         <option value="casual">Casual</option>
                         <option value="seasonal">Seasonal</option>
                     </select>
                     <select id="sortBy" onchange="TeaWorkers.filterWorkers()" 
-                        class="px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none">
+                        class="px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none min-h-[44px]">
                         <option value="name">Name A-Z</option>
                         <option value="date_joined">Date Joined</option>
                         <option value="newest">Newest First</option>
                     </select>
                     <div class="flex gap-1 border border-stone-200 rounded-xl overflow-hidden">
                         <button onclick="TeaWorkers.setView('table')" id="tableViewBtn" 
-                            class="px-3 py-2.5 bg-emerald-50 text-emerald-700 text-sm transition-colors">
+                            class="px-3 py-2.5 bg-emerald-50 text-emerald-700 text-sm transition-colors min-h-[44px]">
                             <i class="fas fa-list"></i>
                         </button>
                         <button onclick="TeaWorkers.setView('cards')" id="cardViewBtn" 
-                            class="px-3 py-2.5 bg-white text-stone-500 text-sm transition-colors">
+                            class="px-3 py-2.5 bg-white text-stone-500 text-sm transition-colors min-h-[44px]">
                             <i class="fas fa-grid-2"></i>
                         </button>
                     </div>
                     ${TeaWorkers.selectedWorkers.size > 0 ? `
                         <button onclick="TeaWorkers.bulkToggleStatus()" 
-                            class="px-3 py-2.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-xl text-sm font-medium hover:bg-amber-100 transition-colors">
+                            class="px-3 py-2.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-xl text-sm font-medium active:bg-amber-100 transition-colors min-h-[44px]">
                             Bulk Action (${TeaWorkers.selectedWorkers.size})
                         </button>
                     ` : ''}
                 </div>
             </div>
-            
+
             <!-- Workers Container -->
             <div id="workersContainer">
                 <div class="text-center py-12">
@@ -93,7 +92,6 @@ class TeaWorkers {
     static async loadWorkers() {
         try {
             const response = await api.getTeaWorkers();
-            
             if (response.success) {
                 TeaWorkers.allWorkers = response.workers;
                 TeaWorkers.renderStats(response.workers);
@@ -106,7 +104,7 @@ class TeaWorkers {
                         </div>
                         <p class="text-stone-500 mb-4">No workers added yet.</p>
                         <button onclick="TeaWorkers.showAddForm()" 
-                            class="text-emerald-600 hover:text-emerald-700 font-medium">
+                            class="text-emerald-600 active:text-emerald-700 font-medium min-h-[44px]">
                             <i class="fas fa-plus mr-1"></i> Add your first worker
                         </button>
                     </div>
@@ -402,7 +400,6 @@ class TeaWorkers {
     static async bulkToggleStatus() {
         const action = confirm('Deactivate all selected workers?');
         if (!action) return;
-        
         for (const id of TeaWorkers.selectedWorkers) {
             await api.updateTeaWorker(id, { is_active: false });
         }
@@ -415,31 +412,32 @@ class TeaWorkers {
         window.open(`${CONFIG.API_URL}/tea/workers/export/csv`, '_blank');
     }
 
+    // ---------- ADD WORKER FORM (phone‑optimized) ----------
     static showAddForm() {
-        modal.openForm('Add New Worker', `
+        const formFields = `
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="md:col-span-2">
                     <label class="block text-sm font-semibold text-slate-700 mb-1.5">Full Name *</label>
-                    <input type="text" id="workerName" required 
-                        class="w-full px-3.5 py-2.5 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                    <input type="text" id="workerName" required autofocus inputmode="text"
+                        class="w-full px-3.5 py-2.5 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all min-h-[48px]"
                         placeholder="Enter full name">
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-1.5">Phone Number</label>
-                    <input type="tel" id="workerPhone" 
-                        class="w-full px-3.5 py-2.5 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                    <input type="tel" id="workerPhone" inputmode="tel"
+                        class="w-full px-3.5 py-2.5 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all min-h-[48px]"
                         placeholder="0712345678">
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-1.5">ID Number</label>
-                    <input type="text" id="workerIdNumber" 
-                        class="w-full px-3.5 py-2.5 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                    <input type="text" id="workerIdNumber" inputmode="numeric"
+                        class="w-full px-3.5 py-2.5 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all min-h-[48px]"
                         placeholder="National ID">
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-1.5">Gender</label>
                     <select id="workerGender" 
-                        class="w-full px-3.5 py-2.5 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all bg-white">
+                        class="w-full px-3.5 py-2.5 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all bg-white min-h-[48px]">
                         <option value="">Select Gender</option>
                         <option value="male">Male</option>
                         <option value="female">Female</option>
@@ -448,13 +446,13 @@ class TeaWorkers {
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-1.5">Date of Birth</label>
-                    <input type="date" id="workerDob" 
-                        class="w-full px-3.5 py-2.5 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all">
+                    <input type="date" id="workerDob"
+                        class="w-full px-3.5 py-2.5 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all min-h-[48px]">
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-1.5">Worker Type</label>
                     <select id="workerType" 
-                        class="w-full px-3.5 py-2.5 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all bg-white">
+                        class="w-full px-3.5 py-2.5 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all bg-white min-h-[48px]">
                         <option value="permanent">Permanent</option>
                         <option value="casual">Casual</option>
                         <option value="seasonal">Seasonal</option>
@@ -463,7 +461,7 @@ class TeaWorkers {
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-1.5">Date Joined</label>
                     <input type="date" id="workerDateJoined" value="${new Date().toISOString().split('T')[0]}"
-                        class="w-full px-3.5 py-2.5 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all">
+                        class="w-full px-3.5 py-2.5 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all min-h-[48px]">
                 </div>
             </div>
             <div class="bg-stone-50 rounded-xl p-4 mt-2 border border-stone-200">
@@ -471,19 +469,22 @@ class TeaWorkers {
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs text-stone-500 mb-1">Username</label>
-                        <input type="text" id="workerUsername" 
-                            class="w-full px-3 py-2 border border-stone-200 rounded-lg focus:ring-2 focus:ring-emerald-500/20 outline-none text-sm"
+                        <input type="text" id="workerUsername" autocomplete="off"
+                            class="w-full px-3 py-2 border border-stone-200 rounded-lg focus:ring-2 focus:ring-emerald-500/20 outline-none text-sm min-h-[44px]"
                             placeholder="username">
                     </div>
                     <div>
                         <label class="block text-xs text-stone-500 mb-1">Password</label>
-                        <input type="password" id="workerPassword" 
-                            class="w-full px-3 py-2 border border-stone-200 rounded-lg focus:ring-2 focus:ring-emerald-500/20 outline-none text-sm"
+                        <input type="password" id="workerPassword" autocomplete="new-password"
+                            class="w-full px-3 py-2 border border-stone-200 rounded-lg focus:ring-2 focus:ring-emerald-500/20 outline-none text-sm min-h-[44px]"
                             placeholder="Min. 6 characters">
                     </div>
                 </div>
             </div>
-        `, async () => {
+        `;
+
+        modal.openForm('Add New Worker', formFields, async (e) => {
+            // Gather data from the form fields
             const workerData = {
                 full_name: document.getElementById('workerName').value,
                 phone: document.getElementById('workerPhone').value,
@@ -492,48 +493,50 @@ class TeaWorkers {
                 date_of_birth: document.getElementById('workerDob').value,
                 worker_type: document.getElementById('workerType').value,
                 date_joined: document.getElementById('workerDateJoined').value,
-                username: document.getElementById('workerUsername').value,
-                password: document.getElementById('workerPassword').value
+                username: document.getElementById('workerUsername').value || undefined,
+                password: document.getElementById('workerPassword').value || undefined
             };
 
-            try {
-                const response = await api.createTeaWorker(workerData);
-                if (response.success) {
-                    modal.close();
-                    showToast('Worker added successfully!', 'success');
-                    await TeaWorkers.loadWorkers();
-                }
-            } catch (error) {
-                showToast(error.message, 'error');
+            const response = await api.createTeaWorker(workerData);
+            if (response.success) {
+                modal.close();
+                showToast('Worker added successfully!', 'success');
+                await TeaWorkers.loadWorkers();
             }
-        }, { submitText: 'Add Worker', submitIcon: 'fa-user-plus', icon: 'fa-user-plus', size: 'max-w-2xl' });
+        }, {
+            submitText: 'Add Worker',
+            submitIcon: 'fa-user-plus',
+            icon: 'fa-user-plus',
+            size: 'max-w-2xl'
+        });
     }
 
+    // ---------- EDIT WORKER FORM (phone‑optimized) ----------
     static async showEditForm(workerId) {
         const worker = TeaWorkers.allWorkers.find(w => w.id === workerId);
         if (!worker) { showToast('Worker not found.', 'error'); return; }
 
-        modal.openForm('Edit Worker', `
+        const formFields = `
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="md:col-span-2">
                     <label class="block text-sm font-semibold text-slate-700 mb-1.5">Full Name *</label>
-                    <input type="text" id="editWorkerName" value="${worker.full_name}" required 
-                        class="w-full px-3.5 py-2.5 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none">
+                    <input type="text" id="editWorkerName" value="${worker.full_name}" required autofocus inputmode="text"
+                        class="w-full px-3.5 py-2.5 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none min-h-[48px]">
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-1.5">Phone Number</label>
-                    <input type="tel" id="editWorkerPhone" value="${worker.phone || ''}" 
-                        class="w-full px-3.5 py-2.5 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none">
+                    <input type="tel" id="editWorkerPhone" value="${worker.phone || ''}" inputmode="tel"
+                        class="w-full px-3.5 py-2.5 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none min-h-[48px]">
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-1.5">ID Number</label>
-                    <input type="text" id="editWorkerIdNumber" value="${worker.id_number || ''}" 
-                        class="w-full px-3.5 py-2.5 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none">
+                    <input type="text" id="editWorkerIdNumber" value="${worker.id_number || ''}" inputmode="numeric"
+                        class="w-full px-3.5 py-2.5 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none min-h-[48px]">
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-1.5">Gender</label>
                     <select id="editWorkerGender" 
-                        class="w-full px-3.5 py-2.5 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none bg-white">
+                        class="w-full px-3.5 py-2.5 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none bg-white min-h-[48px]">
                         <option value="">Select</option>
                         <option value="male" ${worker.gender === 'male' ? 'selected' : ''}>Male</option>
                         <option value="female" ${worker.gender === 'female' ? 'selected' : ''}>Female</option>
@@ -542,13 +545,13 @@ class TeaWorkers {
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-1.5">Date of Birth</label>
-                    <input type="date" id="editWorkerDob" value="${worker.date_of_birth || ''}" 
-                        class="w-full px-3.5 py-2.5 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none">
+                    <input type="date" id="editWorkerDob" value="${worker.date_of_birth || ''}"
+                        class="w-full px-3.5 py-2.5 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none min-h-[48px]">
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-1.5">Worker Type</label>
                     <select id="editWorkerType" 
-                        class="w-full px-3.5 py-2.5 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none bg-white">
+                        class="w-full px-3.5 py-2.5 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none bg-white min-h-[48px]">
                         <option value="permanent" ${worker.worker_type === 'permanent' ? 'selected' : ''}>Permanent</option>
                         <option value="casual" ${worker.worker_type === 'casual' ? 'selected' : ''}>Casual</option>
                         <option value="seasonal" ${worker.worker_type === 'seasonal' ? 'selected' : ''}>Seasonal</option>
@@ -556,11 +559,13 @@ class TeaWorkers {
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-1.5">Date Joined</label>
-                    <input type="date" id="editWorkerDateJoined" value="${worker.date_joined || ''}" 
-                        class="w-full px-3.5 py-2.5 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none">
+                    <input type="date" id="editWorkerDateJoined" value="${worker.date_joined || ''}"
+                        class="w-full px-3.5 py-2.5 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none min-h-[48px]">
                 </div>
             </div>
-        `, async () => {
+        `;
+
+        modal.openForm('Edit Worker', formFields, async (e) => {
             const workerData = {
                 full_name: document.getElementById('editWorkerName').value,
                 phone: document.getElementById('editWorkerPhone').value,
@@ -571,34 +576,29 @@ class TeaWorkers {
                 date_joined: document.getElementById('editWorkerDateJoined').value
             };
 
-            try {
-                const response = await api.updateTeaWorker(workerId, workerData);
-                if (response.success) {
-                    modal.close();
-                    showToast('Worker updated successfully!', 'success');
-                    await TeaWorkers.loadWorkers();
-                }
-            } catch (error) {
-                showToast(error.message, 'error');
+            const response = await api.updateTeaWorker(workerId, workerData);
+            if (response.success) {
+                modal.close();
+                showToast('Worker updated successfully!', 'success');
+                await TeaWorkers.loadWorkers();
             }
-        }, { submitText: 'Update Worker', icon: 'fa-user-pen', size: 'max-w-2xl' });
+        }, {
+            submitText: 'Update Worker',
+            icon: 'fa-user-pen',
+            size: 'max-w-2xl'
+        });
     }
 
+    // ---------- STATUS TOGGLE ----------
     static async toggleStatus(workerId, currentStatus, workerName) {
         const action = currentStatus ? 'Deactivate' : 'Activate';
         modal.openConfirm(
             `${action} Worker`,
             `Are you sure you want to ${action.toLowerCase()} <strong>${workerName}</strong>?`,
             async () => {
-                try {
-                    const response = await api.updateTeaWorker(workerId, { is_active: !currentStatus });
-                    if (response.success) {
-                        showToast(`Worker ${action}d successfully!`, 'success');
-                        await TeaWorkers.loadWorkers();
-                    }
-                } catch (error) {
-                    showToast(error.message, 'error');
-                }
+                await api.updateTeaWorker(workerId, { is_active: !currentStatus });
+                showToast(`Worker ${action}d successfully!`, 'success');
+                await TeaWorkers.loadWorkers();
             },
             { 
                 confirmText: action,
@@ -609,30 +609,24 @@ class TeaWorkers {
         );
     }
 
+    // ---------- RESET PASSWORD ----------
     static showResetPasswordForm(workerId, workerName) {
         modal.openForm(`Reset Password: ${workerName}`, `
             <div>
                 <label class="block text-sm font-semibold text-slate-700 mb-1.5">New Password *</label>
-                <input type="password" id="resetPassword" required 
-                    class="w-full px-3.5 py-2.5 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
+                <input type="password" id="resetPassword" required autofocus
+                    class="w-full px-3.5 py-2.5 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none min-h-[48px]"
                     placeholder="Min. 6 characters">
             </div>
         `, async () => {
             const newPassword = document.getElementById('resetPassword').value;
             if (newPassword.length < 6) { showToast('Password must be at least 6 characters', 'warning'); return; }
-            
-            try {
-                // Find user_id from worker
-                const worker = TeaWorkers.allWorkers.find(w => w.id === workerId);
-                if (worker && worker.user_id) {
-                    const response = await api.resetUserPassword(worker.user_id, newPassword);
-                    if (response.success) {
-                        modal.close();
-                        showToast(`Password reset for ${workerName}!`, 'success');
-                    }
-                }
-            } catch (error) {
-                showToast(error.message, 'error');
+
+            const worker = TeaWorkers.allWorkers.find(w => w.id === workerId);
+            if (worker && worker.user_id) {
+                await api.resetUserPassword(worker.user_id, newPassword);
+                modal.close();
+                showToast(`Password reset for ${workerName}!`, 'success');
             }
         }, { submitText: 'Reset Password', submitIcon: 'fa-key', icon: 'fa-key', submitClass: 'bg-gradient-to-r from-sky-600 to-sky-700 shadow-lg shadow-sky-600/20' });
     }
