@@ -393,4 +393,18 @@ input:focus, select:focus, textarea:focus {
 .z-toast { z-index: 50; }
 .z-login { z-index: 50; }
 .sidebar-scroll { -webkit-overflow-scrolling: touch; overflow-y: auto; }
-body.no-scroll { overflow: hidden; position: fixed; width: 100%; }
+body.no-scroll { overflow: hidden; position: fixed; width: 100%; }   
+/* ============================================
+   LOGIN MODAL MOBILE FIX
+   ============================================ */
+@media (max-width: 640px) {
+    #loginModal {
+        align-items: center !important;
+        padding: 1rem !important;
+    }
+    
+    #loginModal > div {
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+}
