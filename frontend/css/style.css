@@ -880,3 +880,20 @@ input.success, select.success, textarea.success {
 .z-modal { z-index: 40; }
 .z-toast { z-index: 50; }
 .z-login { z-index: 50; }
+/* ============================================
+   TOUCH‑FRIENDLY BUTTON FIX (all devices)
+   ============================================ */
+button, 
+[role="button"],
+.btn,
+[onclick] {
+    touch-action: manipulation;   /* eliminates 300ms delay */
+    -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
+}
+
+/* Make sure absolutely nothing overlays buttons on mobile */
+#mainContent,
+#appContainer {
+    pointer-events: auto;
+}
