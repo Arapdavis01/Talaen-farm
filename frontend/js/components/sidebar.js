@@ -1,5 +1,5 @@
 // ============================================
-// TALAEN FARM - Sidebar Component (Mobile Optimized)
+// TALAEN FARM - Sidebar Component (Professional)
 // ============================================
 
 class Sidebar {
@@ -11,35 +11,6 @@ class Sidebar {
         this.currentModule = null;
         this.activeRoute = null;
         this.disputeCount = 0;
-        this.touchStartX = 0;
-        this.touchEndX = 0;
-        this.initSwipeGestures();
-    }
-
-    initSwipeGestures() {
-        // Swipe right to open sidebar
-        document.addEventListener('touchstart', (e) => {
-            this.touchStartX = e.changedTouches[0].screenX;
-        }, { passive: true });
-
-        document.addEventListener('touchend', (e) => {
-            this.touchEndX = e.changedTouches[0].screenX;
-            this.handleSwipe();
-        }, { passive: true });
-    }
-
-    handleSwipe() {
-        if (window.innerWidth >= 1024) return;
-        const swipeDistance = this.touchEndX - this.touchStartX;
-        
-        // Swipe right from left edge to open
-        if (swipeDistance > 70 && this.touchStartX < 40 && !this.isOpen) {
-            this.open();
-        }
-        // Swipe left to close
-        if (swipeDistance < -70 && this.isOpen) {
-            this.close();
-        }
     }
 
     build(module) {
@@ -61,9 +32,7 @@ class Sidebar {
                 const route = link.dataset.route;
                 this.setActiveItem(link);
                 router.navigate(route);
-                if (window.innerWidth < 1024) {
-                    this.close();
-                }
+                if (window.innerWidth < 1024) this.close();
             });
         });
 
@@ -81,6 +50,7 @@ class Sidebar {
 
     async loadDisputeCount() {
         const user = auth.getCurrentUser();
+        // Skip for workers, store managers, and non-admin roles
         if (this.currentModule !== 'tea' || user.role === 'tea_worker' || user.role === 'store_manager') return;
         try {
             const response = await api.getDisputedRecords();
@@ -184,9 +154,9 @@ class Sidebar {
         `;
 
         html += `
-            <button class="w-full text-left text-slate-400 active:text-white text-sm py-3 px-3 rounded-xl active:bg-white/5 transition-all mb-5 flex items-center gap-2.5 font-medium group min-h-[44px]"
+            <button class="w-full text-left text-slate-400 hover:text-white text-sm py-2.5 px-3 rounded-xl hover:bg-white/5 transition-all mb-5 flex items-center gap-2.5 font-medium group"
                     onclick="router.goToModuleSelector()">
-                <span class="w-7 h-7 bg-white/5 rounded-lg flex items-center justify-center group-active:bg-white/10 transition-all">
+                <span class="w-7 h-7 bg-white/5 rounded-lg flex items-center justify-center group-hover:bg-white/10 transition-all">
                     <i class="fas fa-arrow-left text-xs"></i>
                 </span>
                 Back to Modules
@@ -220,6 +190,7 @@ class Sidebar {
 
         const items = [];
 
+        // ==================== TEA WORKER MENU ====================
         if (isTeaWorker) {
             items.push(
                 { route: 'worker-dashboard', icon: 'fa-home', label: 'My Dashboard' },
@@ -233,6 +204,7 @@ class Sidebar {
             return items;
         }
 
+        // ==================== STORE MANAGER MENU ====================
         if (isStoreManager) {
             items.push(
                 { route: 'store-dashboard', icon: 'fa-home', label: 'Store Dashboard' },
@@ -243,6 +215,7 @@ class Sidebar {
             return items;
         }
 
+        // ==================== ADMIN MENU ====================
         if (isAdmin) {
             items.push({ route: 'user-management', icon: 'fa-users-gear', label: 'User Management' });
         }
@@ -338,13 +311,13 @@ class Sidebar {
     createNavItem(item, moduleAccent = 'emerald') {
         return `
             <a href="#" data-route="${item.route}" 
-                class="flex items-center gap-3 px-3 py-3 rounded-xl text-slate-400 active:bg-white/5 transition-all cursor-pointer font-medium text-[13px] group mb-0.5 relative min-h-[44px]">
-                <span class="w-8 h-8 bg-white/5 rounded-lg flex items-center justify-center flex-shrink-0 group-active:bg-${moduleAccent}-500/15 transition-all">
-                    <i class="fas ${item.icon} text-xs group-active:text-${moduleAccent}-400 transition-colors"></i>
+                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:bg-white/5 transition-all cursor-pointer font-medium text-[13px] group mb-0.5 relative">
+                <span class="w-8 h-8 bg-white/5 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-${moduleAccent}-500/15 transition-all">
+                    <i class="fas ${item.icon} text-xs group-hover:text-${moduleAccent}-400 transition-colors"></i>
                 </span>
-                <span class="flex-1 group-active:text-slate-200 transition-colors">${item.label}</span>
+                <span class="flex-1 group-hover:text-slate-200 transition-colors">${item.label}</span>
                 ${item.badge ? `<span id="comparisonBadge" class="hidden absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 bg-amber-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">0</span>` : ''}
-                <span class="opacity-0 group-active:opacity-100 transition-opacity">
+                <span class="opacity-0 group-hover:opacity-100 transition-opacity">
                     <i class="fas fa-chevron-right text-[9px] text-slate-600"></i>
                 </span>
             </a>
@@ -362,23 +335,8 @@ class Sidebar {
     }
 
     toggle() { if (this.isOpen) this.close(); else this.open(); }
-    
-    open() {
-        this.sidebar.classList.add('sidebar-open');
-        this.overlay.classList.remove('hidden');
-        this.isOpen = true;
-        document.body.classList.add('no-scroll');
-        if (typeof navbar !== 'undefined' && navbar.updateHamburgerIcon) navbar.updateHamburgerIcon(true);
-    }
-    
-    close() {
-        this.sidebar.classList.remove('sidebar-open');
-        this.overlay.classList.add('hidden');
-        this.isOpen = false;
-        document.body.classList.remove('no-scroll');
-        if (typeof navbar !== 'undefined' && navbar.updateHamburgerIcon) navbar.updateHamburgerIcon(false);
-    }
-    
+    open() { this.sidebar.classList.add('sidebar-open'); this.overlay.classList.remove('hidden'); this.isOpen = true; if (typeof navbar !== 'undefined' && navbar.updateHamburgerIcon) navbar.updateHamburgerIcon(true); }
+    close() { this.sidebar.classList.remove('sidebar-open'); this.overlay.classList.add('hidden'); this.isOpen = false; if (typeof navbar !== 'undefined' && navbar.updateHamburgerIcon) navbar.updateHamburgerIcon(false); }
     refresh() { if (this.currentModule) { this.build(this.currentModule); if (this.activeRoute) this.setActiveRoute(this.activeRoute); } }
 }
 
