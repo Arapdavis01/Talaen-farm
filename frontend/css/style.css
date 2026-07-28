@@ -1,5 +1,6 @@
-    /* ============================================
+/* ============================================
    TALAEN FARM - Professional Modern Styling
+   (Responsive Enhanced)
    ============================================ */
 
 /* Import Inter font weights */
@@ -15,6 +16,11 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     background-color: #fafaf9;
+}
+
+/* Prevent background scroll when sidebar overlay is visible */
+body.sidebar-locked {
+    overflow: hidden;
 }
 
 /* ============================================
@@ -216,9 +222,36 @@ body {
     color: #f1f5f9;
 }
 
-/* Sidebar overlay */
+/* Sidebar overlay (improved fade) */
 #sidebarOverlay {
     transition: opacity 0.3s ease;
+    opacity: 0;
+    pointer-events: none;
+}
+
+#sidebarOverlay:not(.hidden) {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* ============================================
+   MOBILE NAVBAR (Responsive Enhancements)
+   ============================================ */
+@media (max-width: 1023px) {
+    #mobileNavbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 15; /* below sidebar, above content */
+        transition: transform 0.3s ease;
+        will-change: transform;
+    }
+
+    /* Push main content down so it's not hidden behind the fixed navbar */
+    #mainContent {
+        padding-top: calc(4rem + 0.75rem); /* navbar height + breathing room */
+    }
 }
 
 /* ============================================
@@ -374,7 +407,7 @@ body {
     border-top: 2px solid #e7e5e4;
 }
 
-/* Mobile responsive table */
+/* Mobile responsive table (card style) */
 @media (max-width: 768px) {
     .responsive-table thead {
         display: none;
@@ -652,14 +685,17 @@ input.success, select.success, textarea.success {
 }
 
 /* ============================================
-   RESPONSIVE STYLES
+   RESPONSIVE STYLES (Extended)
    ============================================ */
+
+/* --- Large tablets / small desktops (below 1024px) --- */
 @media (max-width: 1024px) {
     .lg\:ml-72 {
         margin-left: 0 !important;
     }
 }
 
+/* --- Tablets (below 768px) --- */
 @media (max-width: 768px) {
     .grid-cols-1.md\:grid-cols-2 {
         grid-template-columns: repeat(1, 1fr);
@@ -674,9 +710,11 @@ input.success, select.success, textarea.success {
     }
 }
 
+/* --- Mobile phones (below 640px) --- */
 @media (max-width: 640px) {
     #mainContent {
         padding: 0.75rem;
+        padding-top: calc(4rem + 0.75rem); /* keep navbar space */
     }
     
     h1 {
@@ -692,7 +730,63 @@ input.success, select.success, textarea.success {
     }
     
     .stat-card .text-2xl {
-        font-size: 1.2rem !important;
+        font-size: 1.1rem !important;
+    }
+
+    .btn-primary, .btn-danger {
+        padding: 0.65rem 1rem;
+        font-size: 0.85rem;
+    }
+
+    /* Increase tap targets for sidebar links on mobile */
+    #sidebarNav a {
+        padding-top: 0.75rem;
+        padding-bottom: 0.75rem;
+        font-size: 0.9rem;
+    }
+}
+
+/* --- Small phones (below 480px) --- */
+@media (max-width: 480px) {
+    /* Login modal header simplification */
+    #loginModal .relative.h-64 {
+        height: 160px;
+    }
+
+    /* Hide the two split images and show a single background */
+    #loginModal .relative.h-64 > div[style*="clip-path"] {
+        display: none;
+    }
+    #loginModal .relative.h-64 {
+        background-image: url('https://images.unsplash.com/photo-1499529112087-3cb3b73cec95?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');
+        background-size: cover;
+        background-position: center;
+    }
+
+    /* Resize centre logo */
+    #loginModal .w-24.h-24 {
+        width: 60px;
+        height: 60px;
+    }
+
+    /* Resize title text */
+    #loginModal h1 {
+        font-size: 1.5rem;
+    }
+    #loginModal p.text-white\/70 {
+        font-size: 0.65rem;
+    }
+
+    /* Reduce padding inside modal */
+    #loginModal .p-8 {
+        padding: 1.25rem;
+    }
+}
+
+/* --- Very small phones (below 380px) --- */
+@media (max-width: 380px) {
+    #mobileNavbar {
+        padding: 0.75rem;
     }
 }
 
