@@ -1,5 +1,5 @@
 // ============================================
-// TALAEN FARM - Authentication Module (Mobile‑Hardened)
+// TALAEN FARM - Authentication Module (Phone‑Fixed)
 // ============================================
 
 class AuthManager {
@@ -9,22 +9,17 @@ class AuthManager {
         this.tokenCheckInterval = null;
     }
 
-    /**
-     * Called by App after DOM is fully ready.
-     * Avoids running any DOM queries before the page is built.
-     */
     init() {
         const savedToken = localStorage.getItem(CONFIG.TOKEN_KEY);
         const savedUser = localStorage.getItem(CONFIG.USER_KEY);
 
         if (savedToken && savedUser) {
             if (this.isTokenExpired(savedToken)) {
-                console.log('Saved token expired – clearing silently');
+                console.log('Saved token expired – clearing');
                 this.clearSession(true);
             } else {
                 this.token = savedToken;
                 this.currentUser = JSON.parse(savedUser);
-                // Ensure API instance gets the token immediately
                 if (typeof api !== 'undefined') api.setToken(savedToken);
                 this.startTokenCheck();
                 this.showAppUI();
@@ -34,7 +29,6 @@ class AuthManager {
                 }
             }
         }
-
         this.setupEventListeners();
     }
 
@@ -51,42 +45,18 @@ class AuthManager {
             const parts = token.split('.');
             if (parts.length !== 3) return true;
             const payload = JSON.parse(atob(parts[1]));
-            const expiry = payload.exp * 1000;
-            const now = Date.now();
-            return now >= (expiry - 60000); // 1 minute buffer
-        } catch (e) {
-            console.error('Token parse error:', e);
-            return true;
-        }
-    }
-
-    getTokenRemainingMinutes() {
-        if (!this.token) return 0;
-        try {
-            const payload = JSON.parse(atob(this.token.split('.')[1]));
-            const expiry = payload.exp * 1000;
-            return Math.floor(Math.max(0, expiry - Date.now()) / 60000);
-        } catch (e) { return 0; }
+            return Date.now() >= (payload.exp * 1000 - 60000);
+        } catch (e) { return true; }
     }
 
     startTokenCheck() {
         if (this.tokenCheckInterval) clearInterval(this.tokenCheckInterval);
         this.tokenCheckInterval = setInterval(() => {
             if (this.token && this.isTokenExpired(this.token)) {
-                console.log('Token expired during session');
-                if (typeof showToast === 'function') {
-                    showToast('Session expired. Please login again.', 'warning', 4000);
-                }
+                if (typeof showToast === 'function') showToast('Session expired. Please login again.', 'warning', 4000);
                 setTimeout(() => this.clearSession(false), 1500);
             }
-        }, 120000); // 2 minutes
-    }
-
-    stopTokenCheck() {
-        if (this.tokenCheckInterval) {
-            clearInterval(this.tokenCheckInterval);
-            this.tokenCheckInterval = null;
-        }
+        }, 120000);
     }
 
     clearSession(silent = false) {
@@ -103,19 +73,14 @@ class AuthManager {
         const appContainer = document.getElementById('appContainer');
         const loginForm = document.getElementById('loginForm');
         const loginError = document.getElementById('loginError');
-
         if (appContainer) appContainer.classList.add('hidden');
         if (loginModal) loginModal.style.display = 'flex';
         if (loginForm) loginForm.reset();
         if (loginError) loginError.style.display = 'none';
-
-        if (!silent && typeof showToast === 'function') {
-            showToast('Logged out successfully.', 'info');
-        }
+        if (!silent && typeof showToast === 'function') showToast('Logged out.', 'info');
     }
 
     setupEventListeners() {
-        // Form submit (normal flow)
         const loginForm = document.getElementById('loginForm');
         if (loginForm) {
             loginForm.addEventListener('submit', (e) => {
@@ -124,7 +89,7 @@ class AuthManager {
             });
         }
 
-        // 🔴 Backup: direct click on the Sign In button (crucial for mobile)
+        // 🔴 Backup click handler for mobile
         const submitBtn = document.querySelector('#loginForm button[type="submit"]');
         if (submitBtn) {
             submitBtn.addEventListener('click', (e) => {
@@ -133,30 +98,20 @@ class AuthManager {
             });
         }
 
-        // Toggle password visibility
         const toggleBtn = document.getElementById('togglePassword');
         if (toggleBtn) {
             toggleBtn.addEventListener('click', () => {
-                const pwdInput = document.getElementById('password');
+                const pwd = document.getElementById('password');
                 const icon = toggleBtn.querySelector('i');
-                if (!pwdInput || !icon) return;
-                if (pwdInput.type === 'password') {
-                    pwdInput.type = 'text';
-                    icon.classList.remove('fa-eye');
-                    icon.classList.add('fa-eye-slash');
-                } else {
-                    pwdInput.type = 'password';
-                    icon.classList.remove('fa-eye-slash');
-                    icon.classList.add('fa-eye');
-                }
+                if (!pwd || !icon) return;
+                const isPass = pwd.type === 'password';
+                pwd.type = isPass ? 'text' : 'password';
+                icon.className = isPass ? 'fas fa-eye-slash' : 'fas fa-eye';
             });
         }
 
-        // Logout button
         const logoutBtn = document.getElementById('logoutBtn');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', () => this.handleLogout());
-        }
+        if (logoutBtn) logoutBtn.addEventListener('click', () => this.handleLogout());
     }
 
     async handleLogin() {
@@ -165,10 +120,7 @@ class AuthManager {
         const errorDiv = document.getElementById('loginError');
         const submitBtn = document.querySelector('#loginForm button[type="submit"]');
 
-        if (!username || !password) {
-            this.showError('Please enter both username and password.');
-            return;
-        }
+        if (!username || !password) { this.showError('Enter username and password.'); return; }
 
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Signing in...';
@@ -183,80 +135,52 @@ class AuthManager {
                 localStorage.setItem(CONFIG.USER_KEY, JSON.stringify(response.user));
                 api.setToken(response.token);
                 localStorage.setItem('available_modules', JSON.stringify(response.available_modules));
-
                 this.startTokenCheck();
                 document.getElementById('loginModal').style.display = 'none';
                 document.getElementById('appContainer').classList.remove('hidden');
-
                 this.initializeApp(response.user, response.available_modules);
                 if (typeof showToast === 'function') showToast('Welcome back!', 'success');
             } else {
                 this.showError(response.message || 'Login failed.');
             }
         } catch (error) {
-            this.showError(error.message || 'Network error. Please try again.');
+            this.showError(error.message || 'Network error.');
         } finally {
             submitBtn.disabled = false;
             submitBtn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>Sign In';
         }
     }
 
-    showError(message) {
-        const errorDiv = document.getElementById('loginError');
-        const errorText = document.getElementById('loginErrorText');
-        if (errorDiv) {
-            if (errorText) errorText.textContent = message;
-            else errorDiv.textContent = message;
-            errorDiv.style.display = 'block';
+    showError(msg) {
+        const errDiv = document.getElementById('loginError');
+        const errText = document.getElementById('loginErrorText');
+        if (errDiv) {
+            if (errText) errText.textContent = msg;
+            else errDiv.textContent = msg;
+            errDiv.style.display = 'block';
         }
     }
 
     initializeApp(user, availableModules) {
         document.getElementById('sidebarRole').textContent = this.getRoleDisplay(user.role);
-        if (typeof ModuleSelector !== 'undefined') {
-            ModuleSelector.show(availableModules);
-        }
+        if (typeof ModuleSelector !== 'undefined') ModuleSelector.show(availableModules);
     }
 
     getRoleDisplay(role) {
-        const map = {
-            'farm_owner': 'Farm Owner',
-            'supervisor': 'Supervisor',
-            'tea_worker': 'Tea Worker',
-            'dairy_worker': 'Dairy Worker',
-            'store_manager': 'Store Manager',
-            'milk_buyer': 'Milk Buyer'
-        };
+        const map = { farm_owner:'Farm Owner', supervisor:'Supervisor', tea_worker:'Tea Worker', dairy_worker:'Dairy Worker', store_manager:'Store Manager', milk_buyer:'Milk Buyer' };
         return map[role] || role;
     }
 
-    handleLogout() {
-        this.clearSession(false);
-    }
-
-    isAuthenticated() {
-        return !!(this.token && this.currentUser && !this.isTokenExpired(this.token));
-    }
-
-    getCurrentUser() {
-        return this.currentUser;
-    }
-
-    getToken() {
-        return this.token;
-    }
-
-    hasAccess(module) {
-        if (!this.currentUser) return false;
-        const modules = CONFIG.ROLE_MODULES[this.currentUser.role] || [];
-        return modules.includes(module);
-    }
+    handleLogout() { this.clearSession(false); }
+    isAuthenticated() { return !!(this.token && this.currentUser && !this.isTokenExpired(this.token)); }
+    getCurrentUser() { return this.currentUser; }
+    getToken() { return this.token; }
+    hasAccess(mod) { if(!this.currentUser) return false; return (CONFIG.ROLE_MODULES[this.currentUser.role]||[]).includes(mod); }
 }
 
-// Wait for the DOM to be ready before initialising
 let auth;
 document.addEventListener('DOMContentLoaded', () => {
     auth = new AuthManager();
     auth.init();
-    window.auth = auth; // global reference
+    window.auth = auth;
 });
