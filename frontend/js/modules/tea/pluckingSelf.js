@@ -1,5 +1,5 @@
 // ============================================
-// TALAEN FARM - Self Plucking Records (Enhanced)
+// TALAEN FARM - Self Plucking Records (Worker‑Safe)
 // ============================================
 
 class TeaPluckingSelf {
@@ -37,7 +37,7 @@ class TeaPluckingSelf {
             <!-- Stats Cards -->
             <div id="pluckingStats" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6"></div>
             
-            <!-- Toolbar -->
+            <!-- Toolbar (admin only) -->
             ${!isWorker ? `
                 <div class="bg-white rounded-2xl border border-stone-200 p-4 mb-4 shadow-sm">
                     <div class="flex flex-wrap items-center gap-3">
@@ -73,6 +73,7 @@ class TeaPluckingSelf {
             </div>
         `;
 
+        // Admin only: load companies for filter
         if (!isWorker) {
             await TeaPluckingSelf.loadCompanyFilter();
         }
@@ -85,12 +86,14 @@ class TeaPluckingSelf {
             const response = await api.getCompanies();
             if (response.success) {
                 const select = document.getElementById('companyFilter');
-                response.companies.forEach(c => {
-                    const option = document.createElement('option');
-                    option.value = c.id;
-                    option.textContent = c.name;
-                    select.appendChild(option);
-                });
+                if (select) {
+                    response.companies.forEach(c => {
+                        const option = document.createElement('option');
+                        option.value = c.id;
+                        option.textContent = c.name;
+                        select.appendChild(option);
+                    });
+                }
             }
         } catch (error) {
             console.error('Failed to load companies:', error);
@@ -101,8 +104,9 @@ class TeaPluckingSelf {
         try {
             const user = auth.getCurrentUser();
             const isWorker = user.role === 'tea_worker';
+            const workerId = isWorker ? user.linked_worker_id : null;
             
-            const response = await api.getSelfPlucking();
+            const response = await api.getSelfPlucking(workerId);
             if (response.success) {
                 const records = response.records;
                 const today = new Date().toISOString().split('T')[0];
@@ -113,12 +117,17 @@ class TeaPluckingSelf {
                 let recordedCount = 0;
                 let notRecordedCount = 0;
                 
+                // Only admin can see worker stats – avoid workers API for worker role
                 if (!isWorker) {
-                    const workersRes = await api.getTeaWorkers();
-                    const activeWorkers = workersRes.workers.filter(w => w.is_active);
-                    const todayWorkerIds = new Set(todayRecords.map(r => r.worker_id));
-                    recordedCount = todayWorkerIds.size;
-                    notRecordedCount = activeWorkers.length - recordedCount;
+                    try {
+                        const workersRes = await api.getTeaWorkers();
+                        const activeWorkers = workersRes.workers.filter(w => w.is_active);
+                        const todayWorkerIds = new Set(todayRecords.map(r => r.worker_id));
+                        recordedCount = todayWorkerIds.size;
+                        notRecordedCount = activeWorkers.length - recordedCount;
+                    } catch (e) {
+                        console.error('Admin stats load error:', e);
+                    }
                 }
 
                 document.getElementById('pluckingStats').innerHTML = `
@@ -159,11 +168,7 @@ class TeaPluckingSelf {
     static async loadRecords() {
         try {
             const user = auth.getCurrentUser();
-            let workerId = null;
-            
-            if (user.role === 'tea_worker') {
-                workerId = user.linked_worker_id;
-            }
+            const workerId = user.role === 'tea_worker' ? user.linked_worker_id : null;
             
             const response = await api.getSelfPlucking(workerId);
             
@@ -361,17 +366,22 @@ class TeaPluckingSelf {
         showToast(`${TeaPluckingSelf.allRecords.length} records exported!`, 'success');
     }
 
+    // ---------- WORKER‑SAFE ADD FORM (FIXED) ----------
     static async showAddForm() {
         try {
-            const [workersRes, companiesRes, blocksRes] = await Promise.all([
-                api.getTeaWorkers(),
+            const user = auth.getCurrentUser();
+            const isWorker = user.role === 'tea_worker';
+
+            // Only fetch workers if user is NOT a worker
+            if (!isWorker) {
+                const workersRes = await api.getTeaWorkers();
+                TeaPluckingSelf.allWorkers = workersRes.workers.filter(w => w.is_active);
+            }
+
+            const [companiesRes, blocksRes] = await Promise.all([
                 api.getCompanies(),
                 api.getBlocks()
             ]);
-
-            const user = auth.getCurrentUser();
-            const isWorker = user.role === 'tea_worker';
-            TeaPluckingSelf.allWorkers = workersRes.workers.filter(w => w.is_active);
 
             const companyOptions = companiesRes.companies.filter(c => c.is_active)
                 .map(c => `<option value="${c.id}">${c.name} (KES ${c.buying_rate}/kg)</option>`).join('');
@@ -478,7 +488,7 @@ class TeaPluckingSelf {
                 }
             }, { submitText: 'Record Plucking', submitIcon: 'fa-leaf', icon: 'fa-leaf', size: 'max-w-xl' });
         } catch (error) {
-            showToast('Error loading form data.', 'error');
+            showToast('Error loading form data. ' + (error.message || ''), 'error');
         }
     }
 
