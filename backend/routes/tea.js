@@ -1443,7 +1443,7 @@ router.post('/debts/:id/reverse', authorizeRoles('farm_owner', 'supervisor', 'st
     }
 });
 // ============================================
-// PAY WORKER (With Debt Rolling)
+// PAY WORKER (With Debt Rolling) — FIXED
 // POST /api/tea/pay-worker
 // ============================================
 router.post('/pay-worker', authorizeRoles('farm_owner', 'supervisor'), async (req, res) => {
@@ -1489,16 +1489,16 @@ router.post('/pay-worker', authorizeRoles('farm_owner', 'supervisor'), async (re
                 .eq('approval_status', 'disputed');
 
             if (disputedRecords && disputedRecords.length > 0) {
-                return res.status(400).json({ 
-                    success: false, 
+                return res.status(400).json({
+                    success: false,
                     message: `Cannot process payment. ${disputedRecords.length} disputed record(s) need resolution first.`,
                     disputed_count: disputedRecords.length
                 });
             }
 
-            return res.status(400).json({ 
-                success: false, 
-                message: 'No approved plucking records ready for payment.' 
+            return res.status(400).json({
+                success: false,
+                message: 'No approved plucking records ready for payment.'
             });
         }
 
@@ -1515,7 +1515,7 @@ router.post('/pay-worker', authorizeRoles('farm_owner', 'supervisor'), async (re
         // Calculate gross pay
         const grossPay = totalKg * parseFloat(wageRate.rate_per_kg);
 
-        // Get current store debts (unsettled, not reversed)
+        // Get current store debts (unsettled, not reversed) - will NOT be settled now
         const { data: storeDebts } = await supabase
             .from('debts')
             .select('amount')
@@ -1562,18 +1562,12 @@ router.post('/pay-worker', authorizeRoles('farm_owner', 'supervisor'), async (re
         let alertMessage = null;
 
         if (netPay > 0) {
-            // Worker gets paid - clear all debts
-            await supabase
-                .from('debts')
-                .update({ is_settled: true, settlement_id: settlement.id })
-                .eq('worker_id', worker_id)
-                .eq('is_settled', false)
-                .eq('is_reversed', false);
-
+            // Worker gets paid – DO NOT SETTLE STORE DEBTS HERE.
+            // Store debts remain for later payment via Pay Store.
             remainingDebt = 0;
             newRollCount = 0;
         } else {
-            // Worker gets nothing - debt rolls forward
+            // Worker gets nothing – debt rolls forward
             remainingDebt = totalDebt;
             newRollCount = (worker.roll_count || 0) + 1;
 
@@ -1582,7 +1576,8 @@ router.post('/pay-worker', authorizeRoles('farm_owner', 'supervisor'), async (re
             }
         }
 
-        // Update worker: remaining debt, roll count, total debt
+        // Update worker: rolled_debt, roll_count, total_debt
+        // total_debt will be the sum of remaining store debts (which still exist)
         const { data: remainingDebts } = await supabase
             .from('debts')
             .select('amount')
@@ -1594,11 +1589,11 @@ router.post('/pay-worker', authorizeRoles('farm_owner', 'supervisor'), async (re
 
         await supabase
             .from('tea_workers')
-            .update({ 
+            .update({
                 total_debt: currentRemainingDebt,
                 rolled_debt: remainingDebt,
                 roll_count: newRollCount,
-                updated_at: new Date() 
+                updated_at: new Date()
             })
             .eq('id', worker_id);
 
@@ -1619,8 +1614,8 @@ router.post('/pay-worker', authorizeRoles('farm_owner', 'supervisor'), async (re
                 roll_count: newRollCount,
                 alert: alertMessage,
                 status: netPay > 0 ? 'paid' : 'rolled',
-                message: netPay > 0 
-                    ? `Worker paid KES ${netPay.toFixed(2)} for ${totalKg.toFixed(2)} kg (${recordsSettled} records)` 
+                message: netPay > 0
+                    ? `Worker paid KES ${netPay.toFixed(2)} for ${totalKg.toFixed(2)} kg (${recordsSettled} records). Store debts remain for later settlement.`
                     : `Gross pay (KES ${grossPay.toFixed(2)}) fully offset by debt (KES ${totalDebt.toFixed(2)}). KES ${remainingDebt.toFixed(2)} rolls forward. Roll #${newRollCount}.`
             }
         });
@@ -1630,7 +1625,7 @@ router.post('/pay-worker', authorizeRoles('farm_owner', 'supervisor'), async (re
     }
 });
 
-// GET /api/tea/pay-worker/history/:worker_id? - Payment history
+// GET /api/tea/pay-worker/history/:worker_id? - Payment history (unchanged)
 router.get('/pay-worker/history/:worker_id?', authorizeRoles('farm_owner', 'supervisor', 'tea_worker'), async (req, res) => {
     try {
         let worker_id = req.params.worker_id;
@@ -1659,7 +1654,6 @@ router.get('/pay-worker/history/:worker_id?', authorizeRoles('farm_owner', 'supe
         res.status(500).json({ success: false, message: 'Error fetching payment history.' });
     }
 });
-
 // ============================================
 // PAY STORE (Settle all store debts)
 // POST /api/tea/pay-store
