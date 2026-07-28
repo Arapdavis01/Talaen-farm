@@ -198,6 +198,7 @@ body.sidebar-locked {
     }
     
     #sidebar.sidebar-open {
+        display: flex !important;   /* ← THIS FIXES THE MOBILE ISSUE */
         transform: translateX(0);
     }
 }
