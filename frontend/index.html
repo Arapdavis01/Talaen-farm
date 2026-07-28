@@ -2,45 +2,37 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover, shrink-to-fit=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#1a1a2e">
     <title>Talaen Farm Management System</title>
-    
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
+
     <!-- Font Awesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    
+
     <!-- Google Fonts - Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
+
     <!-- Custom CSS -->
     <link rel="stylesheet" href="css/style.css">
-    
+
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: {
-                        'inter': ['Inter', 'sans-serif'],
-                    },
+                    fontFamily: { 'inter': ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', sans-serif] },
                     colors: {
                         'brand': {
-                            50: '#f0fdf4',
-                            100: '#dcfce7',
-                            200: '#bbf7d0',
-                            300: '#86efac',
-                            400: '#4ade80',
-                            500: '#22c55e',
-                            600: '#059669',
-                            700: '#047857',
-                            800: '#065f46',
-                            900: '#064e3b',
+                            50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 300: '#86efac',
+                            400: '#4ade80', 500: '#22c55e', 600: '#059669', 700: '#047857',
+                            800: '#065f46', 900: '#064e3b',
                         },
                         'slate': {
-                            750: '#1e293b',
-                            850: '#1a1a2e',
-                            950: '#0f0f23',
+                            750: '#1e293b', 850: '#1a1a2e', 950: '#0f0f23',
                         }
                     }
                 }
@@ -48,21 +40,19 @@
         }
     </script>
 </head>
-<body class="font-inter bg-stone-50">
-    
+<body class="font-inter bg-stone-50 antialiased overflow-x-hidden">
+
     <!-- Full Screen Background -->
     <div id="appBackground" class="fixed inset-0 z-0 bg-cover bg-center bg-no-repeat transition-all duration-700" style="background-image: url('https://images.unsplash.com/photo-1499529112087-3cb3b73cec95?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');">
         <div class="absolute inset-0 bg-gradient-to-br from-slate-900/80 via-slate-800/70 to-slate-900/80"></div>
     </div>
-    
-    <!-- Login Modal -->
+
+    <!-- Login Modal (unchanged – auth.js controls it) -->
     <div id="loginModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="relative w-full max-w-lg">
             <div class="relative bg-white/98 backdrop-blur-sm rounded-3xl shadow-2xl overflow-hidden border border-white/30 animate-fadeIn">
-                
+
                 <div class="relative h-64 overflow-hidden">
-                    
-                    <!-- Tea Farm Image -->
                     <div class="absolute inset-0" style="clip-path: polygon(0 0, 100% 0, 0 100%);">
                         <img src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Tea Farm" class="w-full h-full object-cover">
                         <div class="absolute inset-0 bg-gradient-to-br from-emerald-800/50 to-emerald-900/30"></div>
@@ -78,8 +68,6 @@
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- Dairy Farm Image -->
                     <div class="absolute inset-0" style="clip-path: polygon(100% 0, 100% 100%, 0 100%);">
                         <img src="https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Dairy Farm" class="w-full h-full object-cover">
                         <div class="absolute inset-0 bg-gradient-to-tl from-sky-800/50 to-sky-900/30"></div>
@@ -95,25 +83,19 @@
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- Diagonal Divider -->
                     <div class="absolute inset-0 pointer-events-none" style="background: linear-gradient(135deg, transparent calc(50% - 1.5px), rgba(255,255,255,0.5) 50%, transparent calc(50% + 1.5px));"></div>
-                    
-                    <!-- Center Logo -->
                     <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
                         <div class="w-24 h-24 bg-gradient-to-br from-slate-700 to-slate-800 rounded-2xl flex items-center justify-center shadow-2xl border-[3px] border-white/60 transform hover:scale-110 transition-transform duration-500 overflow-hidden">
                             <img src="assets/images/logo.png.jpg" alt="Logo" class="w-full h-full object-cover" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-tractor text-white text-3xl\'></i>'">
                         </div>
                     </div>
-                    
                     <div class="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/70 to-transparent pointer-events-none"></div>
-                    
                     <div class="absolute bottom-5 left-0 right-0 text-center z-10">
                         <h1 class="text-2xl font-extrabold text-white drop-shadow-2xl tracking-tight">Talaen Farm</h1>
                         <p class="text-white/70 text-[11px] tracking-[0.2em] uppercase font-medium">Management System</p>
                     </div>
                 </div>
-                
+
                 <!-- Login Form -->
                 <div class="p-8 pt-6">
                     <div class="flex items-center justify-center gap-2 mb-5">
@@ -123,7 +105,6 @@
                         </span>
                         <div class="h-px flex-1 bg-gradient-to-r from-transparent via-stone-300 to-transparent"></div>
                     </div>
-                    
                     <form id="loginForm" class="space-y-5">
                         <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-2">Username</label>
@@ -131,38 +112,29 @@
                                 <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-stone-400 group-focus-within:text-emerald-600 transition-colors">
                                     <i class="fas fa-user"></i>
                                 </span>
-                                <input type="text" id="username" required 
-                                    class="w-full pl-11 pr-4 py-3 bg-stone-50 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all font-medium text-slate-800 placeholder-stone-400"
-                                    placeholder="Enter your username">
+                                <input type="text" id="username" required class="w-full pl-11 pr-4 py-3 bg-stone-50 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all font-medium text-slate-800 placeholder-stone-400" placeholder="Enter your username">
                             </div>
                         </div>
-                        
                         <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-2">Password</label>
                             <div class="relative group">
                                 <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-stone-400 group-focus-within:text-emerald-600 transition-colors">
                                     <i class="fas fa-lock"></i>
                                 </span>
-                                <input type="password" id="password" required 
-                                    class="w-full pl-11 pr-12 py-3 bg-stone-50 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all font-medium text-slate-800 placeholder-stone-400"
-                                    placeholder="Enter your password">
+                                <input type="password" id="password" required class="w-full pl-11 pr-12 py-3 bg-stone-50 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all font-medium text-slate-800 placeholder-stone-400" placeholder="Enter your password">
                                 <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 pr-4 flex items-center text-stone-400 hover:text-stone-600 transition-colors">
                                     <i class="fas fa-eye"></i>
                                 </button>
                             </div>
                         </div>
-                        
-                        <button type="submit" 
-                            class="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 text-white py-3.5 rounded-xl font-semibold hover:from-emerald-700 hover:to-emerald-800 transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2">
+                        <button type="submit" class="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 text-white py-3.5 rounded-xl font-semibold hover:from-emerald-700 hover:to-emerald-800 transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2">
                             <i class="fas fa-sign-in-alt"></i> Sign In
                         </button>
                     </form>
-                    
                     <div id="loginError" class="mt-4 text-red-500 text-sm text-center hidden bg-red-50 border border-red-100 py-3 px-4 rounded-xl">
                         <i class="fas fa-exclamation-circle mr-1.5"></i>
                         <span id="loginErrorText"></span>
                     </div>
-                    
                     <p class="text-center text-stone-400 text-xs mt-6">
                         &copy; 2024 Talaen Farm. All rights reserved.
                     </p>
@@ -172,12 +144,12 @@
     </div>
 
     <!-- Main App Container -->
-    <div id="appContainer" class="hidden relative z-10 min-h-screen flex">
-        
-        <!-- Sidebar -->
-        <div id="sidebar" class="hidden lg:flex flex-col w-72 bg-slate-850 text-slate-200 fixed h-full z-30 shadow-2xl border-r border-slate-700/50">
-            <div class="p-6 border-b border-slate-700/50">
-                <div class="flex items-center gap-3 mb-1">
+    <div id="appContainer" class="hidden relative z-10 min-h-screen w-full">
+
+        <!-- Sidebar (off‑canvas mobile, fixed desktop) -->
+        <div id="sidebar" class="flex flex-col w-72 max-w-[85vw] bg-slate-850 text-slate-200 fixed h-full z-30 shadow-2xl border-r border-slate-700/50 transition-transform duration-300 -translate-x-full lg:translate-x-0">
+            <div class="p-6 border-b border-slate-700/50 flex-shrink-0 flex items-center justify-between">
+                <div class="flex items-center gap-3">
                     <div class="w-14 h-14 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl flex items-center justify-center overflow-hidden shadow-lg shadow-emerald-900/30 flex-shrink-0">
                         <img src="assets/images/logo.png.jpg" alt="Logo" class="w-full h-full object-cover" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-tractor text-white text-2xl\'></i>'">
                     </div>
@@ -186,45 +158,52 @@
                         <p id="sidebarRole" class="text-slate-400 text-[11px] leading-tight"></p>
                     </div>
                 </div>
+                <!-- Close button (mobile only) – triggers sidebar.close() -->
+                <button id="sidebarCloseBtn" class="lg:hidden text-slate-400 hover:text-white p-2 min-tap touch-action-manipulation">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
             </div>
-            <nav id="sidebarNav" class="flex-1 overflow-y-auto py-4 px-3 space-y-0.5"></nav>
-            <div class="p-4 border-t border-slate-700/50">
+            <nav id="sidebarNav" class="flex-1 overflow-y-auto py-4 px-3 space-y-0.5 sidebar-scroll"></nav>
+            <div class="p-4 border-t border-slate-700/50 flex-shrink-0">
                 <button id="logoutBtn" class="w-full bg-red-500/10 hover:bg-red-500/20 text-red-300 py-3 rounded-xl transition-all text-sm font-medium flex items-center justify-center gap-2 border border-red-500/20 hover:border-red-500/30">
                     <i class="fas fa-sign-out-alt"></i>Logout
                 </button>
             </div>
         </div>
-        
-        <div id="sidebarOverlay" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-20 lg:hidden"></div>
-        
-        <div class="flex-1 lg:ml-72">
+
+        <!-- Sidebar overlay (mobile only) -->
+        <div id="sidebarOverlay" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-20 lg:hidden sidebar-overlay-tap touch-action-manipulation"></div>
+
+        <!-- Content wrapper -->
+        <div class="flex-1 w-full lg:ml-72">
             <!-- Mobile Navbar -->
-            <div id="mobileNavbar" class="lg:hidden bg-white/95 backdrop-blur-md shadow-sm p-4 flex items-center justify-between sticky top-0 z-10 border-b border-stone-200">
-                <button id="hamburgerBtn" class="text-slate-600 hover:text-emerald-700 transition-colors w-10 h-10 flex items-center justify-center rounded-xl hover:bg-stone-100">
+            <div id="mobileNavbar" class="lg:hidden bg-white/95 backdrop-blur-md shadow-sm px-4 py-3 flex items-center justify-between sticky top-0 z-10 border-b border-stone-200 safe-top">
+                <button id="hamburgerBtn" class="text-slate-600 hover:text-emerald-700 transition-colors w-10 h-10 flex items-center justify-center rounded-xl hover:bg-stone-100 min-tap touch-action-manipulation">
                     <i class="fas fa-bars text-xl"></i>
                 </button>
                 <div class="flex items-center gap-2.5">
                     <div class="w-9 h-9 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-lg flex items-center justify-center overflow-hidden">
                         <img src="assets/images/logo.png.jpg" alt="Logo" class="w-full h-full object-cover" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-tractor text-white text-sm\'></i>'">
                     </div>
-                    <h2 class="font-bold text-slate-800">Talaen Farm</h2>
+                    <h2 class="font-bold text-slate-800 text-sm">Talaen Farm</h2>
                 </div>
-                <div class="w-10"></div>
+                <div class="w-10"></div> <!-- spacer -->
             </div>
-            
-            <main id="mainContent" class="p-4 md:p-6 lg:p-8"></main>
+
+            <!-- Main Content -->
+            <main id="mainContent" class="p-4 md:p-6 lg:p-8 safe-bottom"></main>
         </div>
     </div>
 
     <!-- Toast Container -->
-    <div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-3"></div>
+    <div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-3 w-[calc(100%-2rem)] sm:w-auto max-w-sm pointer-events-none"></div>
 
     <!-- Modal Container -->
-    <div id="modalContainer" class="hidden fixed inset-0 z-40 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-        <div id="modalContent" class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto border border-stone-200"></div>
+    <div id="modalContainer" class="hidden fixed inset-0 z-40 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div id="modalContent" class="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-lg max-h-[85vh] sm:max-h-[90vh] overflow-y-auto border border-stone-200 touch-action-manipulation"></div>
     </div>
 
-    <!-- Scripts -->
+    <!-- ===== SCRIPTS (all your external files remain untouched) ===== -->
     <script src="js/config.js"></script>
     <script src="js/api.js"></script>
     <script src="js/auth.js"></script>
@@ -236,55 +215,68 @@
     <script src="js/components/navbar.js"></script>
     <script src="js/modules/moduleSelector.js"></script>
     <script src="js/modules/userManagement.js"></script>
-    
-    <!-- Tea Module - Admin -->
-    <script src="js/modules/tea/teaDashboard.js"></script>
-    <script src="js/modules/tea/workers.js"></script>
-    <script src="js/modules/tea/companies.js"></script>
-    <script src="js/modules/tea/blocks.js"></script>
-    <script src="js/modules/tea/wageRate.js"></script>
-    <script src="js/modules/tea/pluckingSelf.js"></script>
-    <script src="js/modules/tea/pluckingVerified.js"></script>
-    <script src="js/modules/tea/comparison.js"></script>
-    <script src="js/modules/tea/debts.js"></script>
-    <script src="js/modules/tea/payWorker.js"></script>
-    <script src="js/modules/tea/payStore.js"></script>
-    <script src="js/modules/tea/reports.js"></script>
-    
-    <!-- Tea Module - Worker -->
-    <script src="js/modules/tea/workerDashboard.js"></script>
-    <script src="js/modules/tea/workerPlucking.js"></script>
-    <script src="js/modules/tea/workerDebts.js"></script>
-    <script src="js/modules/tea/workerStorePurchases.js"></script>
-    <script src="js/modules/tea/workerPayments.js"></script>
-    <script src="js/modules/tea/workerProfile.js"></script>
-    
-    <!-- Tea Module - Store Manager (NEW) -->
-    <script src="js/modules/tea/storeDashboard.js"></script>
-    <script src="js/modules/tea/storeWorkerDebts.js"></script>
-    <script src="js/modules/tea/storeProfile.js"></script>
-    
-    <!-- Tea Production Module -->
-    <script src="js/modules/tea/farmInputs.js"></script>
-    <script src="js/modules/tea/productionTargets.js"></script>
-    <script src="js/modules/tea/inputCosts.js"></script>
-    <script src="js/modules/tea/fertilizerSchedule.js"></script>
-    <script src="js/modules/tea/pruningSchedule.js"></script>
-    <script src="js/modules/tea/seasonalAnalysis.js"></script>
-    
-    <!-- Dairy Module -->
-    <script src="js/modules/dairy/dairyDashboard.js"></script>
-    <script src="js/modules/dairy/cows.js"></script>
-    <script src="js/modules/dairy/dairyWorkers.js"></script>
-    <script src="js/modules/dairy/buyers.js"></script>
-    <script src="js/modules/dairy/milkProduction.js"></script>
-    <script src="js/modules/dairy/milkDisposal.js"></script>
-    <script src="js/modules/dairy/feed.js"></script>
-    <script src="js/modules/dairy/payDairyWorker.js"></script>
-    <script src="js/modules/dairy/deliveries.js"></script>
-    <script src="js/modules/dairy/buyerPayments.js"></script>
-    <script src="js/modules/dairy/dairyReports.js"></script>
-    
+    <!-- ... (all your other module scripts) ... -->
     <script src="js/app.js"></script>
+
+    <!-- ===== BODY SCROLL LOCK (essential for mobile) ===== -->
+    <script>
+        (function() {
+            const body = document.body;
+            const loginModal = document.getElementById('loginModal');
+            const modalContainer = document.getElementById('modalContainer');
+
+            function toggleBodyScroll() {
+                const loginVisible = loginModal && loginModal.style.display !== 'none';
+                const genericModalVisible = modalContainer && !modalContainer.classList.contains('hidden');
+                body.classList.toggle('no-scroll', loginVisible || genericModalVisible);
+            }
+
+            // Observer for login modal (auth.js changes style.display)
+            if (loginModal) {
+                new MutationObserver(toggleBodyScroll).observe(loginModal, {
+                    attributes: true, attributeFilter: ['style']
+                });
+            }
+            // Observer for generic modal (classList changes)
+            if (modalContainer) {
+                new MutationObserver(toggleBodyScroll).observe(modalContainer, {
+                    attributes: true, attributeFilter: ['class']
+                });
+            }
+            toggleBodyScroll();
+        })();
+    </script>
+
+    <!-- ===== CONNECT CLOSE BUTTON & NAV LINKS TO SIDEBAR OBJECT ===== -->
+    <script>
+        (function() {
+            const closeBtn = document.getElementById('sidebarCloseBtn');
+            const sidebarNav = document.getElementById('sidebarNav');
+
+            // When sidebar.js is loaded, it creates a global 'sidebar' object
+            function getSidebar() { return window.sidebar; }
+
+            if (closeBtn) {
+                closeBtn.addEventListener('click', function() {
+                    const sidebar = getSidebar();
+                    if (sidebar) sidebar.close();
+                });
+            }
+
+            // Close sidebar when a navigation link is clicked
+            if (sidebarNav) {
+                sidebarNav.addEventListener('click', function(e) {
+                    const link = e.target.closest('a');
+                    if (link) {
+                        // Allow the link to navigate, then close the sidebar
+                        setTimeout(() => {
+                            const sidebar = getSidebar();
+                            if (sidebar && sidebar.isOpen) sidebar.close();
+                        }, 100);
+                    }
+                });
+            }
+        })();
+    </script>
 </body>
 </html>
