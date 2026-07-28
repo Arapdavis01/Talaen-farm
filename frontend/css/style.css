@@ -1,6 +1,6 @@
 /* ============================================
    TALAEN FARM - Professional Modern Styling
-   (Responsive Enhanced)
+   (Responsive Enhanced + Touch‑Friendly)
    ============================================ */
 
 /* Import Inter font weights */
@@ -198,7 +198,7 @@ body.sidebar-locked {
     }
     
     #sidebar.sidebar-open {
-        display: flex !important;   /* ← THIS FIXES THE MOBILE ISSUE */
+        display: flex !important;   /* Overrides Tailwind's hidden on mobile */
         transform: translateX(0);
     }
 }
@@ -880,6 +880,7 @@ input.success, select.success, textarea.success {
 .z-modal { z-index: 40; }
 .z-toast { z-index: 50; }
 .z-login { z-index: 50; }
+
 /* ============================================
    TOUCH‑FRIENDLY BUTTON FIX (all devices)
    ============================================ */
