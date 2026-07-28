@@ -34,7 +34,7 @@
         <div class="absolute inset-0 bg-gradient-to-br from-slate-900/80 via-slate-800/70 to-slate-900/80"></div>
     </div>
 
-    <!-- Login Modal -->
+    <!-- ===== LOGIN MODAL (inline style – DO NOT CHANGE) ===== -->
     <div id="loginModal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 50; display: flex; align-items: center; justify-content: center; padding: 12px;">
         <div style="width: 100%; max-width: 360px;">
             <div style="background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.25);">
@@ -87,9 +87,10 @@
         </div>
     </div>
 
-    <!-- Main App Container -->
+    <!-- ===== MAIN APP CONTAINER ===== -->
     <div id="appContainer" class="hidden relative z-10 min-h-screen w-full">
-        <!-- Sidebar -->
+
+        <!-- SIDEBAR (off‑canvas on mobile, fixed on desktop) -->
         <div id="sidebar" class="flex flex-col w-72 max-w-[85vw] bg-slate-850 text-slate-200 fixed h-full z-30 shadow-2xl border-r border-slate-700/50">
             <div class="p-4 sm:p-6 border-b border-slate-700/50 flex-shrink-0 flex items-center justify-between">
                 <div class="flex items-center gap-2 sm:gap-3">
@@ -101,7 +102,7 @@
                         <p id="sidebarRole" class="text-slate-400 text-[10px] sm:text-[11px] leading-tight"></p>
                     </div>
                 </div>
-                <!-- Close button for mobile sidebar -->
+                <!-- Close button (visible only on mobile) -->
                 <button id="sidebarCloseBtn" class="lg:hidden text-slate-400 hover:text-white p-2 min-tap touch-action-manipulation">
                     <i class="fas fa-times text-xl"></i>
                 </button>
@@ -113,9 +114,11 @@
                 </button>
             </div>
         </div>
-        <!-- Sidebar overlay -->
+
+        <!-- Sidebar overlay (mobile only) -->
         <div id="sidebarOverlay" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-20 lg:hidden sidebar-overlay-tap touch-action-manipulation"></div>
 
+        <!-- Content wrapper (with left margin on desktop) -->
         <div class="flex-1 w-full lg:ml-72">
             <!-- Mobile Navbar -->
             <div id="mobileNavbar" class="lg:hidden bg-white/95 backdrop-blur-md shadow-sm px-3 sm:px-4 py-3 flex items-center justify-between sticky top-0 z-10 border-b border-stone-200 safe-top">
@@ -132,7 +135,8 @@
                     <i class="fas fa-mobile-alt text-lg"></i>
                 </button>
             </div>
-            <!-- Main Content -->
+
+            <!-- Main content area -->
             <main id="mainContent" class="p-3 sm:p-4 md:p-6 lg:p-8 safe-bottom w-full"></main>
         </div>
     </div>
@@ -145,7 +149,7 @@
         <div id="modalContent" class="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-lg max-h-[85vh] sm:max-h-[90vh] overflow-y-auto border border-stone-200 modal-slide-up touch-action-manipulation"></div>
     </div>
 
-    <!-- External Scripts (make sure these files exist) -->
+    <!-- ===== SCRIPTS (keep all existing references) ===== -->
     <script src="js/config.js"></script>
     <script src="js/api.js"></script>
     <script src="js/auth.js"></script>
@@ -197,28 +201,65 @@
     <script src="js/modules/dairy/dairyReports.js"></script>
     <script src="js/app.js"></script>
 
-    <!-- Lock body scroll when any modal or login is visible -->
+    <!-- ===== BODY SCROLL LOCK (works with inline style & class) ===== -->
     <script>
         (function() {
+            const body = document.body;
+            const loginModal = document.getElementById('loginModal');
+            const modalContainer = document.getElementById('modalContainer');
+
             function toggleBodyScroll() {
-                const loginVisible = document.getElementById('loginModal')?.style.display !== 'none';
-                const genericModalVisible = !document.getElementById('modalContainer')?.classList.contains('hidden');
-                document.body.classList.toggle('no-scroll', loginVisible || genericModalVisible);
+                const loginVisible = loginModal && loginModal.style.display !== 'none';
+                const genericModalVisible = modalContainer && !modalContainer.classList.contains('hidden');
+                body.classList.toggle('no-scroll', loginVisible || genericModalVisible);
             }
 
-            const loginObserver = new MutationObserver(toggleBodyScroll);
-            const loginEl = document.getElementById('loginModal');
-            if (loginEl) loginObserver.observe(loginEl, { attributes: true, attributeFilter: ['style'] });
+            // Observe style changes on login modal
+            if (loginModal) {
+                new MutationObserver(toggleBodyScroll).observe(loginModal, { attributes: true, attributeFilter: ['style'] });
+            }
+            // Observe class changes on generic modal
+            if (modalContainer) {
+                new MutationObserver(toggleBodyScroll).observe(modalContainer, { attributes: true, attributeFilter: ['class'] });
+            }
 
-            const modalObserver = new MutationObserver(toggleBodyScroll);
-            const modalEl = document.getElementById('modalContainer');
-            if (modalEl) modalObserver.observe(modalEl, { attributes: true, attributeFilter: ['class'] });
-
+            // Initial check
             toggleBodyScroll();
         })();
     </script>
 
-    <!-- Responsive Info Modal -->
+    <!-- ===== SIDEBAR TOGGLE (hamburger, close, overlay) ===== -->
+    <script>
+        (function() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const hamburger = document.getElementById('hamburgerBtn');
+            const closeBtn = document.getElementById('sidebarCloseBtn');
+            const sidebarNav = document.getElementById('sidebarNav');
+
+            function openSidebar() {
+                sidebar?.classList.add('sidebar-open');
+                overlay?.classList.remove('hidden');
+            }
+            function closeSidebar() {
+                sidebar?.classList.remove('sidebar-open');
+                overlay?.classList.add('hidden');
+            }
+
+            hamburger?.addEventListener('click', openSidebar);
+            closeBtn?.addEventListener('click', closeSidebar);
+            overlay?.addEventListener('click', closeSidebar);
+
+            // Close sidebar when a navigation link is clicked
+            sidebarNav?.addEventListener('click', function(e) {
+                if (e.target.closest('a')) {
+                    closeSidebar();
+                }
+            });
+        })();
+    </script>
+
+    <!-- ===== RESPONSIVE INFO MODAL (as before) ===== -->
     <script>
         function showResponsiveInfo() {
             const modalContainer = document.getElementById('modalContainer');
@@ -240,7 +281,7 @@
                         </summary>
                         <ul class="space-y-2 text-sm text-slate-600 ml-4 list-disc">
                             <li><strong>CSS Variables for consistent theming:</strong> Colors like <code class="bg-stone-200 px-1 rounded">#1a472a</code> and <code class="bg-stone-200 px-1 rounded">#c49a2b</code> are reused throughout.</li>
-                            <li><strong>Media queries:</strong> Breakpoints adjust layout, font sizes, and padding for smaller screens (mobile, tablet, desktop).</li>
+                            <li><strong>Media queries:</strong> Breakpoints adjust layout, font sizes, and padding for smaller screens.</li>
                             <li><strong>Flexible layouts:</strong> Flexbox and relative units (<code>%</code>, <code>rem</code>) allow content to flow naturally.</li>
                             <li><strong>Viewport meta tag:</strong> Ensures proper scaling on mobile devices and prevents zoom issues.</li>
                             <li><strong>Touch‑friendly targets:</strong> Buttons and interactive elements have <code>min-height: 48px</code> and appropriate spacing.</li>
@@ -264,25 +305,12 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             const btn = document.getElementById('responsiveInfoBtn');
-            if (btn) {
-                btn.addEventListener('click', showResponsiveInfo);
-            }
+            if (btn) btn.addEventListener('click', showResponsiveInfo);
 
             const modalContainer = document.getElementById('modalContainer');
             if (modalContainer) {
                 modalContainer.addEventListener('click', function(e) {
-                    if (e.target === modalContainer) {
-                        modalContainer.classList.add('hidden');
-                    }
-                });
-            }
-
-            // Sidebar close button
-            const sidebarClose = document.getElementById('sidebarCloseBtn');
-            if (sidebarClose) {
-                sidebarClose.addEventListener('click', function() {
-                    document.getElementById('sidebar')?.classList.remove('sidebar-open');
-                    document.getElementById('sidebarOverlay')?.classList.add('hidden');
+                    if (e.target === modalContainer) modalContainer.classList.add('hidden');
                 });
             }
         });
