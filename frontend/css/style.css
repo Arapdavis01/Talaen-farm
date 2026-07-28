@@ -1,5 +1,5 @@
 /* ============================================
-   TALAEN FARM – Mobile‑First Adaptive Stylesheet
+   TALAEN FARM – Responsive & Touch‑Friendly Stylesheet
    ============================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
@@ -35,7 +35,7 @@ body {
 .safe-left { padding-left: env(safe-area-inset-left, 0px); }
 .safe-right { padding-right: env(safe-area-inset-right, 0px); }
 
-/* ---------- TOUCH TARGETS (min 44px) ---------- */
+/* ---------- TOUCH TARGETS (minimum 44px) ---------- */
 .min-tap { min-width: 44px; min-height: 44px; }
 
 /* ---------- ANIMATIONS ---------- */
@@ -52,6 +52,12 @@ body {
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
 
+.animate-fadeIn { animation: fadeIn 0.5s ease-out; }
+.animate-fadeInUp { animation: fadeInUp 0.6s ease-out; }
+.animate-fadeInDown { animation: fadeInDown 0.4s ease-out; }
+.animate-slideInLeft { animation: slideInLeft 0.5s ease-out; }
+.animate-slideInRight { animation: slideInRight 0.5s ease-out; }
+
 /* ---------- CUSTOM SCROLLBARS ---------- */
 ::-webkit-scrollbar { width: 7px; height: 7px; }
 ::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
@@ -67,7 +73,7 @@ body {
 #appBackground { transition: opacity 0.5s ease; }
 
 /* ============================================
-   SIDEBAR – works with original sidebar.js
+   SIDEBAR – Off‑canvas mobile, fixed desktop
    ============================================ */
 #sidebar {
     position: fixed;
@@ -88,13 +94,12 @@ body {
     transform: translateX(0) !important;
 }
 
-/* Desktop: always visible (Tailwind's lg:translate-x-0 overrides transform) */
+/* Desktop: always visible */
 @media (min-width: 1024px) {
     #sidebar {
         transform: translateX(0) !important;
         width: 288px;
     }
-    /* Hide the close button on desktop */
     #sidebarCloseBtn { display: none; }
 }
 
@@ -121,6 +126,7 @@ body {
 }
 
 #sidebarNav a:active { background: rgba(255,255,255,0.08); }
+
 @media (hover: hover) {
     #sidebarNav a:hover {
         background: rgba(255,255,255,0.05);
@@ -133,7 +139,7 @@ body {
 .sidebar-overlay-tap { cursor: pointer; touch-action: manipulation; }
 
 /* ============================================
-   CARDS (original styles + touch)
+   CARDS
    ============================================ */
 .stat-card {
     transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
@@ -167,7 +173,7 @@ body {
 }
 
 /* ============================================
-   MODALS (slide‑up on mobile, fade on desktop)
+   MODALS – slide‑up on mobile, fade on desktop
    ============================================ */
 #modalContainer {
     position: fixed;
@@ -180,6 +186,7 @@ body {
     backdrop-filter: blur(4px);
     transition: opacity 0.3s ease;
 }
+
 #modalContent {
     background: white;
     border-radius: 1.5rem;
@@ -193,6 +200,7 @@ body {
     border: 1px solid rgba(0,0,0,0.08);
     margin: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
+
 #modalContent.modal-closing { animation: modalSlideOut 0.25s ease-in forwards; }
 
 @media (max-width: 640px) {
@@ -204,7 +212,7 @@ body {
     }
 }
 
-/* ---------- TABLES (card view on mobile) ---------- */
+/* ---------- RESPONSIVE TABLES ---------- */
 .responsive-table { border-collapse: separate; border-spacing: 0; width: 100%; }
 .responsive-table thead th {
     background: #fafaf9; font-weight: 600; color: #78716c;
@@ -243,7 +251,7 @@ body {
     }
 }
 
-/* ---------- TYPOGRAPHY (fluid) ---------- */
+/* ---------- TYPOGRAPHY (fluid scaling) ---------- */
 h1, .h1   { font-size: clamp(1.35rem, 5vw, 2rem); }
 h2, .h2   { font-size: clamp(1.15rem, 4.5vw, 1.75rem); }
 h3, .h3   { font-size: clamp(1rem, 4vw, 1.5rem); }
