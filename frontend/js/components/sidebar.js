@@ -334,10 +334,37 @@ class Sidebar {
         if (link) this.setActiveItem(link);
     }
 
-    toggle() { if (this.isOpen) this.close(); else this.open(); }
-    open() { this.sidebar.classList.add('sidebar-open'); this.overlay.classList.remove('hidden'); this.isOpen = true; if (typeof navbar !== 'undefined' && navbar.updateHamburgerIcon) navbar.updateHamburgerIcon(true); }
-    close() { this.sidebar.classList.remove('sidebar-open'); this.overlay.classList.add('hidden'); this.isOpen = false; if (typeof navbar !== 'undefined' && navbar.updateHamburgerIcon) navbar.updateHamburgerIcon(false); }
-    refresh() { if (this.currentModule) { this.build(this.currentModule); if (this.activeRoute) this.setActiveRoute(this.activeRoute); } }
+    toggle() {
+        if (this.isOpen) this.close();
+        else this.open();
+    }
+
+    open() {
+        this.sidebar.classList.add('sidebar-open');
+        this.overlay.classList.remove('hidden');
+        this.isOpen = true;
+        document.body.classList.add('sidebar-locked');   // ← Lock background scroll
+        if (typeof navbar !== 'undefined' && navbar.updateHamburgerIcon) {
+            navbar.updateHamburgerIcon(true);
+        }
+    }
+
+    close() {
+        this.sidebar.classList.remove('sidebar-open');
+        this.overlay.classList.add('hidden');
+        this.isOpen = false;
+        document.body.classList.remove('sidebar-locked'); // ← Unlock background scroll
+        if (typeof navbar !== 'undefined' && navbar.updateHamburgerIcon) {
+            navbar.updateHamburgerIcon(false);
+        }
+    }
+
+    refresh() {
+        if (this.currentModule) {
+            this.build(this.currentModule);
+            if (this.activeRoute) this.setActiveRoute(this.activeRoute);
+        }
+    }
 }
 
 const sidebar = new Sidebar();
