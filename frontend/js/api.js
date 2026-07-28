@@ -1,22 +1,31 @@
 // ============================================
-// TALAEN FARM - API Service
+// TALAEN FARM - API Service (Mobile‑Hardened)
 // ============================================
 
 class ApiService {
     constructor() {
         this.baseUrl = CONFIG.API_URL;
-        this.token = localStorage.getItem(CONFIG.TOKEN_KEY);
+        // Do not cache token – always read from auth
     }
 
+    /**
+     * Called by auth to update the token in localStorage.
+     * The actual token is always read from auth.getToken() in getHeaders().
+     */
     setToken(token) {
-        this.token = token;
-        if (token) { localStorage.setItem(CONFIG.TOKEN_KEY, token); }
-        else { localStorage.removeItem(CONFIG.TOKEN_KEY); }
+        if (token) {
+            localStorage.setItem(CONFIG.TOKEN_KEY, token);
+        } else {
+            localStorage.removeItem(CONFIG.TOKEN_KEY);
+        }
     }
 
     getHeaders() {
         const headers = { 'Content-Type': 'application/json' };
-        if (this.token) { headers['Authorization'] = `Bearer ${this.token}`; }
+        // Always take token from auth (most up‑to‑date)
+        if (typeof auth !== 'undefined' && auth.getToken()) {
+            headers['Authorization'] = `Bearer ${auth.getToken()}`;
+        }
         return headers;
     }
 
@@ -25,59 +34,78 @@ class ApiService {
         localStorage.removeItem(CONFIG.USER_KEY);
         localStorage.removeItem('available_modules');
         localStorage.removeItem('current_module');
-        this.token = null;
-        if (typeof showToast === 'function') { showToast('Session expired. Please login again.', 'warning', 5000); }
+        if (typeof showToast === 'function') {
+            showToast('Session expired. Please login again.', 'warning', 5000);
+        }
         setTimeout(() => {
             const appContainer = document.getElementById('appContainer');
             const loginModal = document.getElementById('loginModal');
             if (appContainer) appContainer.classList.add('hidden');
-            if (loginModal) { loginModal.classList.remove('hidden'); const lf = document.getElementById('loginForm'); const le = document.getElementById('loginError'); if (lf) lf.reset(); if (le) le.classList.add('hidden'); }
+            if (loginModal) {
+                loginModal.style.display = 'flex';
+                const form = document.getElementById('loginForm');
+                const error = document.getElementById('loginError');
+                if (form) form.reset();
+                if (error) error.style.display = 'none';
+            }
         }, 1000);
     }
 
     async request(endpoint, method = 'GET', body = null) {
         try {
             const options = { method, headers: this.getHeaders() };
-            if (body && method !== 'GET') { options.body = JSON.stringify(body); }
-            
+            if (body && method !== 'GET') {
+                options.body = JSON.stringify(body);
+            }
+
             const response = await fetch(`${this.baseUrl}${endpoint}`, options);
-            
-            // Handle expired/invalid token - clone response before reading
+
+            // Handle auth errors first
             if (response.status === 401 || response.status === 403) {
                 const cloned = response.clone();
                 const errData = await cloned.json().catch(() => ({}));
-                if (errData.message === 'Invalid or expired token.' || 
-                    errData.message === 'Access denied. No token provided.' || 
+                if (errData.message === 'Invalid or expired token.' ||
+                    errData.message === 'Access denied. No token provided.' ||
                     errData.message === 'Authentication required.') {
                     this.handleSessionExpired();
                     throw new Error('Session expired. Redirecting to login...');
                 }
             }
-            
+
             const data = await response.json();
-            if (!response.ok) { throw new Error(data.message || 'Request failed'); }
+
+            if (!response.ok) {
+                // Convert cryptic backend messages to user‑friendly ones
+                let msg = data.message || 'Request failed';
+                if (msg === 'Error loading form data' || msg === 'Access denied') {
+                    msg = 'Session expired. Please log in again.';
+                }
+                throw new Error(msg);
+            }
+
             return data;
         } catch (error) {
-            if (error.message !== 'Session expired. Redirecting to login...') { 
-                console.error(`API Error [${method} ${endpoint}]:`, error); 
+            if (error.message !== 'Session expired. Redirecting to login...') {
+                console.error(`API Error [${method} ${endpoint}]:`, error);
             }
             throw error;
         }
     }
 
+    // Shorthand methods
     async get(endpoint) { return this.request(endpoint, 'GET'); }
     async post(endpoint, body) { return this.request(endpoint, 'POST', body); }
     async put(endpoint, body) { return this.request(endpoint, 'PUT', body); }
     async delete(endpoint) { return this.request(endpoint, 'DELETE'); }
 
-    // ============ AUTH ============
+    // --------- AUTH ---------
     async login(username, password) { return this.post('/auth/login', { username, password }); }
     async register(userData) { return this.post('/auth/register', userData); }
     async getProfile() { return this.get('/auth/me'); }
     async changePassword(cp, np) { return this.post('/auth/change-password', { current_password: cp, new_password: np }); }
     async getUsers() { return this.get('/auth/users'); }
 
-    // ============ USER MANAGEMENT ============
+    // --------- USER MANAGEMENT ---------
     async updateUser(userId, userData) { return this.put(`/auth/users/${userId}`, userData); }
     async resetUserPassword(userId, newPassword) { return this.post(`/auth/reset-password/${userId}`, { password: newPassword }); }
 
@@ -113,8 +141,6 @@ class ApiService {
     async updateVerifiedPlucking(id, pluckingData) { return this.put(`/tea/plucking/verified/${id}`, pluckingData); }
     async deleteVerifiedPlucking(id) { return this.delete(`/tea/plucking/verified/${id}`); }
     async checkVerifiedPlucking(workerId, date = null) { const ep = `/tea/plucking/verified/check/${workerId}${date ? '?date=' + date : ''}`; return this.get(ep); }
-    
-    // Approval & Disputes
     async approveVerifiedPlucking(id, approvedKg) { return this.put(`/tea/plucking/verified/${id}/approve`, { approved_kg: approvedKg }); }
     async getDisputedRecords() { return this.get('/tea/comparison/disputes'); }
     async getResolvedDisputes() { return this.get('/tea/comparison/resolved'); }
@@ -142,7 +168,7 @@ class ApiService {
     async getWorkerPerformanceReport(params = {}) { const q = new URLSearchParams(params).toString(); return this.get(`/tea/reports/workers${q ? '?' + q : ''}`); }
     async getDebtReport() { return this.get('/tea/reports/debts'); }
 
-    // ============ FARM PRODUCTION MANAGEMENT ============
+    // Farm Production
     async getFarmInputs() { return this.get('/tea/production/inputs'); }
     async addFarmInput(data) { return this.post('/tea/production/inputs', data); }
     async updateFarmInput(id, data) { return this.put(`/tea/production/inputs/${id}`, data); }
@@ -194,5 +220,5 @@ class ApiService {
     async getDairyReport(params = {}) { const q = new URLSearchParams(params).toString(); return this.get(`/dairy/reports/summary?${q}`); }
 }
 
-// Create global API instance
+// Create API instance early (no DOM dependency)
 const api = new ApiService();
