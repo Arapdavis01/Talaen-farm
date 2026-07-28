@@ -59,8 +59,16 @@ class AuthManager {
         }, 120000);
     }
 
+    // 🔴 THIS WAS MISSING – adding it back now
+    stopTokenCheck() {
+        if (this.tokenCheckInterval) {
+            clearInterval(this.tokenCheckInterval);
+            this.tokenCheckInterval = null;
+        }
+    }
+
     clearSession(silent = false) {
-        this.stopTokenCheck();
+        this.stopTokenCheck();   // now works
         localStorage.removeItem(CONFIG.TOKEN_KEY);
         localStorage.removeItem(CONFIG.USER_KEY);
         localStorage.removeItem('available_modules');
@@ -89,7 +97,7 @@ class AuthManager {
             });
         }
 
-        // 🔴 Backup click handler for mobile
+        // Backup click handler for mobile
         const submitBtn = document.querySelector('#loginForm button[type="submit"]');
         if (submitBtn) {
             submitBtn.addEventListener('click', (e) => {
