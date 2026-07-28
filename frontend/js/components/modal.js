@@ -1,5 +1,6 @@
 // ============================================
 // TALAEN FARM - Phone‑Friendly Modal Component
+// (DOM‑safe creation + all previous improvements)
 // ============================================
 
 class Modal {
@@ -7,6 +8,12 @@ class Modal {
         this.container = document.getElementById('modalContainer');
         this.content = document.getElementById('modalContent');
         this.isOpen = false;
+
+        // Guard: if the DOM elements aren't ready yet, we'll wait until open() is called
+        if (!this.container || !this.content) {
+            console.warn('Modal container not found – waiting for DOMContentLoaded');
+            return;
+        }
 
         // Close on overlay click
         this.container.addEventListener('click', (e) => {
@@ -18,7 +25,7 @@ class Modal {
             if (e.key === 'Escape' && this.isOpen) this.close();
         });
 
-        // Prevent scrolling behind modal on touch devices
+        // Prevent background scroll when overlay is touched
         this.container.addEventListener('touchmove', (e) => {
             if (e.target === this.container) e.preventDefault();
         }, { passive: false });
@@ -29,6 +36,15 @@ class Modal {
      * The keyboard does NOT open automatically – the user must tap a field.
      */
     open(title, content, options = {}) {
+        // Safety check: re‑query DOM elements in case they weren't available in constructor
+        if (!this.container) this.container = document.getElementById('modalContainer');
+        if (!this.content) this.content = document.getElementById('modalContent');
+
+        if (!this.container || !this.content) {
+            console.error('Modal: container or content element missing');
+            return;
+        }
+
         const {
             size = 'max-w-lg',
             onClose,
@@ -49,7 +65,7 @@ class Modal {
                     </div>
                     <h3 class="text-base font-bold text-slate-800">${title}</h3>
                 </div>
-                <button class="w-9 h-9 flex items-center justify-center rounded-xl text-stone-400 active:text-slate-600 active:bg-stone-100 transition-all min-tap"
+                <button class="w-9 h-9 flex items-center justify-center rounded-xl text-stone-400 active:text-slate-600 active:bg-stone-100 transition-all"
                         onclick="modal.close()" title="Close">
                     <i class="fas fa-times text-lg"></i>
                 </button>
@@ -61,25 +77,21 @@ class Modal {
             </div>
         `;
 
-        // Show container
         this.container.classList.remove('hidden');
         this.isOpen = true;
         this.onCloseCallback = onClose;
 
         // Prevent background scroll
         document.body.classList.add('no-scroll');
-
-        // IMPORTANT: Do NOT auto-focus any input.
-        // The user will see the form first, then tap to open the keyboard.
     }
 
     close() {
         if (!this.isOpen) return;
 
-        // Trigger closing animation
         this.content.classList.add('modal-closing');
 
         const finishClose = () => {
+            if (!this.container || !this.content) return;
             this.container.classList.add('hidden');
             this.content.classList.remove('modal-closing');
             this.isOpen = false;
@@ -90,8 +102,7 @@ class Modal {
         };
 
         this.content.addEventListener('animationend', finishClose, { once: true });
-        // Fallback
-        setTimeout(finishClose, 400);
+        setTimeout(finishClose, 400); // fallback if animation doesn't fire
     }
 
     // ========== Convenience methods ==========
@@ -124,7 +135,7 @@ class Modal {
 
         this.open(title, formHtml, { icon, size });
 
-        // Attach submit handler
+        // Attach submit handler after the DOM is updated
         setTimeout(() => {
             const form = document.getElementById('modalForm');
             if (!form) return;
@@ -137,7 +148,9 @@ class Modal {
                 try {
                     await submitHandler(e);
                 } catch (error) {
-                    showToast(error.message || 'An error occurred', 'error');
+                    if (typeof showToast === 'function') {
+                        showToast(error.message || 'An error occurred', 'error');
+                    }
                 } finally {
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = originalHTML;
@@ -189,7 +202,9 @@ class Modal {
                     try {
                         await confirmHandler();
                     } catch (error) {
-                        showToast(error.message || 'Action failed', 'error');
+                        if (typeof showToast === 'function') {
+                            showToast(error.message || 'Action failed', 'error');
+                        }
                     } finally {
                         btn.disabled = false;
                         btn.innerHTML = `<i class="fas fa-check text-sm"></i> ${confirmText}`;
@@ -235,5 +250,9 @@ class Modal {
     }
 }
 
-// Create the global instance
-const modal = new Modal();
+// 🔴 CRITICAL FIX: wait for DOM before creating the global modal instance
+let modal;
+document.addEventListener('DOMContentLoaded', () => {
+    modal = new Modal();
+    window.modal = modal;   // ensure global access
+});
