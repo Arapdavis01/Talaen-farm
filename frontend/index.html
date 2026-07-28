@@ -124,7 +124,10 @@
                     </div>
                     <h2 class="font-bold text-slate-800 text-sm sm:text-base truncate">Talaen Farm</h2>
                 </div>
-                <div class="w-10 flex-shrink-0"></div>
+                <!-- Responsive info button (replaces empty placeholder) -->
+                <button id="responsiveInfoBtn" class="text-slate-500 active:text-emerald-600 w-10 h-10 flex items-center justify-center rounded-xl active:bg-stone-100 min-tap flex-shrink-0 touch-action:manipulation" title="How this system adapts to all devices">
+                    <i class="fas fa-mobile-alt text-lg"></i>
+                </button>
             </div>
             <!-- Main Content Area -->
             <main id="mainContent" class="p-3 sm:p-4 md:p-6 lg:p-8 safe-bottom w-full"></main>
@@ -200,23 +203,77 @@
                 document.body.classList.toggle('no-scroll', loginVisible || genericModalVisible);
             }
 
-            // Observe login modal style changes
             const loginObserver = new MutationObserver(toggleBodyScroll);
             const loginEl = document.getElementById('loginModal');
-            if (loginEl) {
-                loginObserver.observe(loginEl, { attributes: true, attributeFilter: ['style'] });
-            }
+            if (loginEl) loginObserver.observe(loginEl, { attributes: true, attributeFilter: ['style'] });
 
-            // Observe generic modal class changes
             const modalObserver = new MutationObserver(toggleBodyScroll);
             const modalEl = document.getElementById('modalContainer');
-            if (modalEl) {
-                modalObserver.observe(modalEl, { attributes: true, attributeFilter: ['class'] });
-            }
+            if (modalEl) modalObserver.observe(modalEl, { attributes: true, attributeFilter: ['class'] });
 
-            // Initial check
             toggleBodyScroll();
         })();
+    </script>
+
+    <!-- Responsive Design Info Modal Script -->
+    <script>
+        function showResponsiveInfo() {
+            const modalContainer = document.getElementById('modalContainer');
+            const modalContent = document.getElementById('modalContent');
+            if (!modalContainer || !modalContent) return;
+
+            modalContent.innerHTML = `
+                <div class="p-4 sm:p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg sm:text-xl font-bold text-slate-800">
+                            <i class="fas fa-mobile-alt text-emerald-600 mr-2"></i>Device Adaptability
+                        </h3>
+                        <button onclick="document.getElementById('modalContainer').classList.add('hidden')" 
+                                class="text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
+                    </div>
+                    <details open class="bg-stone-50 border border-stone-200 rounded-2xl p-4">
+                        <summary class="font-semibold text-emerald-700 cursor-pointer select-none mb-2">
+                            📱 How this system works on all devices
+                        </summary>
+                        <ul class="space-y-2 text-sm text-slate-600 ml-4 list-disc">
+                            <li><strong>CSS Variables for consistent theming:</strong> Colors like <code class="bg-stone-200 px-1 rounded">#1a472a</code> and <code class="bg-stone-200 px-1 rounded">#c49a2b</code> are reused throughout.</li>
+                            <li><strong>Media queries:</strong> Breakpoints adjust layout, font sizes, and padding for smaller screens (mobile, tablet, desktop).</li>
+                            <li><strong>Flexible layouts:</strong> Flexbox and relative units (<code>%</code>, <code>rem</code>) allow content to flow naturally.</li>
+                            <li><strong>Viewport meta tag:</strong> Ensures proper scaling on mobile devices and prevents zoom issues.</li>
+                            <li><strong>Touch‑friendly targets:</strong> Buttons and interactive elements have <code>min-height: 48px</code> and appropriate spacing.</li>
+                            <li><strong>Conditional sidebar:</strong> Off‑canvas sidebar on mobile, fixed sidebar on desktop (using Tailwind's <code>lg:</code> breakpoint).</li>
+                            <li><strong>Backdrop blur and modern effects:</strong> Degrade gracefully on older browsers.</li>
+                        </ul>
+                        <p class="mt-3 text-xs text-slate-500 italic">
+                            This very modal is responsive – try resizing your browser window!
+                        </p>
+                    </details>
+                    <div class="mt-6 border-t pt-4 text-center">
+                        <p class="text-sm text-slate-500 italic">
+                            Built with gratitude – by <span class="font-semibold text-emerald-700">Dancun .K. Koech</span>
+                        </p>
+                    </div>
+                </div>
+            `;
+
+            modalContainer.classList.remove('hidden');
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const btn = document.getElementById('responsiveInfoBtn');
+            if (btn) {
+                btn.addEventListener('click', showResponsiveInfo);
+            }
+
+            const modalContainer = document.getElementById('modalContainer');
+            if (modalContainer) {
+                modalContainer.addEventListener('click', function(e) {
+                    if (e.target === modalContainer) {
+                        modalContainer.classList.add('hidden');
+                    }
+                });
+            }
+        });
     </script>
 </body>
 </html>
