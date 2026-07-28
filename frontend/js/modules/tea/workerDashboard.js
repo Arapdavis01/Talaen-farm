@@ -1,5 +1,5 @@
 // ============================================
-// TALAEN FARM - Worker Dashboard
+// TALAEN FARM - Worker Dashboard (Fixed)
 // ============================================
 
 class TeaWorkerDashboard {
@@ -22,11 +22,15 @@ class TeaWorkerDashboard {
 
     static async loadDashboard() {
         try {
+            const user = auth.getCurrentUser();
+            // Use worker_id from the user object (adjust if backend uses a different property name)
+            const workerId = user.worker_id || user.id;
+
             const [statsRes, pluckingRes, debtsRes, paymentRes] = await Promise.all([
-                api.get('/tea/worker/dashboard'),
-                api.getSelfPlucking(),
-                api.getDebts(),
-                api.getPaymentHistory()
+                api.get('/tea/worker/dashboard'),          // Dashboard stats already scoped to worker via JWT
+                api.getSelfPlucking(workerId),              // Pass workerId explicitly
+                api.getDebts(workerId),                     // Pass workerId explicitly
+                api.getPaymentHistory(workerId)             // Pass workerId explicitly
             ]);
 
             if (statsRes.success) {
@@ -94,7 +98,14 @@ class TeaWorkerDashboard {
                     </div>`;
             }
         } catch (e) {
-            document.getElementById('workerDashboardContent').innerHTML = '<div class="bg-white rounded-2xl border border-stone-200 p-12 text-center"><p class="text-red-500">Failed to load dashboard.</p></div>';
+            // Show a helpful error message with a retry button
+            document.getElementById('workerDashboardContent').innerHTML = `
+                <div class="bg-white rounded-2xl border border-stone-200 p-12 text-center">
+                    <i class="fas fa-exclamation-circle text-red-400 text-3xl mb-3"></i>
+                    <p class="text-red-600 font-medium">Failed to load dashboard</p>
+                    <p class="text-stone-500 text-sm mt-2">${e.message || 'An unexpected error occurred.'}</p>
+                    <button onclick="TeaWorkerDashboard.show()" class="mt-4 px-4 py-2 bg-stone-100 hover:bg-stone-200 rounded-xl text-sm font-medium transition-colors">Retry</button>
+                </div>`;
         }
     }
 }
