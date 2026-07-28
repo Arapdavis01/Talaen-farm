@@ -10,13 +10,10 @@
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-
     <!-- Font Awesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
     <!-- Google Fonts - Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-
     <!-- Custom CSS -->
     <link rel="stylesheet" href="css/style.css">
 
@@ -26,14 +23,8 @@
                 extend: {
                     fontFamily: { 'inter': ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', sans-serif] },
                     colors: {
-                        'brand': {
-                            50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 300: '#86efac',
-                            400: '#4ade80', 500: '#22c55e', 600: '#059669', 700: '#047857',
-                            800: '#065f46', 900: '#064e3b',
-                        },
-                        'slate': {
-                            750: '#1e293b', 850: '#1a1a2e', 950: '#0f0f23',
-                        }
+                        'brand': { 50:'#f0fdf4',100:'#dcfce7',200:'#bbf7d0',300:'#86efac',400:'#4ade80',500:'#22c55e',600:'#059669',700:'#047857',800:'#065f46',900:'#064e3b' },
+                        'slate': { 750:'#1e293b',850:'#1a1a2e',950:'#0f0f23' }
                     }
                 }
             }
@@ -47,7 +38,7 @@
         <div class="absolute inset-0 bg-gradient-to-br from-slate-900/80 via-slate-800/70 to-slate-900/80"></div>
     </div>
 
-    <!-- Login Modal (unchanged – auth.js controls it) -->
+    <!-- Login Modal (unchanged – controlled by auth.js) -->
     <div id="loginModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="relative w-full max-w-lg">
             <div class="relative bg-white/98 backdrop-blur-sm rounded-3xl shadow-2xl overflow-hidden border border-white/30 animate-fadeIn">
@@ -146,7 +137,7 @@
     <!-- Main App Container -->
     <div id="appContainer" class="hidden relative z-10 min-h-screen w-full">
 
-        <!-- Sidebar (off‑canvas mobile, fixed desktop) -->
+        <!-- Sidebar (exact structure sidebar.js expects) -->
         <div id="sidebar" class="flex flex-col w-72 max-w-[85vw] bg-slate-850 text-slate-200 fixed h-full z-30 shadow-2xl border-r border-slate-700/50 transition-transform duration-300 -translate-x-full lg:translate-x-0">
             <div class="p-6 border-b border-slate-700/50 flex-shrink-0 flex items-center justify-between">
                 <div class="flex items-center gap-3">
@@ -158,7 +149,7 @@
                         <p id="sidebarRole" class="text-slate-400 text-[11px] leading-tight"></p>
                     </div>
                 </div>
-                <!-- Close button (mobile only) – triggers sidebar.close() -->
+                <!-- Close button for mobile (sidebar.js doesn't bind it, so we do it below) -->
                 <button id="sidebarCloseBtn" class="lg:hidden text-slate-400 hover:text-white p-2 min-tap touch-action-manipulation">
                     <i class="fas fa-times text-xl"></i>
                 </button>
@@ -171,7 +162,7 @@
             </div>
         </div>
 
-        <!-- Sidebar overlay (mobile only) -->
+        <!-- Sidebar overlay (controlled by navbar.js & sidebar.js) -->
         <div id="sidebarOverlay" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-20 lg:hidden sidebar-overlay-tap touch-action-manipulation"></div>
 
         <!-- Content wrapper -->
@@ -187,7 +178,7 @@
                     </div>
                     <h2 class="font-bold text-slate-800 text-sm">Talaen Farm</h2>
                 </div>
-                <div class="w-10"></div> <!-- spacer -->
+                <div class="w-10"></div> <!-- spacer for symmetry -->
             </div>
 
             <!-- Main Content -->
@@ -203,7 +194,7 @@
         <div id="modalContent" class="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-lg max-h-[85vh] sm:max-h-[90vh] overflow-y-auto border border-stone-200 touch-action-manipulation"></div>
     </div>
 
-    <!-- ===== SCRIPTS (all your external files remain untouched) ===== -->
+    <!-- ===== SCRIPTS (all original files, unchanged) ===== -->
     <script src="js/config.js"></script>
     <script src="js/api.js"></script>
     <script src="js/auth.js"></script>
@@ -211,11 +202,13 @@
     <script src="js/background.js"></script>
     <script src="js/components/toast.js"></script>
     <script src="js/components/modal.js"></script>
+    <!-- Original sidebar.js (the one you just pasted) -->
     <script src="js/components/sidebar.js"></script>
+    <!-- Original navbar.js (the optimized version you pasted earlier) -->
     <script src="js/components/navbar.js"></script>
     <script src="js/modules/moduleSelector.js"></script>
     <script src="js/modules/userManagement.js"></script>
-    <!-- ... (all your other module scripts) ... -->
+    <!-- ... (all other module scripts) ... -->
     <script src="js/app.js"></script>
 
     <!-- ===== BODY SCROLL LOCK (essential for mobile) ===== -->
@@ -231,13 +224,11 @@
                 body.classList.toggle('no-scroll', loginVisible || genericModalVisible);
             }
 
-            // Observer for login modal (auth.js changes style.display)
             if (loginModal) {
                 new MutationObserver(toggleBodyScroll).observe(loginModal, {
                     attributes: true, attributeFilter: ['style']
                 });
             }
-            // Observer for generic modal (classList changes)
             if (modalContainer) {
                 new MutationObserver(toggleBodyScroll).observe(modalContainer, {
                     attributes: true, attributeFilter: ['class']
@@ -247,32 +238,15 @@
         })();
     </script>
 
-    <!-- ===== CONNECT CLOSE BUTTON & NAV LINKS TO SIDEBAR OBJECT ===== -->
+    <!-- ===== Close button for mobile sidebar (uses global `sidebar` from sidebar.js) ===== -->
     <script>
         (function() {
             const closeBtn = document.getElementById('sidebarCloseBtn');
-            const sidebarNav = document.getElementById('sidebarNav');
-
-            // When sidebar.js is loaded, it creates a global 'sidebar' object
-            function getSidebar() { return window.sidebar; }
-
             if (closeBtn) {
                 closeBtn.addEventListener('click', function() {
-                    const sidebar = getSidebar();
-                    if (sidebar) sidebar.close();
-                });
-            }
-
-            // Close sidebar when a navigation link is clicked
-            if (sidebarNav) {
-                sidebarNav.addEventListener('click', function(e) {
-                    const link = e.target.closest('a');
-                    if (link) {
-                        // Allow the link to navigate, then close the sidebar
-                        setTimeout(() => {
-                            const sidebar = getSidebar();
-                            if (sidebar && sidebar.isOpen) sidebar.close();
-                        }, 100);
+                    // The global `sidebar` object is created by sidebar.js
+                    if (window.sidebar) {
+                        window.sidebar.close();
                     }
                 });
             }
