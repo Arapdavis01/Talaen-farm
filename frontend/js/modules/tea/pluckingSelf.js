@@ -1,5 +1,5 @@
 // ============================================
-// TALAEN FARM - Self Plucking Records (Worker‑Safe)
+// TALAEN FARM - Self Plucking Records (Mobile‑Safe)
 // ============================================
 
 class TeaPluckingSelf {
@@ -11,6 +11,8 @@ class TeaPluckingSelf {
 
     static async show() {
         const mainContent = document.getElementById('mainContent');
+        if (!mainContent) return;
+
         const user = auth.getCurrentUser();
         const isWorker = user.role === 'tea_worker';
         
@@ -34,10 +36,8 @@ class TeaPluckingSelf {
                 </div>
             </div>
             
-            <!-- Stats Cards -->
             <div id="pluckingStats" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6"></div>
             
-            <!-- Toolbar (admin only) -->
             ${!isWorker ? `
                 <div class="bg-white rounded-2xl border border-stone-200 p-4 mb-4 shadow-sm">
                     <div class="flex flex-wrap items-center gap-3">
@@ -64,7 +64,6 @@ class TeaPluckingSelf {
                 </div>
             ` : ''}
             
-            <!-- Records Container -->
             <div id="pluckingRecords">
                 <div class="text-center py-12">
                     <div class="spinner mx-auto"></div>
@@ -73,7 +72,9 @@ class TeaPluckingSelf {
             </div>
         `;
 
-        // Admin only: load companies for filter
+        // 🛡️ Wait for mobile DOM to paint before accessing new elements
+        await new Promise(resolve => requestAnimationFrame(resolve));
+
         if (!isWorker) {
             await TeaPluckingSelf.loadCompanyFilter();
         }
@@ -101,6 +102,9 @@ class TeaPluckingSelf {
     }
 
     static async loadStats() {
+        const statsContainer = document.getElementById('pluckingStats');
+        if (!statsContainer) return;
+
         try {
             const user = auth.getCurrentUser();
             const isWorker = user.role === 'tea_worker';
@@ -117,7 +121,6 @@ class TeaPluckingSelf {
                 let recordedCount = 0;
                 let notRecordedCount = 0;
                 
-                // Only admin can see worker stats – avoid workers API for worker role
                 if (!isWorker) {
                     try {
                         const workersRes = await api.getTeaWorkers();
@@ -130,7 +133,7 @@ class TeaPluckingSelf {
                     }
                 }
 
-                document.getElementById('pluckingStats').innerHTML = `
+                statsContainer.innerHTML = `
                     <div class="stat-card bg-white rounded-2xl border border-stone-200 p-4 shadow-sm">
                         <p class="text-xs font-medium text-stone-500 uppercase tracking-wider mb-2">Total Records</p>
                         <p class="text-2xl font-bold text-slate-800">${records.length}</p>
@@ -166,6 +169,9 @@ class TeaPluckingSelf {
     }
 
     static async loadRecords() {
+        const container = document.getElementById('pluckingRecords');
+        if (!container) return;
+
         try {
             const user = auth.getCurrentUser();
             const workerId = user.role === 'tea_worker' ? user.linked_worker_id : null;
@@ -176,7 +182,7 @@ class TeaPluckingSelf {
                 TeaPluckingSelf.allRecords = response.records;
                 TeaPluckingSelf.renderRecords(TeaPluckingSelf.allRecords);
             } else {
-                document.getElementById('pluckingRecords').innerHTML = `
+                container.innerHTML = `
                     <div class="bg-white rounded-2xl border border-stone-200 p-12 text-center">
                         <i class="fas fa-leaf text-stone-300 text-3xl mb-3"></i>
                         <p class="text-stone-500">No plucking records found.</p>
@@ -184,7 +190,7 @@ class TeaPluckingSelf {
                 `;
             }
         } catch (error) {
-            document.getElementById('pluckingRecords').innerHTML = `
+            container.innerHTML = `
                 <div class="bg-white rounded-2xl border border-stone-200 p-12 text-center">
                     <i class="fas fa-exclamation-circle text-red-500 text-3xl mb-3"></i>
                     <p class="text-red-500">Failed to load records.</p>
@@ -212,8 +218,11 @@ class TeaPluckingSelf {
     }
 
     static renderRecords(records) {
+        const container = document.getElementById('pluckingRecords');
+        if (!container) return;
+
         if (records.length === 0) {
-            document.getElementById('pluckingRecords').innerHTML = `
+            container.innerHTML = `
                 <div class="bg-white rounded-2xl border border-stone-200 p-12 text-center">
                     <i class="fas fa-search text-stone-300 text-3xl mb-3"></i>
                     <p class="text-stone-500">No records match your filters.</p>
@@ -268,7 +277,7 @@ class TeaPluckingSelf {
             </tr>
         `).join('');
 
-        document.getElementById('pluckingRecords').innerHTML = `
+        container.innerHTML = `
             <div class="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="responsive-table w-full">
@@ -366,7 +375,7 @@ class TeaPluckingSelf {
         showToast(`${TeaPluckingSelf.allRecords.length} records exported!`, 'success');
     }
 
-    // ---------- WORKER‑SAFE ADD FORM (FIXED) ----------
+    // ---------- WORKER‑SAFE ADD FORM ----------
     static async showAddForm() {
         try {
             const user = auth.getCurrentUser();
