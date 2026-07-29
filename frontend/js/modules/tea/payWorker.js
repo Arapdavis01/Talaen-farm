@@ -1,11 +1,16 @@
 // ============================================
 // TALAEN FARM - Pay Tea Worker (Debt Rolling)
+// Mobile‑Safe + All Fixes
 // ============================================
 
 class TeaPayWorker {
+    // Initialize to avoid undefined errors when filtering
+    static allWorkers = [];
+
     static async show() {
         const mainContent = document.getElementById('mainContent');
-        
+        if (!mainContent) return;
+
         mainContent.innerHTML = `
             <div class="mb-6">
                 <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Pay Worker</h1>
@@ -47,15 +52,20 @@ class TeaPayWorker {
             </div>
         `;
 
+        // Give the DOM a moment to paint on mobile before accessing new elements
+        await new Promise(resolve => requestAnimationFrame(resolve));
         await TeaPayWorker.loadWorkers();
     }
 
     static async loadWorkers() {
+        const workerList = document.getElementById('workerList');
+        if (!workerList) return;
+
         try {
             const [workersRes, wageRes] = await Promise.all([api.getTeaWorkers(), api.getWageRate()]);
 
             if (!wageRes.wage_rate) {
-                document.getElementById('workerList').innerHTML = `
+                workerList.innerHTML = `
                     <div class="text-center py-8">
                         <div class="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-3"><i class="fas fa-exclamation-triangle text-amber-500"></i></div>
                         <p class="text-amber-700 font-medium">No wage rate set.</p>
@@ -68,17 +78,19 @@ class TeaPayWorker {
                 const verifiedRes = await api.getVerifiedPlucking();
                 const verifiedRecords = verifiedRes.success ? verifiedRes.records : [];
                 TeaPayWorker.allWorkers = workersRes.workers.filter(w => w.is_active);
-
                 TeaPayWorker.renderWorkerList(TeaPayWorker.allWorkers, verifiedRecords);
             } else {
-                document.getElementById('workerList').innerHTML = '<div class="text-center py-8"><p class="text-stone-500">No active workers found.</p></div>';
+                workerList.innerHTML = '<div class="text-center py-8"><p class="text-stone-500">No active workers found.</p></div>';
             }
         } catch (error) {
-            document.getElementById('workerList').innerHTML = '<div class="text-center py-8"><i class="fas fa-exclamation-circle text-red-500 text-xl mb-2"></i><p class="text-red-500">Failed to load workers.</p></div>';
+            workerList.innerHTML = '<div class="text-center py-8"><i class="fas fa-exclamation-circle text-red-500 text-xl mb-2"></i><p class="text-red-500">Failed to load workers.</p></div>';
         }
     }
 
     static renderWorkerList(workers, verifiedRecords) {
+        const list = document.getElementById('workerList');
+        if (!list) return;
+
         const html = workers.map(worker => {
             const workerRecords = verifiedRecords.filter(r => r.worker_id === worker.id && !r.is_settled);
             const approvedKg = workerRecords.filter(r => r.is_approved).reduce((s, r) => s + parseFloat(r.approved_kg || r.weight_kg), 0);
@@ -108,18 +120,24 @@ class TeaPayWorker {
             `;
         }).join('');
 
-        document.getElementById('workerList').innerHTML = html || '<div class="text-center py-8"><p class="text-stone-500">No workers match.</p></div>';
+        list.innerHTML = html || '<div class="text-center py-8"><p class="text-stone-500">No workers match.</p></div>';
     }
 
     static filterWorkers() {
+        // Guard against undefined allWorkers
+        if (!Array.isArray(TeaPayWorker.allWorkers)) {
+            console.warn('Workers not loaded yet');
+            return;
+        }
         const search = (document.getElementById('payWorkerSearch')?.value || '').toLowerCase();
         const filtered = TeaPayWorker.allWorkers.filter(w => w.full_name.toLowerCase().includes(search));
-        const verifiedRes = { records: [] }; // We'd need to re-fetch, but for now filter only
         TeaPayWorker.renderWorkerList(filtered, []);
     }
 
     static async selectWorker(workerId, workerName) {
         const previewDiv = document.getElementById('paymentPreview');
+        if (!previewDiv) return;
+
         previewDiv.innerHTML = `<div class="text-center py-8"><div class="spinner mx-auto"></div><p class="text-stone-500 mt-3">Calculating payment...</p></div>`;
 
         try {
@@ -186,7 +204,7 @@ class TeaPayWorker {
                     
                     <div class="bg-emerald-50 rounded-xl p-4">
                         <div class="flex justify-between"><span class="font-medium text-slate-800">Net Pay:</span><span class="text-xl font-bold ${netPay > 0 ? 'text-emerald-700' : 'text-red-600'}">KES ${netPay > 0 ? netPay.toFixed(2) : '0.00'}</span></div>
-                        ${netPay <= 0 ? `<p class="text-sm text-red-500 mt-2"><i class="fas fa-exclamation-circle mr-1"></i>KES ${totalDebt.toFixed(2)} debt rolls forward (Roll #${rollCount + 1})</p>` : `<p class="text-sm text-emerald-600 mt-2"><i class="fas fa-check-circle mr-1"></i>All debts cleared!</p>`}
+                        ${netPay <= 0 ? `<p class="text-sm text-red-500 mt-2"><i class="fas fa-exclamation-circle mr-1"></i>KES ${totalDebt.toFixed(2)} debt rolls forward (Roll #${rollCount + 1})</p>` : `<p class="text-sm text-emerald-600 mt-2"><i class="fas fa-check-circle mr-1"></i>Store debts remain for later settlement</p>`}
                     </div>
                     
                     <button onclick="TeaPayWorker.processPayment('${workerId}')" 
@@ -203,7 +221,7 @@ class TeaPayWorker {
     }
 
     static async processPayment(workerId) {
-        modal.openConfirm('Confirm Payment', 'This will settle all approved plucking records.', async () => {
+        modal.openConfirm('Confirm Payment', 'This will settle all approved plucking records. Store debts remain for later settlement via Pay Store.', async () => {
             try {
                 const response = await api.payWorker(workerId);
                 if (response.success) {
