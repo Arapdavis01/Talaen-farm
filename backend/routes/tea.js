@@ -630,9 +630,18 @@ router.post('/plucking/self', authorizeRoles('farm_owner', 'supervisor', 'tea_wo
     try {
         let { worker_id, company_id, block_id, plucking_date, weight_kg, field_grade, notes } = req.body;
 
-        // If tea worker, use their linked worker_id
+        // If tea worker, find their worker id via user_id
         if (req.user.role === 'tea_worker') {
-            worker_id = req.user.linked_worker_id;
+            const { data: workerLink } = await supabase
+                .from('tea_workers')
+                .select('id')
+                .eq('user_id', req.user.id)
+                .maybeSingle();
+
+            if (!workerLink) {
+                return res.status(404).json({ success: false, message: 'Worker profile not found.' });
+            }
+            worker_id = workerLink.id;
         }
 
         // Validate required fields
@@ -644,10 +653,7 @@ router.post('/plucking/self', authorizeRoles('farm_owner', 'supervisor', 'tea_wo
         }
 
         if (weight_kg <= 0) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Weight must be greater than 0.' 
-            });
+            return res.status(400).json({ success: false, message: 'Weight must be greater than 0.' });
         }
 
         // Check if worker already has a record for this date (warning, not blocking)
@@ -691,9 +697,18 @@ router.get('/plucking/self/:worker_id?', authorizeRoles('farm_owner', 'superviso
     try {
         let worker_id = req.params.worker_id;
         
-        // If tea worker, force their own records
+        // If tea worker, force their own records via user_id
         if (req.user.role === 'tea_worker') {
-            worker_id = req.user.linked_worker_id;
+            const { data: workerLink } = await supabase
+                .from('tea_workers')
+                .select('id')
+                .eq('user_id', req.user.id)
+                .maybeSingle();
+
+            if (!workerLink) {
+                return res.status(404).json({ success: false, message: 'Worker profile not found.' });
+            }
+            worker_id = workerLink.id;
         }
 
         let query = supabase
@@ -1258,7 +1273,16 @@ router.get('/debts/:worker_id?', authenticateToken, async (req, res) => {
 
         // Tea workers can only see their own debts
         if (req.user.role === 'tea_worker') {
-            worker_id = req.user.linked_worker_id;
+            const { data: workerLink } = await supabase
+                .from('tea_workers')
+                .select('id')
+                .eq('user_id', req.user.id)
+                .maybeSingle();
+
+            if (!workerLink) {
+                return res.status(404).json({ success: false, message: 'Worker profile not found.' });
+            }
+            worker_id = workerLink.id;
         }
 
         let query = supabase
