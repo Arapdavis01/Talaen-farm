@@ -18,7 +18,7 @@ class App {
             // Handle navigation if needed
         });
 
-        console.log('🌿 Talaen Farm Management System initialized');
+        console.log('Talaen Farm Management System initialized');
         console.log('Version:', CONFIG.APP_VERSION);
     }
 
