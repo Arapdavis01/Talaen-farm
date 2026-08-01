@@ -2048,12 +2048,16 @@ router.get('/dashboard', authorizeRoles('farm_owner', 'supervisor'), async (req,
     }
 });
 // ============================================
-// WORKER DASHBOARD
+// WORKER DASHBOARD (FIXED)
 // GET /api/tea/worker/dashboard
 // ============================================
 router.get('/worker/dashboard', authorizeRoles('tea_worker'), async (req, res) => {
     try {
         const workerId = req.user.linked_worker_id;
+        if (!workerId) {
+            return res.status(400).json({ success: false, message: 'Worker ID not linked to account.' });
+        }
+
         const today = new Date().toISOString().split('T')[0];
         const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
 
@@ -2069,25 +2073,30 @@ router.get('/worker/dashboard', authorizeRoles('tea_worker'), async (req, res) =
             .eq('worker_id', workerId)
             .gte('plucking_date', monthStart);
 
+        // 🔴 Changed .single() to .maybeSingle() to avoid error when worker not found
         const { data: worker } = await supabase
             .from('tea_workers')
             .select('rolled_debt, roll_count')
             .eq('id', workerId)
-            .single();
+            .maybeSingle();
 
+        // 🔴 Changed .single() to .maybeSingle() – no settlements yet? No problem!
         const { data: lastPayment } = await supabase
             .from('settlements')
             .select('*')
             .eq('worker_id', workerId)
             .order('created_at', { ascending: false })
             .limit(1)
-            .single();
+            .maybeSingle();
+
+        const todayKg = todayPlucking?.reduce((s, r) => s + parseFloat(r.weight_kg), 0) || 0;
+        const monthlyKg = monthPlucking?.reduce((s, r) => s + parseFloat(r.weight_kg), 0) || 0;
 
         res.json({
             success: true,
             stats: {
-                today_kg: todayPlucking.reduce((s, r) => s + parseFloat(r.weight_kg), 0),
-                monthly_kg: monthPlucking.reduce((s, r) => s + parseFloat(r.weight_kg), 0),
+                today_kg: todayKg,
+                monthly_kg: monthlyKg,
                 rolled_debt: parseFloat(worker?.rolled_debt || 0),
                 roll_count: worker?.roll_count || 0,
                 last_payment: lastPayment || null
@@ -2098,7 +2107,8 @@ router.get('/worker/dashboard', authorizeRoles('tea_worker'), async (req, res) =
         res.status(500).json({ success: false, message: 'Error fetching worker dashboard.' });
     }
 });
-// GET /api/tea/worker/profile
+
+// GET /api/tea/worker/profile (unchanged – already safe)
 router.get('/worker/profile', authorizeRoles('tea_worker'), async (req, res) => {
     try {
         const workerId = req.user.linked_worker_id;
@@ -2110,14 +2120,12 @@ router.get('/worker/profile', authorizeRoles('tea_worker'), async (req, res) => 
 
         if (!worker) return res.status(404).json({ success: false, message: 'Worker not found.' });
 
-        // Get total kg
         const { data: plucking } = await supabase
             .from('plucking_self')
             .select('weight_kg')
             .eq('worker_id', workerId);
         const totalKg = plucking.reduce((s, r) => s + parseFloat(r.weight_kg), 0);
 
-        // Get current debt
         const { data: debts } = await supabase
             .from('debts')
             .select('amount')
