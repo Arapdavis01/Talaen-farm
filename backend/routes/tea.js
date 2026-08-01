@@ -2048,16 +2048,23 @@ router.get('/dashboard', authorizeRoles('farm_owner', 'supervisor'), async (req,
     }
 });
 // ============================================
-// WORKER DASHBOARD (FIXED)
+// WORKER DASHBOARD (FIXED – uses user_id)
 // GET /api/tea/worker/dashboard
 // ============================================
 router.get('/worker/dashboard', authorizeRoles('tea_worker'), async (req, res) => {
     try {
-        const workerId = req.user.linked_worker_id;
-        if (!workerId) {
-            return res.status(400).json({ success: false, message: 'Worker ID not linked to account.' });
+        // 🔁 Look up worker by user_id instead of linked_worker_id
+        const { data: worker } = await supabase
+            .from('tea_workers')
+            .select('id, rolled_debt, roll_count')
+            .eq('user_id', req.user.id)
+            .maybeSingle();
+
+        if (!worker) {
+            return res.status(404).json({ success: false, message: 'Worker profile not found.' });
         }
 
+        const workerId = worker.id;
         const today = new Date().toISOString().split('T')[0];
         const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
 
@@ -2073,14 +2080,6 @@ router.get('/worker/dashboard', authorizeRoles('tea_worker'), async (req, res) =
             .eq('worker_id', workerId)
             .gte('plucking_date', monthStart);
 
-        // 🔴 Changed .single() to .maybeSingle() to avoid error when worker not found
-        const { data: worker } = await supabase
-            .from('tea_workers')
-            .select('rolled_debt, roll_count')
-            .eq('id', workerId)
-            .maybeSingle();
-
-        // 🔴 Changed .single() to .maybeSingle() – no settlements yet? No problem!
         const { data: lastPayment } = await supabase
             .from('settlements')
             .select('*')
@@ -2097,8 +2096,8 @@ router.get('/worker/dashboard', authorizeRoles('tea_worker'), async (req, res) =
             stats: {
                 today_kg: todayKg,
                 monthly_kg: monthlyKg,
-                rolled_debt: parseFloat(worker?.rolled_debt || 0),
-                roll_count: worker?.roll_count || 0,
+                rolled_debt: parseFloat(worker.rolled_debt || 0),
+                roll_count: worker.roll_count || 0,
                 last_payment: lastPayment || null
             }
         });
@@ -2108,23 +2107,30 @@ router.get('/worker/dashboard', authorizeRoles('tea_worker'), async (req, res) =
     }
 });
 
-// GET /api/tea/worker/profile (unchanged – already safe)
+// ============================================
+// WORKER PROFILE (FIXED – uses user_id)
+// GET /api/tea/worker/profile
+// ============================================
 router.get('/worker/profile', authorizeRoles('tea_worker'), async (req, res) => {
     try {
-        const workerId = req.user.linked_worker_id;
+        // 🔁 Look up worker by user_id
         const { data: worker } = await supabase
             .from('tea_workers')
             .select('*')
-            .eq('id', workerId)
-            .single();
+            .eq('user_id', req.user.id)
+            .maybeSingle();   // use maybeSingle to avoid error if not found
 
-        if (!worker) return res.status(404).json({ success: false, message: 'Worker not found.' });
+        if (!worker) {
+            return res.status(404).json({ success: false, message: 'Worker not found.' });
+        }
+
+        const workerId = worker.id;
 
         const { data: plucking } = await supabase
             .from('plucking_self')
             .select('weight_kg')
             .eq('worker_id', workerId);
-        const totalKg = plucking.reduce((s, r) => s + parseFloat(r.weight_kg), 0);
+        const totalKg = plucking?.reduce((s, r) => s + parseFloat(r.weight_kg), 0) || 0;
 
         const { data: debts } = await supabase
             .from('debts')
@@ -2132,7 +2138,7 @@ router.get('/worker/profile', authorizeRoles('tea_worker'), async (req, res) => 
             .eq('worker_id', workerId)
             .eq('is_settled', false)
             .eq('is_reversed', false);
-        const currentDebt = debts.reduce((s, d) => s + parseFloat(d.amount), 0);
+        const currentDebt = debts?.reduce((s, d) => s + parseFloat(d.amount), 0) || 0;
 
         res.json({
             success: true,
