@@ -1,12 +1,14 @@
 /* ============================================
    TALAEN FARM - Professional Modern Styling
-   (Responsive Enhanced + Touch‑Friendly)
+   (Responsive Enhanced + Touch‑Friendly + App-aware)
    ============================================ */
 
 /* Import Inter font weights */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-/* Base Styles */
+/* ============================================
+   BASE STYLES
+   ============================================ */
 html {
     scroll-behavior: smooth;
 }
@@ -123,6 +125,19 @@ body.sidebar-locked {
 }
 
 /* ============================================
+   ACCESSIBILITY: Respect reduced-motion preference
+   (Android "Remove animations" accessibility setting)
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* ============================================
    CUSTOM SCROLLBAR
    ============================================ */
 ::-webkit-scrollbar {
@@ -196,9 +211,9 @@ body.sidebar-locked {
     #sidebar {
         transform: translateX(-100%);
     }
-    
+
     #sidebar.sidebar-open {
-        display: flex !important;   /* Overrides Tailwind's hidden on mobile */
+        display: flex !important;
         transform: translateX(0);
     }
 }
@@ -217,13 +232,17 @@ body.sidebar-locked {
     color: #cbd5e1;
 }
 
-#sidebarNav a:hover {
-    background: rgba(255, 255, 255, 0.05);
-    border-left: 3px solid rgba(255, 255, 255, 0.2);
-    color: #f1f5f9;
+/* Hover states only apply on hover-capable devices.
+   This fixes the sticky-hover problem in Android WebView. */
+@media (hover: hover) {
+    #sidebarNav a:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-left: 3px solid rgba(255, 255, 255, 0.2);
+        color: #f1f5f9;
+    }
 }
 
-/* Sidebar overlay (improved fade) */
+/* Sidebar overlay (fade) */
 #sidebarOverlay {
     transition: opacity 0.3s ease;
     opacity: 0;
@@ -236,7 +255,7 @@ body.sidebar-locked {
 }
 
 /* ============================================
-   MOBILE NAVBAR (Responsive Enhancements)
+   MOBILE NAVBAR
    ============================================ */
 @media (max-width: 1023px) {
     #mobileNavbar {
@@ -244,14 +263,13 @@ body.sidebar-locked {
         top: 0;
         left: 0;
         right: 0;
-        z-index: 15; /* below sidebar, above content */
+        z-index: 15;
         transition: transform 0.3s ease;
         will-change: transform;
     }
 
-    /* Push main content down so it's not hidden behind the fixed navbar */
     #mainContent {
-        padding-top: calc(4rem + 0.75rem); /* navbar height + breathing room */
+        padding-top: calc(4rem + 0.75rem);
     }
 }
 
@@ -264,10 +282,12 @@ body.sidebar-locked {
     border: 1px solid #e7e5e4;
 }
 
-.hover-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
-    border-color: #d6d3d1;
+@media (hover: hover) {
+    .hover-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+        border-color: #d6d3d1;
+    }
 }
 
 /* Dashboard stat cards */
@@ -278,14 +298,16 @@ body.sidebar-locked {
     border: 1px solid #e7e5e4;
 }
 
-.stat-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.08);
-    border-color: #059669;
-}
+@media (hover: hover) {
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.08);
+        border-color: #059669;
+    }
 
-.stat-card:hover .stat-icon {
-    transform: scale(1.08);
+    .stat-card:hover .stat-icon {
+        transform: scale(1.08);
+    }
 }
 
 .stat-icon {
@@ -302,13 +324,19 @@ body.sidebar-locked {
     position: relative;
 }
 
-.module-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 28px 56px rgba(0, 0, 0, 0.18);
-}
+@media (hover: hover) {
+    .module-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 28px 56px rgba(0, 0, 0, 0.18);
+    }
 
-.module-card:hover .module-card-overlay {
-    background: rgba(0, 0, 0, 0.4);
+    .module-card:hover .module-card-overlay {
+        background: rgba(0, 0, 0, 0.4);
+    }
+
+    .module-card:hover .module-card-image {
+        transform: scale(1.1);
+    }
 }
 
 .module-card:active {
@@ -319,10 +347,6 @@ body.sidebar-locked {
     transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.module-card:hover .module-card-image {
-    transform: scale(1.1);
-}
-
 .module-card-overlay {
     transition: background 0.4s ease;
 }
@@ -330,7 +354,9 @@ body.sidebar-locked {
 /* ============================================
    MODAL STYLES
    ============================================ */
-#modalContent {
+/* Pop-in animation for web — the Android app uses bottom-sheet animation
+   defined in app-shell.css instead. */
+html:not(.is-android-app) #modalContent {
     animation: modalSlideIn 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -359,10 +385,12 @@ body.sidebar-locked {
     outline: none;
 }
 
-#modalContent input:hover,
-#modalContent select:hover,
-#modalContent textarea:hover {
-    border-color: #a8a29e;
+@media (hover: hover) {
+    #modalContent input:hover,
+    #modalContent select:hover,
+    #modalContent textarea:hover {
+        border-color: #a8a29e;
+    }
 }
 
 /* ============================================
@@ -390,8 +418,10 @@ body.sidebar-locked {
     transition: all 0.15s ease;
 }
 
-.responsive-table tbody tr:hover {
-    background: #f0fdf4;
+@media (hover: hover) {
+    .responsive-table tbody tr:hover {
+        background: #f0fdf4;
+    }
 }
 
 .responsive-table tbody td {
@@ -413,7 +443,7 @@ body.sidebar-locked {
     .responsive-table thead {
         display: none;
     }
-    
+
     .responsive-table tbody tr {
         display: block;
         margin-bottom: 0.75rem;
@@ -422,13 +452,15 @@ body.sidebar-locked {
         padding: 1rem;
         background: white;
     }
-    
-    .responsive-table tbody tr:hover {
-        border-color: #059669;
-        box-shadow: 0 2px 12px rgba(5, 150, 105, 0.08);
-        background: white;
+
+    @media (hover: hover) {
+        .responsive-table tbody tr:hover {
+            border-color: #059669;
+            box-shadow: 0 2px 12px rgba(5, 150, 105, 0.08);
+            background: white;
+        }
     }
-    
+
     .responsive-table tbody td {
         display: flex;
         justify-content: space-between;
@@ -436,16 +468,16 @@ body.sidebar-locked {
         padding: 0.6rem 0;
         border-bottom: 1px solid #f5f5f4;
     }
-    
+
     .responsive-table tbody td:last-child {
         border-bottom: none;
         padding-bottom: 0;
     }
-    
+
     .responsive-table tbody td:first-child {
         padding-top: 0;
     }
-    
+
     .responsive-table tbody td::before {
         content: attr(data-label);
         font-weight: 700;
@@ -502,14 +534,19 @@ button:disabled {
     box-shadow: 0 4px 14px rgba(5, 150, 105, 0.25);
 }
 
-.btn-primary:hover {
-    background: linear-gradient(135deg, #047857, #065f46);
-    box-shadow: 0 6px 22px rgba(5, 150, 105, 0.35);
-    transform: translateY(-1px);
+@media (hover: hover) {
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #047857, #065f46);
+        box-shadow: 0 6px 22px rgba(5, 150, 105, 0.35);
+        transform: translateY(-1px);
+    }
 }
 
-.btn-primary:active {
-    transform: translateY(0);
+/* Prevent hover-jump on tap */
+.btn-primary:active,
+.btn-danger:active {
+    transform: scale(0.97);
+    box-shadow: 0 2px 8px rgba(5, 150, 105, 0.2);
 }
 
 .btn-danger {
@@ -518,8 +555,10 @@ button:disabled {
     box-shadow: 0 4px 14px rgba(239, 68, 68, 0.25);
 }
 
-.btn-danger:hover {
-    box-shadow: 0 6px 22px rgba(239, 68, 68, 0.35);
+@media (hover: hover) {
+    .btn-danger:hover {
+        box-shadow: 0 6px 22px rgba(239, 68, 68, 0.35);
+    }
 }
 
 /* ============================================
@@ -536,8 +575,10 @@ input:focus, select:focus, textarea:focus {
     border-color: #059669;
 }
 
-input:hover, select:hover, textarea:hover {
-    border-color: #a8a29e;
+@media (hover: hover) {
+    input:hover, select:hover, textarea:hover {
+        border-color: #a8a29e;
+    }
 }
 
 /* Form validation styles */
@@ -660,29 +701,31 @@ input.success, select.success, textarea.success {
 }
 
 /* ============================================
-   TOOLTIP
+   TOOLTIP — hover-only (no mobile tooltips)
    ============================================ */
-[data-tooltip] {
-    position: relative;
-}
+@media (hover: hover) {
+    [data-tooltip] {
+        position: relative;
+    }
 
-[data-tooltip]:hover::after {
-    content: attr(data-tooltip);
-    position: absolute;
-    bottom: calc(100% + 8px);
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 0.4rem 0.75rem;
-    background: #1c1917;
-    color: white;
-    border-radius: 0.5rem;
-    font-size: 0.7rem;
-    font-weight: 500;
-    white-space: nowrap;
-    z-index: 100;
-    pointer-events: none;
-    animation: fadeIn 0.2s ease-out;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    [data-tooltip]:hover::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        bottom: calc(100% + 8px);
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 0.4rem 0.75rem;
+        background: #1c1917;
+        color: white;
+        border-radius: 0.5rem;
+        font-size: 0.7rem;
+        font-weight: 500;
+        white-space: nowrap;
+        z-index: 100;
+        pointer-events: none;
+        animation: fadeIn 0.2s ease-out;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
 }
 
 /* ============================================
@@ -701,11 +744,11 @@ input.success, select.success, textarea.success {
     .grid-cols-1.md\:grid-cols-2 {
         grid-template-columns: repeat(1, 1fr);
     }
-    
+
     .grid-cols-1.md\:grid-cols-3 {
         grid-template-columns: repeat(1, 1fr);
     }
-    
+
     .grid-cols-1.md\:grid-cols-4 {
         grid-template-columns: repeat(2, 1fr);
     }
@@ -715,21 +758,21 @@ input.success, select.success, textarea.success {
 @media (max-width: 640px) {
     #mainContent {
         padding: 0.75rem;
-        padding-top: calc(4rem + 0.75rem); /* keep navbar space */
+        padding-top: calc(4rem + 0.75rem);
     }
-    
+
     h1 {
         font-size: 1.35rem !important;
     }
-    
+
     h2 {
         font-size: 1.15rem !important;
     }
-    
+
     .stat-card {
         padding: 0.9rem !important;
     }
-    
+
     .stat-card .text-2xl {
         font-size: 1.1rem !important;
     }
@@ -739,7 +782,6 @@ input.success, select.success, textarea.success {
         font-size: 0.85rem;
     }
 
-    /* Increase tap targets for sidebar links on mobile */
     #sidebarNav a {
         padding-top: 0.75rem;
         padding-bottom: 0.75rem;
@@ -795,40 +837,40 @@ input.success, select.success, textarea.success {
    PRINT STYLES
    ============================================ */
 @media print {
-    #sidebar, 
+    #sidebar,
     #sidebarOverlay,
-    #mobileNavbar, 
-    #toastContainer, 
+    #mobileNavbar,
+    #toastContainer,
     #modalContainer,
     #appBackground {
         display: none !important;
     }
-    
+
     #appContainer {
         display: block !important;
     }
-    
+
     #mainContent {
         margin-left: 0 !important;
         padding: 0 !important;
     }
-    
+
     .stat-card {
         break-inside: avoid;
         box-shadow: none !important;
         border: 1px solid #ddd !important;
         page-break-inside: avoid;
     }
-    
+
     .responsive-table tbody tr {
         break-inside: avoid;
         page-break-inside: avoid;
     }
-    
+
     button {
         display: none !important;
     }
-    
+
     body {
         font-size: 12px;
         color: #000;
@@ -882,18 +924,17 @@ input.success, select.success, textarea.success {
 .z-login { z-index: 50; }
 
 /* ============================================
-   TOUCH‑FRIENDLY BUTTON FIX (all devices)
+   TOUCH‑FRIENDLY (all devices)
    ============================================ */
-button, 
+button,
 [role="button"],
 .btn,
 [onclick] {
-    touch-action: manipulation;   /* eliminates 300ms delay */
+    touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
     cursor: pointer;
 }
 
-/* Make sure absolutely nothing overlays buttons on mobile */
 #mainContent,
 #appContainer {
     pointer-events: auto;
