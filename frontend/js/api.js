@@ -1,32 +1,55 @@
 // ============================================
-// TALAEN FARM - API Service (Complete + Phone‑Fixed)
+// TALAEN FARM - API Service
 // ============================================
 
 class ApiService {
     constructor() {
         this.baseUrl = CONFIG.API_URL;
-        // No token stored locally – always read from auth
+        this.timeoutMs = 30000; // 30s — accommodates Render cold starts
     }
 
+    // ---------- Token helpers ----------
     setToken(token) {
         if (token) localStorage.setItem(CONFIG.TOKEN_KEY, token);
         else localStorage.removeItem(CONFIG.TOKEN_KEY);
     }
 
-    getHeaders() {
-        const headers = { 'Content-Type': 'application/json' };
-        // Always take the freshest token from auth
-        const token = (typeof auth !== 'undefined' && auth.getToken) ? auth.getToken() : localStorage.getItem(CONFIG.TOKEN_KEY);
+    getToken() {
+        // Always prefer the freshest token from auth
+        if (typeof auth !== 'undefined' && auth && typeof auth.getToken === 'function') {
+            return auth.getToken() || localStorage.getItem(CONFIG.TOKEN_KEY);
+        }
+        return localStorage.getItem(CONFIG.TOKEN_KEY);
+    }
+
+    getHeaders(extra = {}) {
+        const headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            ...extra
+        };
+        const token = this.getToken();
         if (token) headers['Authorization'] = `Bearer ${token}`;
         return headers;
     }
 
+    // ---------- Session expiry ----------
     handleSessionExpired() {
-        localStorage.removeItem(CONFIG.TOKEN_KEY);
-        localStorage.removeItem(CONFIG.USER_KEY);
-        localStorage.removeItem('available_modules');
-        localStorage.removeItem('current_module');
-        if (typeof showToast === 'function') showToast('Session expired. Please login again.', 'warning', 5000);
+        // Clear storage & in-memory auth state (Bug fix: previously only localStorage was cleared,
+        // so auth.isAuthenticated() still returned true afterwards)
+        if (typeof auth !== 'undefined' && auth && typeof auth.clearSession === 'function') {
+            auth.clearSession(true); // silent — we show our own toast below
+        } else {
+            localStorage.removeItem(CONFIG.TOKEN_KEY);
+            localStorage.removeItem(CONFIG.USER_KEY);
+            localStorage.removeItem('available_modules');
+            localStorage.removeItem('current_module');
+        }
+
+        if (typeof showToast === 'function') {
+            showToast('Session expired. Please login again.', 'warning', 5000);
+        }
+
         setTimeout(() => {
             const app = document.getElementById('appContainer');
             const login = document.getElementById('loginModal');
@@ -38,167 +61,234 @@ class ApiService {
                 if (f) f.reset();
                 if (e) e.style.display = 'none';
             }
-        }, 1000);
+        }, 800);
     }
 
-    async request(endpoint, method = 'GET', body = null) {
-        try {
-            const options = { method, headers: this.getHeaders() };
-            if (body && method !== 'GET') options.body = JSON.stringify(body);
-            const response = await fetch(`${this.baseUrl}${endpoint}`, options);
+    // ---------- Query string helper ----------
+    _qs(params) {
+        if (!params) return '';
+        const q = new URLSearchParams(params).toString();
+        return q ? `?${q}` : '';
+    }
 
+    // ---------- Core request ----------
+    async request(endpoint, method = 'GET', body = null) {
+        const url = `${this.baseUrl}${endpoint}`;
+        const isApp = !!(window.TALAEN && window.TALAEN.isAndroidApp);
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), this.timeoutMs);
+
+        try {
+            const options = {
+                method,
+                headers: this.getHeaders(),
+                signal: controller.signal,
+                // Avoid stale GET responses in the Android WebView
+                cache: method === 'GET' && isApp ? 'no-store' : 'default'
+            };
+            if (body && method !== 'GET') options.body = JSON.stringify(body);
+
+            let response;
+            try {
+                response = await fetch(url, options);
+            } catch (netErr) {
+                if (netErr.name === 'AbortError') {
+                    throw new Error('Request timed out. Please try again.');
+                }
+                throw new Error('Network error. Check your connection.');
+            } finally {
+                clearTimeout(timeoutId);
+            }
+
+            // Read body once (safe if non-JSON, e.g. Render 502 HTML)
+            const rawText = await response.text();
+            let data = {};
+            if (rawText) {
+                try { data = JSON.parse(rawText); }
+                catch { data = { message: rawText.slice(0, 200) }; }
+            }
+
+            // Auth failure detection
             if (response.status === 401 || response.status === 403) {
-                const clone = response.clone();
-                const errData = await clone.json().catch(() => ({}));
-                if (errData.message === 'Invalid or expired token.' ||
-                    errData.message === 'Access denied. No token provided.' ||
-                    errData.message === 'Authentication required.') {
+                const msg = (data && data.message) || '';
+                const isAuthFailure =
+                    !msg ||
+                    /token|auth|access|session|expired|denied/i.test(msg);
+
+                if (isAuthFailure) {
                     this.handleSessionExpired();
                     throw new Error('Session expired');
                 }
             }
 
-            const data = await response.json();
             if (!response.ok) {
-                let msg = data.message || 'Request failed';
-                if (msg === 'Error loading form data' || msg === 'Access denied') msg = 'Session expired. Please login again.';
+                let msg = (data && data.message) || `Request failed (${response.status})`;
+                if (msg === 'Error loading form data' || msg === 'Access denied') {
+                    msg = 'Session expired. Please login again.';
+                }
                 throw new Error(msg);
             }
+
             return data;
         } catch (error) {
-            if (error.message !== 'Session expired') console.error(`API Error [${method} ${endpoint}]:`, error);
+            if (error.message !== 'Session expired') {
+                console.error(`API Error [${method} ${endpoint}]:`, error);
+            }
             throw error;
         }
     }
 
-    // Shorthand methods
-    async get(endpoint) { return this.request(endpoint, 'GET'); }
-    async post(endpoint, body) { return this.request(endpoint, 'POST', body); }
-    async put(endpoint, body) { return this.request(endpoint, 'PUT', body); }
-    async delete(endpoint) { return this.request(endpoint, 'DELETE'); }
+    // ---------- Shorthand methods ----------
+    get(endpoint)          { return this.request(endpoint, 'GET'); }
+    post(endpoint, body)   { return this.request(endpoint, 'POST', body); }
+    put(endpoint, body)    { return this.request(endpoint, 'PUT', body); }
+    delete(endpoint)       { return this.request(endpoint, 'DELETE'); }
 
     // ============ AUTH ============
-    async login(username, password) { return this.post('/auth/login', { username, password }); }
-    async register(userData) { return this.post('/auth/register', userData); }
-    async getProfile() { return this.get('/auth/me'); }
-    async changePassword(cp, np) { return this.post('/auth/change-password', { current_password: cp, new_password: np }); }
-    async getUsers() { return this.get('/auth/users'); }
+    async login(username, password) {
+        const res = await this.post('/auth/login', { username, password });
+        if (res && res.token) this.setToken(res.token);
+        return res;
+    }
+    register(userData)              { return this.post('/auth/register', userData); }
+    getProfile()                    { return this.get('/auth/me'); }
+    changePassword(cp, np)          { return this.post('/auth/change-password', { current_password: cp, new_password: np }); }
+    getUsers()                      { return this.get('/auth/users'); }
 
     // ============ USER MANAGEMENT ============
-    async updateUser(userId, userData) { return this.put(`/auth/users/${userId}`, userData); }
-    async resetUserPassword(userId, newPassword) { return this.post(`/auth/reset-password/${userId}`, { password: newPassword }); }
+    updateUser(userId, userData)         { return this.put(`/auth/users/${userId}`, userData); }
+    resetUserPassword(userId, newPassword){ return this.post(`/auth/reset-password/${userId}`, { password: newPassword }); }
 
     // ============ TEA MODULE ============
-    async getTeaWorkers(params = {}) { const q = new URLSearchParams(params).toString(); return this.get(`/tea/workers${q ? '?' + q : ''}`); }
-    async getTeaWorkerStats(workerId) { return this.get(`/tea/workers/${workerId}/stats`); }
-    async createTeaWorker(workerData) { return this.post('/tea/workers', workerData); }
-    async updateTeaWorker(id, workerData) { return this.put(`/tea/workers/${id}`, workerData); }
+    getTeaWorkers(params = {})   { return this.get(`/tea/workers${this._qs(params)}`); }
+    getTeaWorkerStats(workerId)  {
+        if (!workerId) throw new Error('workerId is required');
+        return this.get(`/tea/workers/${workerId}/stats`);
+    }
+    createTeaWorker(workerData)         { return this.post('/tea/workers', workerData); }
+    updateTeaWorker(id, workerData)     { return this.put(`/tea/workers/${id}`, workerData); }
 
-    async getCompanies() { return this.get('/tea/companies'); }
-    async getCompanyStats(companyId) { return this.get(`/tea/companies/${companyId}/stats`); }
-    async createCompany(companyData) { return this.post('/tea/companies', companyData); }
-    async updateCompany(id, companyData) { return this.put(`/tea/companies/${id}`, companyData); }
+    getCompanies()                      { return this.get('/tea/companies'); }
+    getCompanyStats(companyId)          { return this.get(`/tea/companies/${companyId}/stats`); }
+    createCompany(companyData)          { return this.post('/tea/companies', companyData); }
+    updateCompany(id, companyData)      { return this.put(`/tea/companies/${id}`, companyData); }
 
-    async getBlocks() { return this.get('/tea/blocks'); }
-    async createBlock(blockData) { return this.post('/tea/blocks', blockData); }
+    getBlocks()                         { return this.get('/tea/blocks'); }
+    createBlock(blockData)              { return this.post('/tea/blocks', blockData); }
 
-    async getWageRate() { return this.get('/tea/wage-rate'); }
-    async getWageRateHistory() { return this.get('/tea/wage-rate/history'); }
-    async setWageRate(wageData) { return this.post('/tea/wage-rate', wageData); }
-    async getWageRateImpact(proposedRate) { return this.get(`/tea/wage-rate/impact?proposed_rate=${proposedRate}`); }
+    getWageRate()                       { return this.get('/tea/wage-rate'); }
+    getWageRateHistory()                { return this.get('/tea/wage-rate/history'); }
+    setWageRate(wageData)               { return this.post('/tea/wage-rate', wageData); }
+    getWageRateImpact(proposedRate)     { return this.get(`/tea/wage-rate/impact?proposed_rate=${proposedRate}`); }
 
     // Self Plucking
-    async recordSelfPlucking(pluckingData) { return this.post('/tea/plucking/self', pluckingData); }
-    async getSelfPlucking(workerId = null) { const ep = workerId ? `/tea/plucking/self/${workerId}` : '/tea/plucking/self'; return this.get(ep); }
-    async updateSelfPlucking(id, pluckingData) { return this.put(`/tea/plucking/self/${id}`, pluckingData); }
-    async deleteSelfPlucking(id) { return this.delete(`/tea/plucking/self/${id}`); }
-    async checkWorkerPlucking(workerId, date = null) { const ep = `/tea/plucking/check/${workerId}${date ? '?date=' + date : ''}`; return this.get(ep); }
+    recordSelfPlucking(pluckingData)    { return this.post('/tea/plucking/self', pluckingData); }
+    getSelfPlucking(workerId = null)    { return this.get(workerId ? `/tea/plucking/self/${workerId}` : '/tea/plucking/self'); }
+    updateSelfPlucking(id, pluckingData){ return this.put(`/tea/plucking/self/${id}`, pluckingData); }
+    deleteSelfPlucking(id)              { return this.delete(`/tea/plucking/self/${id}`); }
+    checkWorkerPlucking(workerId, date = null) {
+        return this.get(`/tea/plucking/check/${workerId}${date ? '?date=' + date : ''}`);
+    }
 
     // Verified Plucking
-    async recordVerifiedPlucking(pluckingData) { return this.post('/tea/plucking/verified', pluckingData); }
-    async getVerifiedPlucking(workerId = null) { const ep = workerId ? `/tea/plucking/verified/${workerId}` : '/tea/plucking/verified'; return this.get(ep); }
-    async updateVerifiedPlucking(id, pluckingData) { return this.put(`/tea/plucking/verified/${id}`, pluckingData); }
-    async deleteVerifiedPlucking(id) { return this.delete(`/tea/plucking/verified/${id}`); }
-    async checkVerifiedPlucking(workerId, date = null) { const ep = `/tea/plucking/verified/check/${workerId}${date ? '?date=' + date : ''}`; return this.get(ep); }
+    recordVerifiedPlucking(pluckingData)      { return this.post('/tea/plucking/verified', pluckingData); }
+    getVerifiedPlucking(workerId = null)      { return this.get(workerId ? `/tea/plucking/verified/${workerId}` : '/tea/plucking/verified'); }
+    updateVerifiedPlucking(id, pluckingData)  { return this.put(`/tea/plucking/verified/${id}`, pluckingData); }
+    deleteVerifiedPlucking(id)                { return this.delete(`/tea/plucking/verified/${id}`); }
+    checkVerifiedPlucking(workerId, date = null) {
+        return this.get(`/tea/plucking/verified/check/${workerId}${date ? '?date=' + date : ''}`);
+    }
 
     // Approval & Disputes
-    async approveVerifiedPlucking(id, approvedKg) { return this.put(`/tea/plucking/verified/${id}/approve`, { approved_kg: approvedKg }); }
-    async getDisputedRecords() { return this.get('/tea/comparison/disputes'); }
-    async getResolvedDisputes() { return this.get('/tea/comparison/resolved'); }
-    async resolveDispute(id, approvedKg, notes) { return this.put(`/tea/comparison/resolve/${id}`, { approved_kg: approvedKg, resolution_notes: notes }); }
+    approveVerifiedPlucking(id, approvedKg)   { return this.put(`/tea/plucking/verified/${id}/approve`, { approved_kg: approvedKg }); }
+    getDisputedRecords()                      { return this.get('/tea/comparison/disputes'); }
+    getResolvedDisputes()                     { return this.get('/tea/comparison/resolved'); }
+    resolveDispute(id, approvedKg, notes)     { return this.put(`/tea/comparison/resolve/${id}`, { approved_kg: approvedKg, resolution_notes: notes }); }
 
     // Comparison
-    async getComparison(workerId, date = null) { let ep = `/tea/comparison/${workerId}`; if (date) ep += `?date=${date}`; return this.get(ep); }
+    getComparison(workerId, date = null) {
+        return this.get(`/tea/comparison/${workerId}${date ? '?date=' + date : ''}`);
+    }
 
     // Debts
-    async getDebts(workerId = null) { const ep = workerId ? `/tea/debts/${workerId}` : '/tea/debts'; return this.get(ep); }
-    async addDebt(debtData) { return this.post('/tea/debts', debtData); }
-    async updateDebt(debtId, debtData) { return this.put(`/tea/debts/${debtId}`, debtData); }
-    async reverseDebt(debtId, reason) { return this.post(`/tea/debts/${debtId}/reverse`, { reason }); }
+    getDebts(workerId = null)          { return this.get(workerId ? `/tea/debts/${workerId}` : '/tea/debts'); }
+    addDebt(debtData)                  { return this.post('/tea/debts', debtData); }
+    updateDebt(debtId, debtData)       { return this.put(`/tea/debts/${debtId}`, debtData); }
+    reverseDebt(debtId, reason)        { return this.post(`/tea/debts/${debtId}/reverse`, { reason }); }
 
-    // Payments – **MISSING METHOD RESTORED**
-    async payWorker(workerId) { return this.post('/tea/pay-worker', { worker_id: workerId }); }
-    async payStore() { return this.post('/tea/pay-store'); }
-    async getPaymentHistory(workerId = null) { const ep = workerId ? `/tea/pay-worker/history/${workerId}` : '/tea/pay-worker/history'; return this.get(ep); }
-    async getStorePaymentHistory() { return this.get('/tea/pay-store/history'); }
+    // Payments
+    payWorker(workerId)                { return this.post('/tea/pay-worker', { worker_id: workerId }); }
+    payStore()                         { return this.post('/tea/pay-store'); }
+    getPaymentHistory(workerId = null) { return this.get(workerId ? `/tea/pay-worker/history/${workerId}` : '/tea/pay-worker/history'); }
+    getStorePaymentHistory()           { return this.get('/tea/pay-store/history'); }
 
     // Reports
-    async getTeaDashboard() { return this.get('/tea/dashboard'); }
-    async getProfitReport(params = {}) { const q = new URLSearchParams(params).toString(); return this.get(`/tea/reports/profit${q ? '?' + q : ''}`); }
-    async getProductionReport(params = {}) { const q = new URLSearchParams(params).toString(); return this.get(`/tea/reports/production${q ? '?' + q : ''}`); }
-    async getWorkerPerformanceReport(params = {}) { const q = new URLSearchParams(params).toString(); return this.get(`/tea/reports/workers${q ? '?' + q : ''}`); }
-    async getDebtReport() { return this.get('/tea/reports/debts'); }
+    getTeaDashboard()                             { return this.get('/tea/dashboard'); }
+    getProfitReport(params = {})                  { return this.get(`/tea/reports/profit${this._qs(params)}`); }
+    getProductionReport(params = {})              { return this.get(`/tea/reports/production${this._qs(params)}`); }
+    getWorkerPerformanceReport(params = {})       { return this.get(`/tea/reports/workers${this._qs(params)}`); }
+    getDebtReport()                               { return this.get('/tea/reports/debts'); }
 
     // ============ FARM PRODUCTION MANAGEMENT ============
-    async getFarmInputs() { return this.get('/tea/production/inputs'); }
-    async addFarmInput(data) { return this.post('/tea/production/inputs', data); }
-    async updateFarmInput(id, data) { return this.put(`/tea/production/inputs/${id}`, data); }
-    async deleteFarmInput(id) { return this.delete(`/tea/production/inputs/${id}`); }
+    getFarmInputs()                     { return this.get('/tea/production/inputs'); }
+    addFarmInput(data)                  { return this.post('/tea/production/inputs', data); }
+    updateFarmInput(id, data)           { return this.put(`/tea/production/inputs/${id}`, data); }
+    deleteFarmInput(id)                 { return this.delete(`/tea/production/inputs/${id}`); }
 
-    async getProductionTargets() { return this.get('/tea/production/targets'); }
-    async addProductionTarget(data) { return this.post('/tea/production/targets', data); }
-    async updateProductionTarget(id, data) { return this.put(`/tea/production/targets/${id}`, data); }
-    async deleteProductionTarget(id) { return this.delete(`/tea/production/targets/${id}`); }
+    getProductionTargets()              { return this.get('/tea/production/targets'); }
+    addProductionTarget(data)           { return this.post('/tea/production/targets', data); }
+    updateProductionTarget(id, data)    { return this.put(`/tea/production/targets/${id}`, data); }
+    deleteProductionTarget(id)          { return this.delete(`/tea/production/targets/${id}`); }
 
-    async getFertilizerSchedule() { return this.get('/tea/production/fertilizer'); }
-    async addFertilizer(data) { return this.post('/tea/production/fertilizer', data); }
-    async updateFertilizer(id, data) { return this.put(`/tea/production/fertilizer/${id}`, data); }
-    async deleteFertilizer(id) { return this.delete(`/tea/production/fertilizer/${id}`); }
+    getFertilizerSchedule()             { return this.get('/tea/production/fertilizer'); }
+    addFertilizer(data)                 { return this.post('/tea/production/fertilizer', data); }
+    updateFertilizer(id, data)          { return this.put(`/tea/production/fertilizer/${id}`, data); }
+    deleteFertilizer(id)                { return this.delete(`/tea/production/fertilizer/${id}`); }
 
-    async getPruningSchedule() { return this.get('/tea/production/pruning'); }
-    async addPruning(data) { return this.post('/tea/production/pruning', data); }
-    async updatePruning(id, data) { return this.put(`/tea/production/pruning/${id}`, data); }
-    async deletePruning(id) { return this.delete(`/tea/production/pruning/${id}`); }
+    getPruningSchedule()                { return this.get('/tea/production/pruning'); }
+    addPruning(data)                    { return this.post('/tea/production/pruning', data); }
+    updatePruning(id, data)             { return this.put(`/tea/production/pruning/${id}`, data); }
+    deletePruning(id)                   { return this.delete(`/tea/production/pruning/${id}`); }
 
-    async getInputCosts() { return this.get('/tea/production/costs'); }
-    async getSeasonalAnalysis() { return this.get('/tea/production/seasonal'); }
+    getInputCosts()                     { return this.get('/tea/production/costs'); }
+    getSeasonalAnalysis()               { return this.get('/tea/production/seasonal'); }
 
     // ============ DAIRY MODULE ============
-    async getCows() { return this.get('/dairy/cows'); }
-    async createCow(cowData) { return this.post('/dairy/cows', cowData); }
-    async updateCow(id, cowData) { return this.put(`/dairy/cows/${id}`, cowData); }
-    async deleteCow(id) { return this.delete(`/dairy/cows/${id}`); }
-    async getDairyWorkers() { return this.get('/dairy/workers'); }
-    async createDairyWorker(workerData) { return this.post('/dairy/workers', workerData); }
-    async updateDairyWorker(id, workerData) { return this.put(`/dairy/workers/${id}`, workerData); }
-    async getMilkBuyers() { return this.get('/dairy/buyers'); }
-    async createMilkBuyer(buyerData) { return this.post('/dairy/buyers', buyerData); }
-    async updateMilkBuyer(id, buyerData) { return this.put(`/dairy/buyers/${id}`, buyerData); }
-    async recordMilkProduction(productionData) { return this.post('/dairy/production', productionData); }
-    async getMilkProduction(params = {}) { const q = new URLSearchParams(params).toString(); return this.get(`/dairy/production?${q}`); }
-    async recordMilkDisposal(disposalData) { return this.post('/dairy/disposal', disposalData); }
-    async getMilkDisposal(params = {}) { const q = new URLSearchParams(params).toString(); return this.get(`/dairy/disposal?${q}`); }
-    async recordFeed(feedData) { return this.post('/dairy/feed', feedData); }
-    async getFeed(params = {}) { const q = new URLSearchParams(params).toString(); return this.get(`/dairy/feed?${q}`); }
-    async payDairyWorker(paymentData) { return this.post('/dairy/pay-worker', paymentData); }
-    async getDairyPayments(workerId = null) { const ep = workerId ? `/dairy/payments/${workerId}` : '/dairy/payments'; return this.get(ep); }
-    async createDelivery(deliveryData) { return this.post('/dairy/deliveries', deliveryData); }
-    async getDeliveries() { return this.get('/dairy/deliveries'); }
-    async confirmDelivery(id, litresConfirmed) { return this.put(`/dairy/deliveries/${id}/confirm`, { litres_confirmed: litresConfirmed }); }
-    async recordBuyerPayment(paymentData) { return this.post('/dairy/buyer-payments', paymentData); }
-    async getBuyerPayments() { return this.get('/dairy/buyer-payments'); }
-    async getDairyDashboard() { return this.get('/dairy/dashboard'); }
-    async getDairyReport(params = {}) { const q = new URLSearchParams(params).toString(); return this.get(`/dairy/reports/summary?${q}`); }
+    getCows()                           { return this.get('/dairy/cows'); }
+    createCow(cowData)                  { return this.post('/dairy/cows', cowData); }
+    updateCow(id, cowData)              { return this.put(`/dairy/cows/${id}`, cowData); }
+    deleteCow(id)                       { return this.delete(`/dairy/cows/${id}`); }
+
+    getDairyWorkers()                   { return this.get('/dairy/workers'); }
+    createDairyWorker(workerData)       { return this.post('/dairy/workers', workerData); }
+    updateDairyWorker(id, workerData)   { return this.put(`/dairy/workers/${id}`, workerData); }
+
+    getMilkBuyers()                     { return this.get('/dairy/buyers'); }
+    createMilkBuyer(buyerData)          { return this.post('/dairy/buyers', buyerData); }
+    updateMilkBuyer(id, buyerData)      { return this.put(`/dairy/buyers/${id}`, buyerData); }
+
+    recordMilkProduction(productionData){ return this.post('/dairy/production', productionData); }
+    getMilkProduction(params = {})      { return this.get(`/dairy/production${this._qs(params)}`); }
+
+    recordMilkDisposal(disposalData)    { return this.post('/dairy/disposal', disposalData); }
+    getMilkDisposal(params = {})        { return this.get(`/dairy/disposal${this._qs(params)}`); }
+
+    recordFeed(feedData)                { return this.post('/dairy/feed', feedData); }
+    getFeed(params = {})                { return this.get(`/dairy/feed${this._qs(params)}`); }
+
+    payDairyWorker(paymentData)         { return this.post('/dairy/pay-worker', paymentData); }
+    getDairyPayments(workerId = null)   { return this.get(workerId ? `/dairy/payments/${workerId}` : '/dairy/payments'); }
+
+    createDelivery(deliveryData)        { return this.post('/dairy/deliveries', deliveryData); }
+    getDeliveries()                     { return this.get('/dairy/deliveries'); }
+    confirmDelivery(id, litresConfirmed){ return this.put(`/dairy/deliveries/${id}/confirm`, { litres_confirmed: litresConfirmed }); }
+
+    recordBuyerPayment(paymentData)     { return this.post('/dairy/buyer-payments', paymentData); }
+    getBuyerPayments()                  { return this.get('/dairy/buyer-payments'); }
+
+    getDairyDashboard()                 { return this.get('/dairy/dashboard'); }
+    getDairyReport(params = {})         { return this.get(`/dairy/reports/summary${this._qs(params)}`); }
 }
 
 // Create the global instance
