@@ -1,0 +1,496 @@
+/* ============================================================
+   TALAEN FARM — Android WebView App Shell
+   Activated by: html.is-android-app (set by index.html UA detection)
+   Loaded AFTER css/style.css so app-only rules win where needed.
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   1. CSS VARIABLES & ROOT SETUP
+   ------------------------------------------------------------ */
+html.is-android-app {
+    /* Safe-area insets (require <meta viewport-fit=cover> in index.html) */
+    --safe-top:    env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left:   env(safe-area-inset-left, 0px);
+    --safe-right:  env(safe-area-inset-right, 0px);
+
+    /* Native-feel sizing tokens */
+    --tap-min: 44px;
+    --radius-card: 18px;
+    --radius-modal: 22px;
+    --radius-input: 12px;
+
+    /* App color tokens (match brand) */
+    --app-bg: #fafaf9;
+    --app-surface: #ffffff;
+    --app-border: rgba(0, 0, 0, 0.06);
+    --app-shadow-card: 0 4px 14px rgba(15, 23, 42, 0.06);
+    --app-shadow-modal: 0 20px 50px rgba(0, 0, 0, 0.35);
+}
+
+html.is-android-app,
+html.is-android-app body {
+    height: 100%;
+    overscroll-behavior-y: none;              /* kill rubber-band */
+    -webkit-tap-highlight-color: transparent; /* no grey tap flash */
+    -webkit-touch-callout: none;
+    text-size-adjust: 100%;                   /* no auto text scaling */
+    -webkit-text-size-adjust: 100%;
+}
+
+html.is-android-app body {
+    padding-top: var(--safe-top);
+    padding-bottom: var(--safe-bottom);
+    padding-left: var(--safe-left);
+    padding-right: var(--safe-right);
+    background-color: var(--app-bg);
+}
+
+/* ------------------------------------------------------------
+   2. HIDE DESKTOP-ONLY CHROME
+   ------------------------------------------------------------ */
+html.is-android-app #mobileNavbar {
+    display: none !important;     /* app has native top bar */
+}
+
+html.is-android-app #sidebar {
+    display: none !important;     /* no desktop sidebar in app */
+}
+
+html.is-android-app #sidebarOverlay {
+    display: none !important;
+}
+
+/* Kill any remaining desktop-layout artifacts */
+html.is-android-app .desktop-header,
+html.is-android-app .desktop-footer,
+html.is-android-app .desktop-only {
+    display: none !important;
+}
+
+/* Keep the background but make it subtler (also matches background.js) */
+html.is-android-app #appBackground {
+    opacity: 0.9;
+}
+
+/* ------------------------------------------------------------
+   3. LAYOUT & MAIN CONTENT
+   ------------------------------------------------------------ */
+html.is-android-app main,
+html.is-android-app #mainContent {
+    padding: 14px 14px calc(20px + var(--safe-bottom)) 14px !important;
+    min-height: calc(100vh - var(--safe-top) - var(--safe-bottom));
+}
+
+html.is-android-app .lg\:ml-72 {
+    margin-left: 0 !important;
+}
+
+/* ------------------------------------------------------------
+   4. TOUCH TARGETS — buttons, links, interactive elements
+   ------------------------------------------------------------ */
+html.is-android-app button,
+html.is-android-app .btn,
+html.is-android-app [role="button"],
+html.is-android-app [data-route],
+html.is-android-app a[onclick] {
+    min-height: var(--tap-min);
+    min-width: var(--tap-min);
+    touch-action: manipulation;
+    transition: transform 120ms ease, opacity 120ms ease;
+}
+
+html.is-android-app button:active,
+html.is-android-app .btn:active,
+html.is-android-app [role="button"]:active {
+    transform: scale(0.97);
+    opacity: 0.9;
+}
+
+/* Icon-only buttons (hamburger, close, etc.) */
+html.is-android-app button.w-10,
+html.is-android-app button.h-10,
+html.is-android-app button.w-9,
+html.is-android-app button.h-9 {
+    min-width: 44px;
+    min-height: 44px;
+}
+
+/* ------------------------------------------------------------
+   5. CARDS — native-feel rounding, shadow, spacing
+   ------------------------------------------------------------ */
+html.is-android-app .card,
+html.is-android-app .module-card,
+html.is-android-app .stat-card,
+html.is-android-app .hover-card {
+    border-radius: var(--radius-card);
+    border: 1px solid var(--app-border);
+    box-shadow: var(--app-shadow-card);
+    background: var(--app-surface);
+}
+
+html.is-android-app .module-card {
+    padding: 0;                                   /* image flush to edge */
+    overflow: hidden;
+}
+
+html.is-android-app .stat-card {
+    padding: 16px !important;
+}
+
+/* Bigger tap rows for lists, tables, nav */
+html.is-android-app .list-row,
+html.is-android-app .nav-item,
+html.is-android-app #sidebarNav a {
+    min-height: 52px;
+    padding: 14px 16px;
+}
+
+/* ------------------------------------------------------------
+   6. FORMS — prevent auto-zoom, snappy typing
+   ------------------------------------------------------------ */
+html.is-android-app input,
+html.is-android-app select,
+html.is-android-app textarea {
+    font-size: 16px !important;                   /* stops Android auto-zoom */
+    line-height: 1.4;
+    min-height: 48px;
+    border-radius: var(--radius-input);
+    padding: 12px 14px;
+    background-color: #fafaf9;
+    border-width: 2px;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+html.is-android-app input:focus,
+html.is-android-app select:focus,
+html.is-android-app textarea:focus {
+    background-color: #ffffff;
+    border-color: #059669;
+    box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.08);
+    outline: none;
+}
+
+html.is-android-app textarea {
+    min-height: 90px;
+    resize: vertical;
+}
+
+html.is-android-app label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 6px;
+    display: inline-block;
+}
+
+/* Kill number spinners (iOS-style, harmless on Android) */
+html.is-android-app input[type="number"]::-webkit-outer-spin-button,
+html.is-android-app input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+html.is-android-app input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+/* Password reveal button spacing */
+html.is-android-app input[type="password"],
+html.is-android-app input.password {
+    padding-right: 46px;
+}
+
+/* ------------------------------------------------------------
+   7. LOGIN MODAL — app-specific card
+   ------------------------------------------------------------ */
+html.is-android-app #loginModal {
+    padding: var(--safe-top) 14px var(--safe-bottom) 14px;
+    align-items: center;
+}
+
+html.is-android-app #loginModal .max-w-lg {
+    max-width: 420px;
+}
+
+html.is-android-app #loginModal .rounded-3xl {
+    border-radius: var(--radius-modal);
+    box-shadow: var(--app-shadow-modal);
+}
+
+/* Shrink hero image on smaller devices */
+@media (max-width: 420px) {
+    html.is-android-app #loginModal .relative.h-64 {
+        height: 180px;
+    }
+    html.is-android-app #loginModal .w-24.h-24 {
+        width: 64px;
+        height: 64px;
+    }
+}
+
+/* ------------------------------------------------------------
+   8. MODALS — bottom sheet style on app
+   ------------------------------------------------------------ */
+html.is-android-app #modalContainer {
+    align-items: flex-end;               /* anchor to bottom */
+    padding: 0;
+    background: rgba(0, 0, 0, 0.55);
+    padding-bottom: var(--safe-bottom);
+}
+
+html.is-android-app #modalContent {
+    width: 100%;
+    max-width: 100%;
+    max-height: 92vh;
+    border-radius: var(--radius-modal) var(--radius-modal) 0 0;
+    padding-bottom: calc(14px + var(--safe-bottom));
+    /* Overrides the web modalSlideIn from style.css — bottom sheet anim */
+    animation: appSheetUp 260ms cubic-bezier(0.2, 0.9, 0.3, 1) !important;
+    overscroll-behavior: contain;
+}
+
+html.is-android-app #modalContent.modal-closing {
+    animation: appSheetDown 200ms ease-in forwards !important;
+}
+
+/* Grab handle — appears at the top of the sheet */
+html.is-android-app #modalContent::before {
+    content: "";
+    display: block;
+    width: 40px;
+    height: 4px;
+    border-radius: 999px;
+    background: #d6d3d1;
+    margin: 10px auto 6px;
+}
+
+/* Modal form inputs & buttons */
+html.is-android-app #modalContent input,
+html.is-android-app #modalContent select,
+html.is-android-app #modalContent textarea {
+    font-size: 16px !important;
+    min-height: 48px;
+}
+
+html.is-android-app #modalContent button {
+    min-height: 44px;
+}
+
+/* Sticky footer of forms inside modal */
+html.is-android-app #modalContent .sticky.bottom-0 {
+    padding-bottom: calc(8px + var(--safe-bottom));
+    background: #ffffff;
+}
+
+@keyframes appSheetUp {
+    from { transform: translateY(100%); opacity: 0.7; }
+    to   { transform: translateY(0);    opacity: 1;   }
+}
+
+@keyframes appSheetDown {
+    from { transform: translateY(0);    opacity: 1;   }
+    to   { transform: translateY(100%); opacity: 0.7; }
+}
+
+/* ------------------------------------------------------------
+   9. TOASTS — safe-area aware
+   ------------------------------------------------------------ */
+html.is-android-app #toastContainer {
+    top: calc(14px + var(--safe-top));
+    right: 12px;
+    left: 12px;
+    pointer-events: none;
+}
+
+html.is-android-app #toastContainer > * {
+    pointer-events: auto;
+    border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+html.is-android-app .toast-item {
+    min-height: 56px;
+}
+
+/* ------------------------------------------------------------
+   10. SCROLL FEEL — hide scrollbars, smooth momentum
+   ------------------------------------------------------------ */
+html.is-android-app ::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+}
+
+html.is-android-app .overflow-y-auto,
+html.is-android-app .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+}
+
+/* ------------------------------------------------------------
+   11. TEXT SELECTION — off for chrome, on for content
+   ------------------------------------------------------------ */
+html.is-android-app button,
+html.is-android-app .btn,
+html.is-android-app nav,
+html.is-android-app .module-card,
+html.is-android-app .stat-card,
+html.is-android-app #mobileNavbar {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+html.is-android-app input,
+html.is-android-app textarea,
+html.is-android-app .selectable,
+html.is-android-app .responsive-table td {
+    user-select: text;
+    -webkit-user-select: text;
+}
+
+/* ------------------------------------------------------------
+   12. TYPOGRAPHY — consistent with app
+   ------------------------------------------------------------ */
+html.is-android-app h1 {
+    font-size: 1.5rem !important;
+    line-height: 1.25;
+}
+
+html.is-android-app h2 {
+    font-size: 1.2rem !important;
+    line-height: 1.3;
+}
+
+html.is-android-app h3 {
+    font-size: 1.05rem !important;
+}
+
+/* Prevent Android from inflating fonts (font-size-adjust) */
+html.is-android-app {
+    font-size-adjust: 0.5;
+}
+
+/* ------------------------------------------------------------
+   13. TABLES — app card style
+   ------------------------------------------------------------ */
+html.is-android-app .responsive-table {
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+html.is-android-app .responsive-table thead th {
+    padding: 12px 16px;
+    font-size: 0.7rem;
+}
+
+html.is-android-app .responsive-table tbody td {
+    padding: 12px 16px;
+}
+
+/* On app, always use card style for tables on small screens */
+@media (max-width: 768px) {
+    html.is-android-app .responsive-table tbody tr {
+        border-radius: 14px;
+        padding: 14px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+    }
+}
+
+/* ------------------------------------------------------------
+   14. MODAL OPEN STATE — body scroll lock helper
+   ------------------------------------------------------------ */
+html.is-android-app body.modal-open,
+html.is-android-app body.sidebar-locked {
+    overflow: hidden !important;
+    touch-action: none;
+}
+
+/* ------------------------------------------------------------
+   15. LOADING / SKELETON FALLBACK
+   ------------------------------------------------------------ */
+html.is-android-app .spinner {
+    border-width: 3px;
+}
+
+html.is-android-app .shimmer {
+    border-radius: 12px;
+}
+
+/* ------------------------------------------------------------
+   16. A11Y — focus outlines on app (native-feel)
+   ------------------------------------------------------------ */
+html.is-android-app :focus-visible {
+    outline: 2px solid #059669;
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+html.is-android-app button:focus:not(:focus-visible),
+html.is-android-app a:focus:not(:focus-visible) {
+    outline: none;
+}
+
+/* ------------------------------------------------------------
+   17. REDUCED MOTION
+   ------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+    html.is-android-app *,
+    html.is-android-app *::before,
+    html.is-android-app *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    /* Still need the sheet modal to disappear cleanly */
+    html.is-android-app #modalContent {
+        animation: none !important;
+    }
+}
+
+/* ------------------------------------------------------------
+   18. LANDSCAPE ORIENTATION
+   ------------------------------------------------------------ */
+@media (orientation: landscape) and (max-height: 500px) {
+    html.is-android-app #modalContent {
+        max-height: 100vh;
+        border-radius: 0;
+    }
+
+    html.is-android-app #loginModal {
+        padding: 10px;
+    }
+
+    html.is-android-app #loginModal .relative.h-64 {
+        height: 140px;
+    }
+}
+
+/* ------------------------------------------------------------
+   19. VERY SMALL PHONES (< 380px)
+   ------------------------------------------------------------ */
+@media (max-width: 380px) {
+    html.is-android-app main,
+    html.is-android-app #mainContent {
+        padding: 10px 10px calc(16px + var(--safe-bottom)) 10px !important;
+    }
+
+    html.is-android-app h1 {
+        font-size: 1.3rem !important;
+    }
+
+    html.is-android-app button,
+    html.is-android-app .btn {
+        font-size: 0.85rem;
+    }
+}
+
+/* ------------------------------------------------------------
+   20. PRINT (unlikely in app, but harmless)
+   ------------------------------------------------------------ */
+@media print {
+    html.is-android-app body {
+        padding: 0 !important;
+    }
+}
