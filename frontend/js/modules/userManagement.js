@@ -3,6 +3,16 @@
 // ============================================
 
 class UserManagement {
+    // ---------- Breakpoint / cache ----------
+    static _MOBILE_BREAKPOINT = 768;
+    static _lastMode = null;
+    static _resizeTimer = null;
+    static _resizeBound = false;
+    static _cachedUsers = [];
+
+    static _isMobile() {
+        return window.innerWidth < UserManagement._MOBILE_BREAKPOINT;
+    }
 
     // ---------- Helpers ----------
     static _esc(str) {
@@ -12,6 +22,16 @@ class UserManagement {
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#39;');
+    }
+
+    static _jsStr(str) {
+        return String(str == null ? '' : str)
+            .replace(/\\/g, '\\\\')
+            .replace(/'/g, "\\'")
+            .replace(/"/g, '&quot;')
+            .replace(/\n/g, '\\n')
+            .replace(/\r/g, '\\r')
+            .replace(/</g, '\\x3C');
     }
 
     static _initials(fullName) {
@@ -36,6 +56,12 @@ class UserManagement {
         return p ? this._esc(p) : '—';
     }
 
+    static _haptic(ms = 10) {
+        if (window.TALAEN && window.TALAEN.isAndroidApp && navigator.vibrate) {
+            try { navigator.vibrate(ms); } catch (_) {}
+        }
+    }
+
     // ---------- Show ----------
     static async show() {
         const mainContent = document.getElementById('mainContent');
@@ -53,7 +79,6 @@ class UserManagement {
                 </button>
             </div>
 
-            <!-- Users Table -->
             <div id="usersTableContainer" class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                 <div class="text-center py-8">
                     <div class="spinner mx-auto"></div>
@@ -61,6 +86,21 @@ class UserManagement {
                 </div>
             </div>
         `;
+
+        // Bind resize listener once
+        if (!UserManagement._resizeBound) {
+            UserManagement._resizeBound = true;
+            window.addEventListener('resize', () => {
+                if (UserManagement._resizeTimer) clearTimeout(UserManagement._resizeTimer);
+                UserManagement._resizeTimer = setTimeout(() => {
+                    UserManagement._resizeTimer = null;
+                    const mode = UserManagement._isMobile() ? 'mobile' : 'desktop';
+                    if (mode !== UserManagement._lastMode && Array.isArray(UserManagement._cachedUsers)) {
+                        UserManagement.renderUsersTable(UserManagement._cachedUsers);
+                    }
+                }, 200);
+            });
+        }
 
         await UserManagement.loadUsers();
     }
@@ -71,10 +111,12 @@ class UserManagement {
             const response = await api.getUsers();
 
             if (response && response.success && Array.isArray(response.users) && response.users.length > 0) {
+                UserManagement._cachedUsers = response.users;
                 UserManagement.renderUsersTable(response.users);
                 return true;
             }
 
+            UserManagement._cachedUsers = [];
             const container = document.getElementById('usersTableContainer');
             if (container) {
                 container.innerHTML = `
@@ -120,7 +162,6 @@ class UserManagement {
             store_manager: { label: 'Store Manager', color: 'bg-orange-100 text-orange-700 border-orange-200', icon: 'fa-store' },
             milk_buyer:    { label: 'Milk Buyer',    color: 'bg-pink-100 text-pink-700 border-pink-200',       icon: 'fa-user-tie' }
         };
-
         const config = roleConfig[role] || { label: role || 'Unknown', color: 'bg-gray-100 text-gray-700 border-gray-200', icon: 'fa-user' };
 
         return `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${config.color}">
@@ -128,8 +169,128 @@ class UserManagement {
         </span>`;
     }
 
-    // ---------- Table render ----------
+    // ---------- Router: mobile vs desktop ----------
     static renderUsersTable(users) {
+        UserManagement._cachedUsers = Array.isArray(users) ? users : [];
+        UserManagement._lastMode = UserManagement._isMobile() ? 'mobile' : 'desktop';
+
+        if (UserManagement._lastMode === 'mobile') {
+            UserManagement._renderUsersList(UserManagement._cachedUsers);
+        } else {
+            UserManagement._renderUsersTableDesktop(UserManagement._cachedUsers);
+        }
+    }
+
+    // ---------- MOBILE: compact list of names ----------
+    static _renderUsersList(users) {
+        const container = document.getElementById('usersTableContainer');
+        if (!container) return;
+
+        const currentUser = auth.getCurrentUser();
+        const currentUserId = currentUser ? currentUser.id : null;
+
+        const rows = users.map((user) => {
+            const safeName = UserManagement._esc(user.full_name || '—');
+            const safeUsername = UserManagement._esc(user.username || '');
+            const rawId = UserManagement._jsStr(user.id);
+            const isActive = !!user.is_active;
+            const isSelf = user.id === currentUserId;
+
+            return `
+                <button type="button"
+                        class="w-full flex items-center gap-3 px-4 py-3 text-left active:bg-stone-50 transition-colors border-b border-stone-100 last:border-b-0 min-h-[64px]"
+                        onclick="UserManagement.showUserDetail('${rawId}')">
+                    <div class="w-11 h-11 bg-gradient-to-br from-green-100 to-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <span class="text-green-700 font-bold text-base">${UserManagement._initials(user.full_name)}</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-semibold text-gray-800 text-sm truncate">${safeName}${isSelf ? ' <span class="text-[10px] text-gray-400 italic">(You)</span>' : ''}</p>
+                        <p class="text-xs text-gray-400 truncate">@${safeUsername}</p>
+                    </div>
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                        <span class="w-2 h-2 rounded-full ${isActive ? 'bg-green-500' : 'bg-red-500'}"></span>
+                        <i class="fas fa-chevron-right text-stone-300 text-xs"></i>
+                    </div>
+                </button>
+            `;
+        }).join('');
+
+        container.innerHTML = `
+            <div class="divide-y divide-stone-100">${rows}</div>
+        `;
+    }
+
+    // ---------- MOBILE: detail modal ----------
+    static showUserDetail(userId) {
+        const user = UserManagement._cachedUsers.find((u) => u.id === userId);
+        if (!user) return;
+
+        UserManagement._haptic(8);
+
+        const currentUser = auth.getCurrentUser();
+        const isSelf = currentUser && currentUser.id === user.id;
+        const isActive = !!user.is_active;
+
+        const actionButtons = isSelf ? `
+            <div class="text-xs text-stone-400 italic text-center py-3">This is your account</div>
+        ` : `
+            <div class="space-y-2 pt-2">
+                <button type="button" data-modal-close
+                        onclick="UserManagement.showResetPasswordForm('${UserManagement._jsStr(user.id)}', '${UserManagement._jsStr(user.full_name || '')}')"
+                        class="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-blue-50 text-blue-700 font-medium text-sm active:bg-blue-100 transition-colors min-h-[48px]">
+                    <i class="fas fa-key"></i> Reset Password
+                </button>
+                <button type="button" data-modal-close
+                        onclick="UserManagement.toggleUserStatus('${UserManagement._jsStr(user.id)}', ${isActive}, '${UserManagement._jsStr(user.full_name || '')}')"
+                        class="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl ${isActive ? 'bg-amber-50 text-amber-700 active:bg-amber-100' : 'bg-green-50 text-green-700 active:bg-green-100'} font-medium text-sm transition-colors min-h-[48px]">
+                    <i class="fas ${isActive ? 'fa-ban' : 'fa-check'}"></i> ${isActive ? 'Deactivate User' : 'Activate User'}
+                </button>
+            </div>
+        `;
+
+        modal.open(`User Details`, `
+            <div class="space-y-4">
+                <!-- Avatar + name -->
+                <div class="flex flex-col items-center text-center pt-2">
+                    <div class="w-20 h-20 bg-gradient-to-br from-green-100 to-emerald-100 rounded-2xl flex items-center justify-center mb-3">
+                        <span class="text-green-700 font-bold text-3xl">${UserManagement._initials(user.full_name)}</span>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800">${UserManagement._esc(user.full_name || '—')}</h3>
+                    <p class="text-sm text-stone-400">@${UserManagement._esc(user.username || '')}</p>
+                    <div class="mt-2">${UserManagement.getRoleBadge(user.role)}</div>
+                </div>
+
+                <!-- Details grid -->
+                <div class="space-y-2 pt-2">
+                    <div class="flex items-center justify-between bg-stone-50 rounded-xl px-4 py-3">
+                        <span class="text-xs font-medium text-stone-500 uppercase tracking-wider">Status</span>
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
+                            isActive
+                                ? 'bg-green-50 text-green-700 border border-green-200'
+                                : 'bg-red-50 text-red-700 border border-red-200'
+                        }">
+                            <span class="w-1.5 h-1.5 rounded-full ${isActive ? 'bg-green-500' : 'bg-red-500'}"></span>
+                            ${isActive ? 'Active' : 'Inactive'}
+                        </span>
+                    </div>
+                    <div class="flex items-center justify-between bg-stone-50 rounded-xl px-4 py-3">
+                        <span class="text-xs font-medium text-stone-500 uppercase tracking-wider">Phone</span>
+                        <span class="text-sm text-slate-700">${UserManagement._fmtPhone(user.phone)}</span>
+                    </div>
+                    <div class="flex items-center justify-between bg-stone-50 rounded-xl px-4 py-3">
+                        <span class="text-xs font-medium text-stone-500 uppercase tracking-wider">Joined</span>
+                        <span class="text-sm text-slate-700">${UserManagement._fmtDate(user.created_at)}</span>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                ${actionButtons}
+            </div>
+        `, { icon: 'fa-user', size: 'max-w-md' });
+    }
+
+    // ---------- DESKTOP: existing table ----------
+    static _renderUsersTableDesktop(users) {
         const container = document.getElementById('usersTableContainer');
         if (!container) return;
 
@@ -145,12 +306,12 @@ class UserManagement {
             const actionButtons = isSelf
                 ? `<span class="text-xs text-gray-400 italic">You</span>`
                 : `
-                    <button onclick="UserManagement.toggleUserStatus('${user.id}', ${isActive}, '${UserManagement._esc((user.full_name || '').replace(/'/g, "\\'"))}')"
+                    <button onclick="UserManagement.toggleUserStatus('${UserManagement._jsStr(user.id)}', ${isActive}, '${UserManagement._jsStr(user.full_name || '')}')"
                         class="w-8 h-8 flex items-center justify-center rounded-lg ${isActive ? 'text-yellow-600 hover:bg-yellow-50' : 'text-green-600 hover:bg-green-50'} transition-colors"
                         title="${isActive ? 'Deactivate' : 'Activate'}">
                         <i class="fas ${isActive ? 'fa-ban' : 'fa-check'} text-sm"></i>
                     </button>
-                    <button onclick="UserManagement.showResetPasswordForm('${user.id}', '${UserManagement._esc((user.full_name || '').replace(/'/g, "\\'"))}')"
+                    <button onclick="UserManagement.showResetPasswordForm('${UserManagement._jsStr(user.id)}', '${UserManagement._jsStr(user.full_name || '')}')"
                         class="w-8 h-8 flex items-center justify-center rounded-lg text-blue-600 hover:bg-blue-50 transition-colors"
                         title="Reset Password">
                         <i class="fas fa-key text-sm"></i>
@@ -307,11 +468,9 @@ class UserManagement {
             const response = await api.register(userData);
             if (response && response.success) {
                 modal.close();
+                UserManagement._haptic(15);
                 if (typeof showToast === 'function') {
                     showToast(`User "${userData.full_name}" created successfully!`, 'success');
-                }
-                if (window.TALAEN && window.TALAEN.isAndroidApp && navigator.vibrate) {
-                    try { navigator.vibrate(15); } catch (_) {}
                 }
                 await UserManagement.loadUsers();
             } else {
@@ -339,11 +498,9 @@ class UserManagement {
             async () => {
                 const response = await api.updateUser(userId, { is_active: !currentStatus });
                 if (response && response.success !== false) {
+                    UserManagement._haptic(10);
                     if (typeof showToast === 'function') {
                         showToast(`User ${action.toLowerCase()}d successfully!`, 'success');
-                    }
-                    if (window.TALAEN && window.TALAEN.isAndroidApp && navigator.vibrate) {
-                        try { navigator.vibrate(10); } catch (_) {}
                     }
                     await UserManagement.loadUsers();
                 } else {
@@ -404,11 +561,9 @@ class UserManagement {
             const response = await api.resetUserPassword(userId, newPassword);
             if (response && response.success !== false) {
                 modal.close();
+                UserManagement._haptic(10);
                 if (typeof showToast === 'function') {
                     showToast(`Password reset successfully for ${safeName || 'user'}!`, 'success');
-                }
-                if (window.TALAEN && window.TALAEN.isAndroidApp && navigator.vibrate) {
-                    try { navigator.vibrate(10); } catch (_) {}
                 }
             } else {
                 throw new Error((response && response.message) || 'Failed to reset password');
