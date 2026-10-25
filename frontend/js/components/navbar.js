@@ -1,162 +1,224 @@
 // ============================================
-// TALAEN FARM - Mobile Navbar Component (Optimized)
+// TALAEN FARM - Mobile Navbar Component
 // ============================================
 
 class Navbar {
     constructor() {
-        this.hamburgerBtn = document.getElementById('hamburgerBtn');
-        this.mobileNavbar = document.getElementById('mobileNavbar');
-        this.sidebar = document.getElementById('sidebar');
-        this.sidebarOverlay = document.getElementById('sidebarOverlay');
+        this.hamburgerBtn = null;
+        this.mobileNavbar = null;
+        this.sidebarEl = null;
+        this.sidebarOverlay = null;
+
         this.currentPageTitle = 'Dashboard';
         this.lastScrollY = 0;
         this.navbarVisible = true;
-        
-        this.setupEventListeners();
-        this.setupResizeHandler();
-        this.setupScrollBehavior();
-        // Swipe gestures handled by sidebar.js
+
+        this._scrollRaf = null;
+        this._scrollTimeout = null;
+
+        // Prefer reduced-motion?
+        this._reducedMotion =
+            window.matchMedia &&
+            window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        this._refs();
+        this._setupEventListeners();
+        this._setupResizeHandler();
+        this._setupScrollBehavior();
     }
 
-    setupEventListeners() {
-        // Hamburger menu toggle
-        this.hamburgerBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.toggleSidebar();
-        });
+    // ---------- Refs ----------
+    _refs() {
+        this.hamburgerBtn   = document.getElementById('hamburgerBtn');
+        this.mobileNavbar   = document.getElementById('mobileNavbar');
+        this.sidebarEl      = document.getElementById('sidebar');
+        this.sidebarOverlay = document.getElementById('sidebarOverlay');
+        return !!(this.hamburgerBtn && this.mobileNavbar);
+    }
 
-        // Close sidebar when overlay is clicked
-        this.sidebarOverlay.addEventListener('click', () => {
-            sidebar.close();
-            this.updateHamburgerIcon(false);
-        });
+    // Sidebar instance (may not be loaded yet)
+    _s() {
+        return (typeof sidebar !== 'undefined' && sidebar) ? sidebar : null;
+    }
 
-        // Close sidebar on outside click (mobile)
-        document.addEventListener('click', (e) => {
-            if (sidebar.isOpen && window.innerWidth < 1024) {
-                const clickedOutside = !this.sidebar.contains(e.target) && 
-                                       !this.hamburgerBtn.contains(e.target);
-                if (clickedOutside) {
-                    sidebar.close();
-                    this.updateHamburgerIcon(false);
-                }
-            }
-        });
-
-        // Keyboard shortcut to toggle sidebar
-        document.addEventListener('keydown', (e) => {
-            if (e.ctrlKey && e.key === 'b') {
-                e.preventDefault();
+    // ---------- Listeners ----------
+    _setupEventListeners() {
+        if (!this.hamburgerBtn) {
+            console.warn('[Navbar] #hamburgerBtn not found; skipping click wiring');
+        } else {
+            this.hamburgerBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
                 this.toggleSidebar();
+            });
+        }
+
+        if (this.sidebarOverlay) {
+            this.sidebarOverlay.addEventListener('click', () => {
+                const s = this._s();
+                if (s) s.close();
+                this.updateHamburgerIcon(false);
+            });
+        }
+
+        // Outside click closes sidebar on mobile
+        document.addEventListener('click', (e) => {
+            const s = this._s();
+            if (!s || !s.isOpen || window.innerWidth >= 1024) return;
+            const clickedOutside =
+                (!this.sidebarEl || !this.sidebarEl.contains(e.target)) &&
+                (!this.hamburgerBtn || !this.hamburgerBtn.contains(e.target));
+            if (clickedOutside) {
+                s.close();
+                this.updateHamburgerIcon(false);
             }
         });
+
+        // Ctrl+B toggle (skip in Android app — no keyboard)
+        if (!(window.TALAEN && window.TALAEN.isAndroidApp)) {
+            document.addEventListener('keydown', (e) => {
+                if (e.ctrlKey && e.key === 'b') {
+                    e.preventDefault();
+                    this.toggleSidebar();
+                }
+            });
+        }
     }
 
-    setupScrollBehavior() {
-        // Hide navbar on scroll down, show on scroll up (saves screen space)
-        let scrollTimeout;
-        window.addEventListener('scroll', () => {
+    // ---------- Scroll behavior (hide on scroll down) ----------
+    _setupScrollBehavior() {
+        // Which element actually scrolls? In the app it's #mainContent.
+        const main = document.getElementById('mainContent');
+        const scrollTarget = (main && main.scrollHeight > main.clientHeight) ? main : window;
+
+        const getScrollY = () => {
+            if (scrollTarget === window) return window.scrollY || 0;
+            return scrollTarget.scrollTop || 0;
+        };
+
+        const onScroll = () => {
             if (window.innerWidth >= 1024) return;
-            
-            clearTimeout(scrollTimeout);
-            const currentScrollY = window.scrollY;
-            
-            if (currentScrollY > this.lastScrollY && currentScrollY > 80) {
-                // Scrolling down - hide navbar
-                if (this.navbarVisible) {
-                    this.mobileNavbar.style.transform = 'translateY(-100%)';
-                    this.mobileNavbar.style.transition = 'transform 0.3s ease';
-                    this.navbarVisible = false;
+            if (!this.mobileNavbar) return;
+
+            if (this._scrollRaf) cancelAnimationFrame(this._scrollRaf);
+            this._scrollRaf = requestAnimationFrame(() => {
+                const y = getScrollY();
+
+                if (y > this.lastScrollY && y > 80) {
+                    // Scrolling down → hide
+                    if (this.navbarVisible) {
+                        this._applyNavbarTransform(true);
+                        this.navbarVisible = false;
+                    }
+                } else {
+                    // Scrolling up → show
+                    if (!this.navbarVisible) {
+                        this._applyNavbarTransform(false);
+                        this.navbarVisible = true;
+                    }
                 }
-            } else {
-                // Scrolling up - show navbar
-                if (!this.navbarVisible) {
-                    this.mobileNavbar.style.transform = 'translateY(0)';
-                    this.mobileNavbar.style.transition = 'transform 0.3s ease';
-                    this.navbarVisible = true;
-                }
-            }
-            
-            this.lastScrollY = currentScrollY;
-            
-            // Reset after scroll stops
-            scrollTimeout = setTimeout(() => {
-                if (!this.navbarVisible) {
-                    this.mobileNavbar.style.transform = 'translateY(0)';
-                    this.navbarVisible = true;
-                }
-            }, 2000);
-        }, { passive: true });
+                this.lastScrollY = y;
+
+                // Auto-show after scrolling stops for 2s
+                if (this._scrollTimeout) clearTimeout(this._scrollTimeout);
+                this._scrollTimeout = setTimeout(() => {
+                    if (!this.navbarVisible) {
+                        this._applyNavbarTransform(false);
+                        this.navbarVisible = true;
+                    }
+                }, 2000);
+            });
+        };
+
+        scrollTarget.addEventListener('scroll', onScroll, { passive: true });
     }
 
-    setupResizeHandler() {
+    _applyNavbarTransform(hidden) {
+        if (!this.mobileNavbar) return;
+        const t = this._reducedMotion ? '' : 'transform 0.3s ease';
+        this.mobileNavbar.style.transition = t;
+        this.mobileNavbar.style.transform = hidden ? 'translateY(-100%)' : 'translateY(0)';
+        this.mobileNavbar.style.visibility = hidden ? 'hidden' : 'visible';
+    }
+
+    // ---------- Resize ----------
+    _setupResizeHandler() {
         let resizeTimer;
         window.addEventListener('resize', () => {
             clearTimeout(resizeTimer);
             resizeTimer = setTimeout(() => {
                 if (window.innerWidth >= 1024) {
-                    // Desktop: ensure sidebar visible, overlay hidden
-                    this.sidebar.classList.remove('sidebar-open');
-                    this.sidebarOverlay.classList.add('hidden');
-                    sidebar.isOpen = false;
+                    // Desktop: reset sidebar state
+                    if (this.sidebarEl) this.sidebarEl.classList.remove('sidebar-open');
+                    if (this.sidebarOverlay) this.sidebarOverlay.classList.add('hidden');
+                    const s = this._s();
+                    if (s) s.isOpen = false;
                     this.updateHamburgerIcon(false);
                     // Reset navbar position
-                    this.mobileNavbar.style.transform = 'translateY(0)';
+                    if (this.mobileNavbar) {
+                        this.mobileNavbar.style.transform = 'translateY(0)';
+                        this.mobileNavbar.style.visibility = 'visible';
+                    }
                     this.navbarVisible = true;
                 }
             }, 250);
         });
     }
 
+    // ---------- Toggle / icon ----------
     toggleSidebar() {
-        if (sidebar.isOpen) {
-            sidebar.close();
-            this.updateHamburgerIcon(false);
-        } else {
-            sidebar.open();
-            this.updateHamburgerIcon(true);
-        }
-        // Haptic feedback if available
-        if (window.navigator && window.navigator.vibrate) {
-            window.navigator.vibrate(10);
+        const s = this._s();
+        if (!s) return;
+
+        // Sidebar itself calls updateHamburgerIcon(true/false) — no duplicate here.
+        s.toggle();
+
+        // Haptic only in app mode
+        if (window.TALAEN && window.TALAEN.isAndroidApp && navigator.vibrate) {
+            try { navigator.vibrate(10); } catch (_) {}
         }
     }
 
     updateHamburgerIcon(isOpen) {
+        if (!this.hamburgerBtn) return;
         const icon = this.hamburgerBtn.querySelector('i');
-        if (icon) {
-            if (isOpen) {
-                icon.className = 'fas fa-times text-lg sm:text-xl';
-                this.hamburgerBtn.classList.add('bg-stone-100');
-            } else {
-                icon.className = 'fas fa-bars text-lg sm:text-xl';
-                this.hamburgerBtn.classList.remove('bg-stone-100');
-            }
+        if (!icon) return;
+
+        if (isOpen) {
+            icon.className = 'fas fa-times text-lg sm:text-xl';
+            this.hamburgerBtn.classList.add('bg-stone-100');
+            this.hamburgerBtn.setAttribute('aria-label', 'Close menu');
+        } else {
+            icon.className = 'fas fa-bars text-lg sm:text-xl';
+            this.hamburgerBtn.classList.remove('bg-stone-100');
+            this.hamburgerBtn.setAttribute('aria-label', 'Open menu');
         }
     }
 
-    // Update the page title in the mobile navbar
+    // ---------- Page title ----------
     setPageTitle(title) {
         this.currentPageTitle = title;
+        if (!this.mobileNavbar) return;
         const titleElement = this.mobileNavbar.querySelector('h2');
-        if (titleElement) {
-            titleElement.textContent = title;
-        }
+        if (titleElement) titleElement.textContent = title;
     }
 
-    // Show/hide mobile navbar
+    // Backwards-compatible alias (some modules may call updateTitle)
+    updateTitle(title) { this.setPageTitle(title); }
+
+    // ---------- Show / hide ----------
     show() {
-        this.mobileNavbar.style.transform = 'translateY(0)';
+        this._applyNavbarTransform(false);
         this.navbarVisible = true;
     }
 
     hide() {
-        this.mobileNavbar.style.transform = 'translateY(-100%)';
+        this._applyNavbarTransform(true);
         this.navbarVisible = false;
     }
 
-    // Add notification badge to hamburger
+    // ---------- Notification badge ----------
     setNotificationBadge(count) {
+        if (!this.hamburgerBtn) return;
         if (count > 0) {
             let badge = this.hamburgerBtn.querySelector('.notification-badge');
             if (!badge) {
@@ -173,5 +235,6 @@ class Navbar {
     }
 }
 
-// Create global navbar instance
+// Global instance
 const navbar = new Navbar();
+window.navbar = navbar;
