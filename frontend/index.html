@@ -2,12 +2,50 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Busienei Farm Management System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+
+    <!-- App / PWA meta -->
+    <meta name="theme-color" content="#047857">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="format-detection" content="telephone=no">
+
+    <title>Talaen Farm Management System</title>
+
+    <!-- Android WebView App detection — MUST run before first paint -->
+    <script>
+        (function () {
+            var ua = navigator.userAgent || navigator.vendor || window.opera || '';
+            var isAndroidApp = /TalaenFarmApp/i.test(ua);
+
+            window.TALAEN = window.TALAEN || {};
+            window.TALAEN.isAndroidApp = isAndroidApp;
+            window.TALAEN.platform = isAndroidApp ? 'android-app' : 'web';
+
+            if (isAndroidApp) {
+                document.documentElement.classList.add('is-android-app');
+                document.documentElement.classList.add('is-webview');
+                document.documentElement.setAttribute('data-platform', 'android-app');
+            }
+        })();
+    </script>
+
+    <!-- Preconnect to backend API for faster first request -->
+    <link rel="preconnect" href="https://talaen-farm-api.onrender.com" crossorigin>
+    <link rel="dns-prefetch" href="https://talaen-farm-api.onrender.com">
+
+    <!-- Tailwind CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Icons & Fonts -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- App styles (order: style.css → app-shell.css) -->
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/app-shell.css">
+
     <script>
         tailwind.config = {
             theme: {
@@ -47,12 +85,12 @@
                     <div class="absolute inset-0 pointer-events-none" style="background: linear-gradient(135deg, transparent calc(50% - 1.5px), rgba(255,255,255,0.5) 50%, transparent calc(50% + 1.5px));"></div>
                     <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
                         <div class="w-24 h-24 bg-gradient-to-br from-slate-700 to-slate-800 rounded-2xl flex items-center justify-center shadow-2xl border-[3px] border-white/60 transform hover:scale-110 transition-transform duration-500 overflow-hidden">
-                            <img src="assets/images/logo.png.jpg" alt="Logo" class="w-full h-full object-cover" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-tractor text-white text-3xl\'></i>'">
+                            <img src="assets/images/logo.png" alt="Talaen Farm Logo" class="w-full h-full object-cover" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-tractor text-white text-3xl\'></i>'">
                         </div>
                     </div>
                     <div class="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/70 to-transparent pointer-events-none"></div>
                     <div class="absolute bottom-5 left-0 right-0 text-center z-10">
-                        <h1 class="text-2xl font-extrabold text-white drop-shadow-2xl tracking-tight">Busienei Farm</h1>
+                        <h1 class="text-2xl font-extrabold text-white drop-shadow-2xl tracking-tight">Talaen Farm</h1>
                         <p class="text-white/70 text-[11px] tracking-[0.2em] uppercase font-medium">Management System</p>
                     </div>
                 </div>
@@ -64,24 +102,44 @@
                     </div>
                     <form id="loginForm" class="space-y-5" autocomplete="off">
                         <div>
-                            <label class="block text-sm font-semibold text-slate-700 mb-2">Username</label>
+                            <label for="username" class="block text-sm font-semibold text-slate-700 mb-2">Username</label>
                             <div class="relative group">
                                 <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-stone-400 group-focus-within:text-emerald-600"><i class="fas fa-user"></i></span>
-                                <input type="text" id="username" required class="w-full pl-11 pr-4 py-3 bg-stone-50 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all font-medium text-slate-800 placeholder-stone-400" placeholder="Enter your username">
+                                <input
+                                    type="text"
+                                    id="username"
+                                    name="username"
+                                    required
+                                    inputmode="text"
+                                    autocomplete="username"
+                                    autocapitalize="none"
+                                    autocorrect="off"
+                                    spellcheck="false"
+                                    enterkeyhint="next"
+                                    class="w-full pl-11 pr-4 py-3 bg-stone-50 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all font-medium text-slate-800 placeholder-stone-400"
+                                    placeholder="Enter your username">
                             </div>
                         </div>
                         <div>
-                            <label class="block text-sm font-semibold text-slate-700 mb-2">Password</label>
+                            <label for="password" class="block text-sm font-semibold text-slate-700 mb-2">Password</label>
                             <div class="relative group">
                                 <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-stone-400 group-focus-within:text-emerald-600"><i class="fas fa-lock"></i></span>
-                                <input type="password" id="password" required class="w-full pl-11 pr-12 py-3 bg-stone-50 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all font-medium text-slate-800 placeholder-stone-400" placeholder="Enter your password">
-                                <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 pr-4 flex items-center text-stone-400 hover:text-stone-600"><i class="fas fa-eye"></i></button>
+                                <input
+                                    type="password"
+                                    id="password"
+                                    name="password"
+                                    required
+                                    autocomplete="current-password"
+                                    enterkeyhint="go"
+                                    class="w-full pl-11 pr-12 py-3 bg-stone-50 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all font-medium text-slate-800 placeholder-stone-400"
+                                    placeholder="Enter your password">
+                                <button type="button" id="togglePassword" aria-label="Toggle password visibility" class="absolute inset-y-0 right-0 pr-4 flex items-center text-stone-400 hover:text-stone-600"><i class="fas fa-eye"></i></button>
                             </div>
                         </div>
                         <button type="submit" class="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 text-white py-3.5 rounded-xl font-semibold hover:from-emerald-700 hover:to-emerald-800 transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2"><i class="fas fa-sign-in-alt"></i> Sign In</button>
                     </form>
                     <div id="loginError" class="mt-4 text-red-500 text-sm text-center hidden bg-red-50 border border-red-100 py-3 px-4 rounded-xl"><i class="fas fa-exclamation-circle mr-1.5"></i><span id="loginErrorText"></span></div>
-                    <p class="text-center text-stone-400 text-xs mt-6">&copy; 2024 Busienei Farm. All rights reserved.</p>
+                    <p class="text-center text-stone-400 text-xs mt-6">&copy; 2024 Talaen Farm. All rights reserved.</p>
                 </div>
             </div>
         </div>
@@ -93,10 +151,10 @@
             <div class="p-6 border-b border-slate-700/50">
                 <div class="flex items-center gap-3 mb-1">
                     <div class="w-14 h-14 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl flex items-center justify-center overflow-hidden shadow-lg shadow-emerald-900/30 flex-shrink-0">
-                        <img src="assets/images/logo.png.jpg" alt="Logo" class="w-full h-full object-cover" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-tractor text-white text-2xl\'></i>'">
+                        <img src="assets/images/logo.png" alt="Talaen Farm Logo" class="w-full h-full object-cover" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-tractor text-white text-2xl\'></i>'">
                     </div>
                     <div>
-                        <h2 class="text-lg font-bold text-white tracking-tight">Busienei Farm</h2>
+                        <h2 class="text-lg font-bold text-white tracking-tight">Talaen Farm</h2>
                         <p id="sidebarRole" class="text-slate-400 text-[11px] leading-tight"></p>
                     </div>
                 </div>
@@ -109,10 +167,10 @@
         <div id="sidebarOverlay" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-20 lg:hidden"></div>
         <div class="flex-1 lg:ml-72">
             <div id="mobileNavbar" class="lg:hidden bg-white/95 backdrop-blur-md shadow-sm p-4 flex items-center justify-between sticky top-0 z-10 border-b border-stone-200">
-                <button id="hamburgerBtn" class="text-slate-600 hover:text-emerald-700 transition-colors w-10 h-10 flex items-center justify-center rounded-xl hover:bg-stone-100"><i class="fas fa-bars text-xl"></i></button>
+                <button id="hamburgerBtn" class="text-slate-600 hover:text-emerald-700 transition-colors w-10 h-10 flex items-center justify-center rounded-xl hover:bg-stone-100" aria-label="Open menu"><i class="fas fa-bars text-xl"></i></button>
                 <div class="flex items-center gap-2.5">
-                    <div class="w-9 h-9 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-lg flex items-center justify-center overflow-hidden"><img src="assets/images/logo.png.jpg" alt="Logo" class="w-full h-full object-cover" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-tractor text-white text-sm\'></i>'"></div>
-                    <h2 class="font-bold text-slate-800">Busienei Farm</h2>
+                    <div class="w-9 h-9 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-lg flex items-center justify-center overflow-hidden"><img src="assets/images/logo.png" alt="Talaen Farm Logo" class="w-full h-full object-cover" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-tractor text-white text-sm\'></i>'"></div>
+                    <h2 class="font-bold text-slate-800">Talaen Farm</h2>
                 </div>
                 <div class="w-10"></div>
             </div>
@@ -125,7 +183,7 @@
         <div id="modalContent" class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto border border-stone-200"></div>
     </div>
 
-    <!-- Scripts (order critical) -->
+    <!-- Scripts (order critical — do not reorder) -->
     <script src="js/config.js"></script>
     <script src="js/api.js"></script>
     <script src="js/auth.js"></script>
@@ -182,15 +240,29 @@
     <script src="js/modules/dairy/dairyReports.js"></script>
     <script src="js/app.js"></script>
 
-    <!-- Critical error reporter -->
+    <!-- Error reporter (non-blocking) -->
     <script>
-        window.addEventListener('error', function(e) {
-            alert('JS Error: ' + e.message + '\nFile: ' + e.filename + '\nLine: ' + e.lineno);
+        window.addEventListener('error', function (e) {
+            console.error('[Talaen] JS Error:', e.message, '| File:', e.filename, '| Line:', e.lineno);
+            // Only show toast if the toast system is already loaded
+            if (typeof showToast === 'function') {
+                showToast('A JavaScript error occurred. Check the console for details.', 'error', 5000);
+            }
         });
-        // Check for modal after full load
-        window.addEventListener('load', function() {
+
+        window.addEventListener('unhandledrejection', function (e) {
+            console.error('[Talaen] Unhandled promise rejection:', e.reason);
+        });
+
+        window.addEventListener('load', function () {
             if (typeof modal === 'undefined') {
-                alert('Modal system not loaded. Please refresh.');
+                console.warn('[Talaen] Modal system not loaded. Please refresh.');
+                if (typeof showToast === 'function') {
+                    showToast('Modal system not loaded. Please refresh.', 'warning', 6000);
+                }
+            }
+            if (window.TALAEN && window.TALAEN.isAndroidApp) {
+                console.info('[Talaen] Running inside Android WebView — .is-android-app applied.');
             }
         });
     </script>
